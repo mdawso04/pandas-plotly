@@ -1,268 +1,253 @@
 import pandas as pd
 import numpy as np
 
-class pq:
+class pq1(object):
     
     #source new xlsx
     #column analyze from json, xml
     #table group
-    #table demote to first row
     #table merge, append
-    #table row count
-    #table pivot, unpivot
+        
+    def __init__(self, csv):
+        super(pq1, self).__init__()
+        self.df = pd.read_csv(csv)
+        
+    def _repr_pretty_(self, p, cycle): 
+        return display(self.df)
+        
+    def __repr__(self): 
+        return self.df.__repr__()
     
-    @staticmethod
-    def READ(csv):
-        s = pd.read_csv(csv)
-        return s
+    def __str__(self): 
+        return self.df.__str__()
+    
+    #def READ(self, csv):
+    #    s = pd.read_csv(csv)
+    #    return s
     
     # COLUMNS
     #add/copy/combine, delete, rename, reorder, change
     
-    @staticmethod
-    def COL_ADD_FIXED(df, value, name = 'new_column'):
+    def COL_ADD_FIXED(self, value, name = 'new_column'):
         n = 1
-        while name in df.columns.values:
+        while name in self.df.columns.values.tolist():
             name = name + str(n)
-        df[name] = value
-        return df
+        self.df[name] = value
+        return self
     
-    @staticmethod
-    def COL_ADD_INDEX(df, name = 'new_column'):
+    def COL_ADD_INDEX(self, name = 'new_column'):
         n = 1
-        while name in df.columns.values:
+        while name in self.df.columns.values.tolist():
             name = name + str(n)
-        df[name] = range(df.shape[0])
-        return df
+        self.df[name] = range(self.df.shape[0])
+        return self
     
-    @staticmethod
-    def COL_ADD_CUSTOM(df, column, lmda, name = 'new_column'):
+    def COL_ADD_CUSTOM(self, column, lmda, name = 'new_column'):
         n = 1
-        while name in df.columns.values:
+        while name in self.df.columns.values.tolist():
             name = name + str(n)
-        df[name] = df[column].apply(lmda)
-        return df
+        self.df[name] = self.df[column].apply(lmda)
+        return self
     
-    @staticmethod
-    def COL_ADD_EXTRACT_POSITION_AFTER(df, column, pos, name = 'new_column'):
-        return pq.COL_ADD_CUSTOM(df, column, lambda x: x[pos:], name = name)
+    def COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column'):
+        self.df = self.COL_ADD_CUSTOM(self.df, column, lambda x: x[pos:], name = name)
+        return self
     
-    @staticmethod
-    def COL_ADD_EXTRACT_POSITION_BEFORE(df, column, pos, name = 'new_column'):
-        return pq.COL_ADD_CUSTOM(df, column, lambda x: x[:pos], name = name)
+    def COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column'):
+        self.df = self.COL_ADD_CUSTOM(self.df, column, lambda x: x[:pos], name = name)
+        return self
     
-    @staticmethod
-    def COL_ADD_EXTRACT_CHARS_FIRST(df, column, chars, name = 'new_column'):
-        return pq.COL_ADD_CUSTOM(df, column, lambda x: x[:chars], name = name)
+    def COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column'):
+        self.df = self.COL_ADD_CUSTOM(self.df, column, lambda x: x[:chars], name = name)
+        return self
     
-    @staticmethod
-    def COL_ADD_EXTRACT_CHARS_LAST(df, column, chars, name = 'new_column'):
-        return pq.COL_ADD_CUSTOM(df, column, lambda x: x[-chars:], name = name)
+    def COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column'):
+        self.df = self.COL_ADD_CUSTOM(self.df, column, lambda x: x[-chars:], name = name)
+        return self
     
-    @staticmethod
-    def COL_ADD_DUPLICATE(df, column, name = 'new_column'):
+    def COL_ADD_DUPLICATE(self, column, name = 'new_column'):
         n = 1
-        while name in df.columns.values:
+        while name in self.df.columns.values.tolist():
             name = name + str(n)
-        df[name] = df[column]
-        return df
+        self.df[name] = self.df[column]
+        return self
     
-    @staticmethod
-    def COL_ADD_COMBINE(df, columns, name = 'new_column', separator = ''):
-        n = 1
-        while name in df.columns.values:
-            name = name + str(n)
-        df[name] = df[columns].apply(lambda x: separator.join(x.tolist()), axis=1)
-        return df
+    def COL_DELETE(self, columns):
+        self.df = self.df.drop(columns, axis = 1)
+        return self
     
-    @staticmethod
-    def COL_ADD_SPLIT_LEFT(df, column, separator = ',', splits = None):
-        splitted = df[column].str.split(pat = separator, n = splits, expand = True)
-        i = range(len(splitted.columns))
-        for c in i:
-            df[column + '_' + str(c)] = splitted.iloc[:, c]
-        return df
+    def COL_DELETE_EXCEPT(self, not_columns):
+        columns = self._diff(list(self.df.columns.values), not_columns)
+        return self.COL_DELETE(self.df, columns)
     
-    @staticmethod
-    def COL_ADD_SPLIT_RIGHT(df, column, separator = ',', splits = None):
-        splitted = df[column].str.rsplit(pat = separator, n = splits, expand = True)
-        i = range(len(splitted.columns))
-        for c in i:
-            df[column + '_' + str(c)] = splitted.iloc[:, c]
-        return df
-        
-    @staticmethod
-    def COL_DELETE(df, columns):
-        return df.drop(columns, axis = 1)
-    
-    @staticmethod
-    def COL_DELETE_EXCEPT(df, not_columns):
-        columns = pq._diff(list(df.columns.values), not_columns)
-        return pq.COL_DELETE(df, columns)
-    
-    @staticmethod
-    def COL_RENAME(df, columns):
+    def COL_RENAME(self, columns):
         # we handle dict OR list
         if isinstance(columns, dict):
-            df.rename(columns = columns, inplace = True)
+            self.df.rename(columns = columns, inplace = True)
         else:
-            df.columns = columns
-        return df
+            self.df.columns = columns
+        return self
     
-    @staticmethod
-    def COL_REORDER_ASC(df):
-        df.columns = sorted(df.columns.values.tolist())
-        return df
+    def COL_REORDER_ASC(self):
+        self.df.columns = sorted(self.df.columns.values.tolist())
+        return self
     
-    @staticmethod
-    def COL_REORDER_DESC(df):
-        df.columns = sorted(df.columns.values.tolist(), reverse = True)
-        return df
+    def COL_REORDER_DESC(self):
+        self.df.columns = sorted(self.df.columns.values.tolist(), reverse = True)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_TO_UPPERCASE(df, columns = None):
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.upper(), axis=0)
-        return df
+    def COL_FORMAT_TO_UPPERCASE(self, columns = None):
+        if columns == None: columns = self.df.columns.values.tolist()
+        self.df[columns] = self.df[columns].apply(lambda s: s.str.upper(), axis=0)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_TO_LOWERCASE(df, columns = None):
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.lower(), axis=0)
-        return df
+    def COL_FORMAT_TO_LOWERCASE(self, columns = None):
+        if columns == None: columns = self.df.columns.values
+        self.df[columns] = self.df[columns].apply(lambda s: s.str.lower(), axis=0)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_TO_TITLECASE(df, columns = None):
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.title(), axis=0)
-        return df
+    def COL_FORMAT_TO_TITLECASE(self, columns = None):
+        if columns == None: columns = self.df.columns.values
+        self.df[columns] = self.df[columns].apply(lambda s: s.str.title(), axis=0)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_STRIP(df, columns = None):
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.strip(), axis=0)
-        return df
+    def COL_FORMAT_STRIP(self, columns = None):
+        if columns == None: columns = self.df.columns.values
+        self.df[columns] = self.df[columns].apply(lambda s: s.str.strip(), axis=0)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_STRIP_LEFT(df, columns = None):
+    def COL_FORMAT_STRIP_LEFT(self, columns = None):
+        df = self.df
         if columns == None: columns = df.columns.values
         df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
-        return df
+        return self
     
-    @staticmethod
-    def COL_FORMAT_STRIP_RIGHT(df, columns = None):
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.rstrip(), axis=0)
-        return df
+    def COL_FORMAT_STRIP_RIGHT(self, columns = None):
+        if columns == None: columns = self.df.columns.values
+        self.df[columns] = self.df[columns].apply(lambda s: s.str.rstrip(), axis=0)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_ADD_PREFIX(df, prefix, column):
-        df[column] = str(prefix) + df[column].astype(str)
-        return df
+    def COL_FORMAT_ADD_PREFIX(self, prefix, column):
+        self.df[column] = str(prefix) + self.df[column].astype(str)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_ADD_SUFFIX(df, suffix, column):
-        df[column] = df[column].astype(str) + str(suffix)
-        return df
+    def COL_FORMAT_ADD_SUFFIX(self, suffix, column):
+        self.df[column] = self.df[column].astype(str) + str(suffix)
+        return self
     
-    @staticmethod
-    def COL_FORMAT_TYPE(df, columns, typ = 'str'):
+    def COL_FORMAT_TYPE(self, columns, typ = 'str'):
         if columns == None: 
-            df = df.astype(typ)
+            self.df = self.df.astype(typ)
         else:
             convert_dict = {c:typ for c in columns}
-            df = df.astype(convert_dict)
-        return df
+            self.df = self.df.astype(convert_dict)
+        return self
     
     #ROW
     
-    @staticmethod
-    def ROW_DELETE(df, rowNums):
+    def ROW_ADD(self, row, index = 0):
+        self.df.loc[index] = row
+        return self
+    
+    def ROW_DELETE(self, rowNums):
         pos = rowNums - 1
-        df.drop(df.index[pos], inplace=True)
-        return df
+        self.df.drop(self.df.index[pos], inplace=True)
+        return self
     
-    @staticmethod
-    def ROW_FILTER(df, criteria):
+    def ROW_FILTER(self, criteria):
         df.query(criteria, inplace = True)
-        return df
+        return self
     
-    @staticmethod
-    def ROW_KEEP_BOTTOM(df, numRows):
-        df = df.tail(numRows)
-        return df
+    def ROW_KEEP_BOTTOM(self, numRows):
+        self.df = self.df.tail(numRows)
+        return self
     
-    @staticmethod
-    def ROW_KEEP_TOP(df, numRows):
-        df = df.head(numRows)
-        return df
+    def ROW_KEEP_TOP(self, numRows):
+        self.df = self.df.head(numRows)
+        return self
     
-    @staticmethod
-    def ROW_REVERSE(df):
-        df = df[::-1].reset_index(drop = True)
-        return df
+    def ROW_REVERSE(self):
+        self.df = self.df[::-1].reset_index(drop = True)
+        return self
     
-    @staticmethod
-    def ROW_SORT(df, columns, descending = False):
+    def ROW_SORT(self, columns, descending = False):
         ascending = 1
         if descending == True: ascending = 0
-        df = df.sort_values(columns, ascending)
-        return df
+        self.df = self.df.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
+        return self
+    
     
     #TABLE
     
-    @staticmethod
-    def TAB_FILL_DOWN(df):
-        df = df.fillna(method="ffill", axis = 'index', inplace = True)
-        return df
+    def TAB_FILL_DOWN(self):
+        self.df = self.df.fillna(method="ffill", axis = 'index', inplace = True)
+        return self
     
-    @staticmethod
-    def TAB_FILL_UP(df):
-        df = df.fillna(method="bfill", axis = 'index', inplace = True)
-        return df
+    def TAB_FILL_UP(self):
+        self.df = self.df.fillna(method="bfill", axis = 'index', inplace = True)
+        return self
     
-    @staticmethod
-    def TAB_FILL_RIGHT(df):
-        df = df.fillna(method="ffill", axis = 'columns', inplace = True)
-        return df
+    def TAB_FILL_RIGHT(self):
+        self.df = self.df.fillna(method="ffill", axis = 'columns', inplace = True)
+        return self
     
-    @staticmethod
-    def TAB_FILL_LEFT(df):
-        df = df.fillna(method="bfill", axis = 'columns', inplace = True)
-        return df
+    def TAB_FILL_LEFT(self):
+        self.df = self.df.fillna(method="bfill", axis = 'columns', inplace = True)
+        return self
     
-    @staticmethod
-    def TAB_REPLACE(df, before, after):
-        df = df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
-        return df
+    def TAB_REPLACE(self, before, after):
+        self.df = self.df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
+        return self
     
-    @staticmethod
-    def TAB_TRANSPOSE(df):
-        df = df.T
-        return df
+    '''
+    def TAB_TRANSPOSE(self):
+        self.df = self.df.transpose(copy = True)
+        return self
+    '''
     
-    @staticmethod
-    def TAB_PROMOTE_TO_HEADER(df, row = 1):
+    def TAB_UNPIVOT(self, indexCols):
+        self.df = pd.melt(self.df, id_vars = indexCols)
+        return self
+    
+    def TAB_PIVOT(self, indexCols, cols, vals):
+        #indexCols = list(set(df.columns) - set(cols) - set(vals))
+        self.df = self.df.pivot(index = indexCols, columns = cols, values = vals).reset_index()
+        return self
+    
+    def TAB_PROMOTE_TO_HEADER(self, row = 1):
         # make new header, fill in blank values with ColN
         i = row - 1
-        newHeader = df.iloc[i:row].squeeze()
+        newHeader = self.df.iloc[i:row].squeeze()
         newHeader = newHeader.values.tolist()
         for i in newHeader:
             if i == None: i = 'Col'
         
         # set new col names
-        pq.COL_RENAME(df, newHeader)
+        self.COL_RENAME(newHeader)
         
         # delete 'promoted' rows
-        df = pq.ROW_DELETE(df, row)
-        return df
+        self.ROW_DELETE(row)
+        return self
     
-    @staticmethod
-    def TAB_INFO(df):
-        print(df.info())
-        return df
+    def TAB_DEMOTE_HEADER(self):
+        # insert 'demoted' column headers
+        self.ROW_ADD(self.df.columns)
+        # make new header as Col1, Col2, Coln
+        newHeader = ['Col' + str(x) for x in range(len(self.df.columns))]
+        # set new col names
+        self.COL_RENAME(newHeader)
+        return self
     
-    @staticmethod
+    def TAB_INFO(self):
+        print(self.df.info())
+        return self
+    
+    def WRITE(self, path = 'query_write.csv'):
+        self.df.to_csv(path, index=False)
+        return self
+    
     def _diff(l1, l2):
         return list(set(l1) - set(l2)) + list(set(l2) - set(l1))
+    
+    
     
