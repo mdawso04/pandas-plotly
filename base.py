@@ -1,16 +1,21 @@
 import pandas as pd
 import numpy as np
-
-class pq1(object):
+import pathlib
+0
+class pq(object):
     
-    #source new xlsx
     #column analyze from json, xml
-    #table group
     #table merge, append
         
-    def __init__(self, csv):
-        super(pq1, self).__init__()
-        self.df = pd.read_csv(csv)
+    def __init__(self, source):
+        super(pq, self).__init__()
+        file_ext = pathlib.Path(source).suffix
+        if file_ext == '.csv':
+            self.df = pd.read_csv(source)
+        elif file_ext == '.xlsx':
+            self.df = pd.read_excel(source)
+        else:
+            df = pd.DataFrame()
         
     def _repr_pretty_(self, p, cycle): 
         return display(self.df)
@@ -195,6 +200,13 @@ class pq1(object):
         self.df = self.df.fillna(method="bfill", axis = 'columns', inplace = True)
         return self
     
+    def TAB_GROUP(self, groupby, aggregates = None):
+        if aggregates == None:
+            self.df = self.df.groupby(groupby).first()
+        else:
+            self.df = self.df.groupby(groupby).agg(aggregates).reset_index() #.rename_axis(mapper = None,axis = 1)
+        return self
+    
     def TAB_REPLACE(self, before, after):
         self.df = self.df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
         return self
@@ -211,7 +223,7 @@ class pq1(object):
     
     def TAB_PIVOT(self, indexCols, cols, vals):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
-        self.df = self.df.pivot(index = indexCols, columns = cols, values = vals).reset_index()
+        self.df = self.df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
         return self
     
     def TAB_PROMOTE_TO_HEADER(self, row = 1):
@@ -240,6 +252,10 @@ class pq1(object):
     
     def TAB_INFO(self):
         print(self.df.info())
+        return self
+    
+    def TAB_SUMMARY_QUANT_STATS(self):
+        self.df = self.df.describe()
         return self
     
     def WRITE(self, path = 'query_write.csv'):
