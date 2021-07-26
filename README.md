@@ -25,3 +25,7 @@ from pyPquery.base import pq as READ
     .WRITE('query_write.csv')
 )
 ```
+
+## Requirements
+
+pandas, numpy, pathlib
