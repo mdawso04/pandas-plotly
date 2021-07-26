@@ -29,3 +29,16 @@ from pyPquery.base import pq as READ
 ## Requirements
 
 pandas, numpy, pathlib
+
+## Methods
+
+| Group | Method |  Description
+| --- | --- | ---
+| COLUMN | COL_ADD_FIXED | Add a new column with a 'fixed' value as content
+| COLUMN | COL_ADD_INDEX |  Add a new column with a index/serial number as content
+| COLUMN | COL_ADD_CUSTOM |  Add a new column with custom (lambda) content
+| COLUMN | COL_ADD_EXTRACT_POSITION_AFTER |  Add a new column with content extracted from after char pos in existing column
+| COLUMN | COL_ADD_EXTRACT_POSITION_BEFORE |  Add a new column with content extracted from before char pos in existing column
+| COLUMN | COL_ADD_EXTRACT_CHARS_FIRST |  Add a new column with first N chars extracted from column
+| COLUMN | COL_ADD_EXTRACT_CHARS_LAST |  Add a new column with last N chars extracted from column
+| COLUMN | COL_ADD_DUPLICATE |  Add a new column with content duplicated from existing column
