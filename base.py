@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
 import pathlib
-0
+
 class pq(object):
     
-    #column analyze from json, xml
-    #table merge, append
+    #column analyze from json
         
     def __init__(self, source):
         super(pq, self).__init__()
@@ -184,6 +183,10 @@ class pq(object):
     
     #TABLE
     
+    def TAB_APPEND(self, otherdf):
+        self.df = self.df.append(otherdf.df, ignore_index=True)
+        return self
+    
     def TAB_FILL_DOWN(self):
         self.df = self.df.fillna(method="ffill", axis = 'index', inplace = True)
         return self
@@ -205,6 +208,10 @@ class pq(object):
             self.df = self.df.groupby(groupby).first()
         else:
             self.df = self.df.groupby(groupby).agg(aggregates).reset_index() #.rename_axis(mapper = None,axis = 1)
+        return self
+    
+    def TAB_MERGE(self, otherdf, on, how = 'left'):
+        self.df = pd.merge(self.df, otherdf.df, on=on, how=how)
         return self
     
     def TAB_REPLACE(self, before, after):
