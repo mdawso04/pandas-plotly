@@ -3,6 +3,10 @@
 A python library with a similar feel to Microsoft Power Query. 
 By using this library, python novices familiar with Power Query or similary tools can quickly do most of the same things in python.
 
+TAB_ = TABLE transformations
+COL_ = COLUMN transformations
+ROW_ = ROW transformations
+
 ## Example
 
 ```python
