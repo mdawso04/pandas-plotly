@@ -76,13 +76,18 @@ class pq(object):
         self.df[name] = self.df[column]
         return self
     
-    def COL_DELETE(self, columns):
+    def COL_DELETE(self, columns, byColNumber = False):
+        if byColNumber:
+            columns = self.df.columns[columns].values.tolist()
         self.df = self.df.drop(columns, axis = 1)
         return self
     
-    def COL_DELETE_EXCEPT(self, not_columns):
-        columns = self._diff(list(self.df.columns.values), not_columns)
-        return self.COL_DELETE(self.df, columns)
+    def COL_DELETE_EXCEPT(self, not_columns, byColNumber = False):
+        if byColNumber:
+            cols = pq._diff([x for x in range(self.df.columns.size)], not_columns)
+        else:
+            cols = pq._diff(self.df.columns.values.tolist(), not_columns)
+        return self.COL_DELETE(cols, byColNumber)
     
     def COL_RENAME(self, columns):
         # we handle dict OR list
@@ -269,6 +274,7 @@ class pq(object):
         self.df.to_csv(path, index=False)
         return self
     
+    @staticmethod
     def _diff(l1, l2):
         return list(set(l1) - set(l2)) + list(set(l2) - set(l1))
     
