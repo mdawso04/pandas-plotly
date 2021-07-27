@@ -41,4 +41,17 @@ pandas, numpy, pathlib
 | COLUMN | COL_ADD_EXTRACT_POSITION_BEFORE |  Add a new column with content extracted from before char pos in existing column
 | COLUMN | COL_ADD_EXTRACT_CHARS_FIRST |  Add a new column with first N chars extracted from column
 | COLUMN | COL_ADD_EXTRACT_CHARS_LAST |  Add a new column with last N chars extracted from column
-| COLUMN | COL_ADD_DUPLICATE |  Add a new column with content duplicated from existing column
+| COLUMN | COL_DELETE |  Delete specified column/s
+| COLUMN | COL_DELETE_EXCEPT |  Deleted all column/s except specified
+| COLUMN | COL_RENAME |  Rename specfied column/s
+| COLUMN | COL_REORDER_ASC |  Reorder column titles in ascending order
+| COLUMN | COL_REORDER_DESC |  Reorder column titles in descending order
+| COLUMN | COL_FORMAT_TO_UPPERCASE |  Format specified column/s values to uppercase
+| COLUMN | COL_FORMAT_TO_LOWERCASE |  Format specified column/s values to lowercase
+| COLUMN | COL_FORMAT_TO_TITLECASE |  Format specified column/s values to titlecase
+| COLUMN | COL_FORMAT_STRIP |  Format specified column/s values by stripping invisible characters
+| COLUMN | COL_FORMAT_STRIP_LEFT |  Format specified column/s values by stripping invisible characters from left
+| COLUMN | COL_FORMAT_STRIP_RIGHT |  Format specified column/s values by stripping invisible characters from right
+| COLUMN | COL_FORMAT_ADD_PREFIX | Format specified single column values by adding prefix
+| COLUMN | COL_FORMAT_ADD_SUFFIX |  Format specified single column values by adding suffix
+| COLUMN | COL_FORMAT_TYPE |  Add a new column with content duplicated from existing column
