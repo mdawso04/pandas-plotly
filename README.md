@@ -55,3 +55,25 @@ pandas, numpy, pathlib
 | COLUMN | COL_FORMAT_ADD_PREFIX | Format specified single column values by adding prefix
 | COLUMN | COL_FORMAT_ADD_SUFFIX |  Format specified single column values by adding suffix
 | COLUMN | COL_FORMAT_TYPE |  Add a new column with content duplicated from existing column
+| ROW | ROW_ADD |  Add a new column with content duplicated from existing column
+| ROW | ROW_DELETE |  Delete row/s at specified index
+| ROW | ROW_FILTER |  Filter rows with specified filter criteria
+| ROW | ROW_KEEP_BOTTOM |  Delete all rows except specified bottom N rows
+| ROW | ROW_KEEP_TOP |  Delete all rows except specified top N rows
+| ROW | ROW_REVERSE |  Reorder all rows in reverse order
+| ROW | ROW_SORT |  Reorder specified column contents in ascending/descending order
+| TABLE | TAB_APPEND |  Append a table to bottom of current table
+| TABLE | TAB_FILL_DOWN |  Fill blank cells with values from last non-blank cell above
+| TABLE | TAB_FILL_UP |  Fill blank cells with values from last non-blank cell below
+| TABLE | TAB_FILL_RIGHT |  Fill blank cells with values from last non-blank cell from left
+| TABLE | TAB_FILL_LEFT |  Fill blank cells with values from last non-blank cell from right
+| TABLE | TAB_GROUP |  Group table contents by specified columns with optional aggregation (sum/max/min etc)
+| TABLE | TAB_MERGE |  Merge a table with current table with specified type (left/right/inner/outer) 
+| TABLE | TAB_REPLACE |  Replace string values in table
+| TABLE | TAB_UNPIVOT |  Unpivot table on specified columns
+| TABLE | TAB_PIVOT |  Pivot table on specified columns
+| TABLE | TAB_PROMOTE_TO_HEADER |  Promote row at specified index to column headers
+| TABLE | TAB_DEMOTE_HEADER |  Demote column headers to make 1st row of table
+| OTHER | TAB_INFO |  Show table summary information
+| OTHER | TAB_SUMMARY_QUANT_STATS |  Show basic summary statistics of table contents
+| OTHER | WRITE |  Write table to CSV
