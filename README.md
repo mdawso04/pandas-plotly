@@ -42,7 +42,7 @@ pandas, numpy, pathlib
 | COLUMN | COL_ADD_EXTRACT_CHARS_FIRST |  Add a new column with first N chars extracted from column
 | COLUMN | COL_ADD_EXTRACT_CHARS_LAST |  Add a new column with last N chars extracted from column
 | COLUMN | COL_DELETE |  Delete specified column/s 
-| COLUMN | COL_DELETE_EXCEPT |  Deleted all column/s except specified  | ```.COL_DELETE_EXCEPT('Age')``` ```.COL_DELETE_EXCEPT([0, 3, 6])``` ```.COL_DELETE_EXCEPT(slice(0, 3))```
+| COLUMN | COL_DELETE_EXCEPT |  Deleted all column/s except specified  | ```.COL_DELETE_EXCEPT('Age')``` ```.COL_DELETE_EXCEPT([0,3,6])``` ```.COL_DELETE_EXCEPT(slice(0,3))```
 | COLUMN | COL_RENAME |  Rename specfied column/s
 | COLUMN | COL_REORDER_ASC |  Reorder column titles in ascending order
 | COLUMN | COL_REORDER_DESC |  Reorder column titles in descending order
