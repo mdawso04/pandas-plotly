@@ -76,18 +76,23 @@ class pq(object):
         self.df[name] = self.df[column]
         return self
     
-    def COL_DELETE(self, columns, byColNumber = False):
-        if byColNumber:
+    def COL_DELETE(self, columns):
+        # if slice or int or int list then convert to col names
+        if isinstance(columns, slice) or isinstance(columns, int):
+            columns = self.df.columns.values.tolist()[columns]
+        elif isinstance(columns, list) and all(isinstance(c, int) for c in columns):
             columns = self.df.columns[columns].values.tolist()
         self.df = self.df.drop(columns, axis = 1)
         return self
     
-    def COL_DELETE_EXCEPT(self, not_columns, byColNumber = False):
-        if byColNumber:
-            cols = pq._diff([x for x in range(self.df.columns.size)], not_columns)
-        else:
-            cols = pq._diff(self.df.columns.values.tolist(), not_columns)
-        return self.COL_DELETE(cols, byColNumber)
+    def COL_DELETE_EXCEPT(self, columns):
+        # if slice, int or int list then convert to col names
+        if isinstance(columns, slice) or isinstance(columns, int):
+            columns = self.df.columns.values.tolist()[columns]
+        elif isinstance(columns, list) and all(isinstance(c, int) for c in columns):
+            columns = self.df.columns[columns].values.tolist()
+        cols = pq._diff(self.df.columns.values.tolist(), columns)
+        return self.COL_DELETE(cols)
     
     def COL_RENAME(self, columns):
         # we handle dict OR list
@@ -276,6 +281,15 @@ class pq(object):
     
     @staticmethod
     def _diff(l1, l2):
+        # if not list type ie string then covert
+        if not isinstance(l1, list):
+            list1 = []
+            list1.append(l1)
+            l1 = list1
+        if not isinstance(l2, list):
+            list2 = []
+            list2.append(l2)
+            l2 = list2
         return list(set(l1) - set(l2)) + list(set(l2) - set(l1))
     
     
