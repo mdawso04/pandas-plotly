@@ -102,6 +102,8 @@ class pq(object):
             self.df.columns = columns
         return self
     
+    #col_reorder list of indices, list of colnames
+    
     def COL_REORDER_ASC(self):
         self.df.columns = sorted(self.df.columns.values.tolist())
         return self
@@ -155,6 +157,10 @@ class pq(object):
         else:
             convert_dict = {c:typ for c in columns}
             self.df = self.df.astype(convert_dict)
+        return self
+    
+    def COL_FORMAT_ROUND(self, decimals):
+        self.df = self.df.round(decimals)
         return self
     
     #ROW
@@ -217,7 +223,9 @@ class pq(object):
         if aggregates == None:
             self.df = self.df.groupby(groupby).first()
         else:
-            self.df = self.df.groupby(groupby).agg(aggregates).reset_index() #.rename_axis(mapper = None,axis = 1)
+            self.df = self.df.groupby(groupby).agg(aggregates).reset_index()
+        # flatten multi-level columns created by aggregation
+        self.df.columns = ['_'.join(col).rstrip('_') for col in self.df.columns.values]
         return self
     
     def TAB_MERGE(self, otherdf, on, how = 'left'):
