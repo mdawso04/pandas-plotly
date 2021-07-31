@@ -54,7 +54,8 @@ pandas, numpy, pathlib
 | COLUMN | COL_FORMAT_STRIP_RIGHT |  Format specified column/s values by stripping invisible characters from right
 | COLUMN | COL_FORMAT_ADD_PREFIX | Format specified single column values by adding prefix
 | COLUMN | COL_FORMAT_ADD_SUFFIX |  Format specified single column values by adding suffix
-| COLUMN | COL_FORMAT_TYPE |  Add a new column with content duplicated from existing column
+| COLUMN | COL_FORMAT_TYPE | 
+| COLUMN | COL_FORMAT_ROUND | Round numerical column values to specified decimal  | ```.COL_FORMAT_ROUND(2)``` ```.COL_FORMAT_ROUND({'c1':2, 'c2':0})``` 
 | ROW | ROW_ADD |  Add a new column with content duplicated from existing column
 | ROW | ROW_DELETE |  Delete row/s at specified index
 | ROW | ROW_FILTER |  Filter rows with specified filter criteria
