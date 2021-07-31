@@ -32,8 +32,8 @@ pandas, numpy, pathlib
 
 ## Methods
 
-| Group | Method |  Description
-| --- | --- | ---
+| Group | Method |  Description | Example
+| --- | --- | --- | ---
 | COLUMN | COL_ADD_FIXED | Add a new column with a 'fixed' value as content
 | COLUMN | COL_ADD_INDEX |  Add a new column with a index/serial number as content
 | COLUMN | COL_ADD_CUSTOM |  Add a new column with custom (lambda) content
@@ -41,8 +41,8 @@ pandas, numpy, pathlib
 | COLUMN | COL_ADD_EXTRACT_POSITION_BEFORE |  Add a new column with content extracted from before char pos in existing column
 | COLUMN | COL_ADD_EXTRACT_CHARS_FIRST |  Add a new column with first N chars extracted from column
 | COLUMN | COL_ADD_EXTRACT_CHARS_LAST |  Add a new column with last N chars extracted from column
-| COLUMN | COL_DELETE |  Delete specified column/s
-| COLUMN | COL_DELETE_EXCEPT |  Deleted all column/s except specified
+| COLUMN | COL_DELETE |  Delete specified column/s 
+| COLUMN | COL_DELETE_EXCEPT |  Deleted all column/s except specified  | ```.COL_DELETE_EXCEPT('Age')``` ```.COL_DELETE_EXCEPT([0,3,6])``` ```.COL_DELETE_EXCEPT(slice(0,3))```
 | COLUMN | COL_RENAME |  Rename specfied column/s
 | COLUMN | COL_REORDER_ASC |  Reorder column titles in ascending order
 | COLUMN | COL_REORDER_DESC |  Reorder column titles in descending order
