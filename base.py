@@ -235,11 +235,10 @@ class pq(object):
     
     def DF__GROUP(self, groupby, aggregates = None):
         if aggregates == None:
-            self._df = self._df.groupby(groupby).first()
+            self._df = self._df.groupby(groupby, as_index=False).first()
         else:
-            self._df = self._df.groupby(groupby).agg(aggregates).reset_index()
-        # flatten multi-level columns created by aggregation
-        self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
+            self._df = self._df.groupby(groupby, as_index=False).agg(aggregates)
+            self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
         self._showFig = False
         return self
     
