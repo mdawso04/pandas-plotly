@@ -7,403 +7,6 @@ from collections.abc import Iterable
 import plotly.express as px
 
 
-### PLOTHELPER CLASS & SUBCLASSES ###
-        
-class PlotHelper(object):
-    
-    def __init__(self, df, col, by, **kwargs):
-        super(PlotHelper, self).__init__()
-        self._df = df
-        self.col = col
-        self.by = by
-        self.kwargs = kwargs
-        self.grp = self._groupingHelper()
-        self.fig, self.axs = self._subplotHelper()
-        
-    def _groupingHelper(self):
-        '''Prepare data into groups in preparation for plotting'''
-        
-        gr_dic = {'_no_grp': self._df}
-        if self.by == None: 
-            gr_dic['num_grp'] = 0
-            if self.col is not None: gr_dic['by_grp'] = {'_no_grp': self._df[self.col]}
-            else: gr_dic['by_grp'] = {'_no_grp': self._df}
-            gr_dic['all_grp'] = list(gr_dic['by_grp'].values())
-            gr_dic['grp_keys'] = sorted(list(gr_dic['by_grp'].keys()))
-        else: 
-            gb = self._df.groupby(self.by)
-            if self.col is not None: grps = {g: gb.get_group(g)[self.col] for g in list(gb.groups.keys())}
-            else: grps = {g: gb.get_group(g) for g in list(gb.groups.keys())}
-            gr_dic['num_grp'] = len(grps)
-            gr_dic['by_grp'] = grps
-            gr_dic['all_grp'] = list(grps.values())
-            gr_dic['grp_keys'] = sorted(list(grps.keys())) 
-        return gr_dic    
-    
-    def _subplotHelper(self):
-        '''Prepare base figure/plot(s)'''
-        subplots=self.kwargs['subplots']
-        numGrps=self.grp['num_grp']
-        
-        # if no grouping OR 1 group OR groups without subplots, just make 1 x 1
-        if numGrps == 0 or numGrps == 1 or subplots == False: 
-            fig, axs = plt.subplots(1, 1)
-        # otherwise, generate
-        else:
-            r = 3 if numGrps >= 3 else numGrps % 3
-            c = 3 if numGrps >= 7 else ((numGrps - 1) // 3) + 1
-            fig, axs = plt.subplots(r, c, sharey=True, tight_layout=True)
-            if isinstance(axs, Iterable): axs = axs.flatten().tolist()
-        # if single axis, add to list for simplified handling later
-        if not isinstance(axs, list): axs = [axs]
-        return fig, axs
-    
-    def plot(self):
-        return
-    
-    def _colorHelper(self, num):
-        num = 9 if num > 9 else num
-        col_pal = {
-            0: 'tab:blue',
-            1: 'tab:orange',
-            2: 'tab:green',
-            3: 'tab:red',
-            4: 'tab:purple',
-            5: 'tab:brown',
-            6: 'tab:pink',
-            7: 'tab:gray',
-            8: 'tab:olive',
-            9: 'tab:cyan'}
-        return col_pal[num]
-    
-    def _formatHelper(self, **kwargs):
-        #default
-        axesProp = {
-            #'adjustable': None,
-            #'agg_filter': None,
-            #'alpha': None,
-            #'anchor': None,
-            #'animated': None,
-            #'aspect': None,
-            #'autoscale_on': None,
-            #'autoscalex_on': None,
-            #'autoscaley_on':None,
-            #'axes_locator': None,
-            #'axisbelow': None,
-            #'box_aspect': None,
-            #'clip_box': None,
-            #'clip_on': None,
-            #'clip_path': None,
-            #'contains': None,
-            #'facecolor': None,
-            #'figure': None,
-            #'frame_on': None,
-            #'gid': None,
-            #'in_layout': None,
-            #'label': None,
-            #'navigate': None,
-            #'navigate_mode': None,
-            #'path_effects': None,
-            #'picker': None,
-            #'position': None,
-            #'prop_cycle': None,
-            #'rasterization_zorder': None,
-            #'rasterized': None,
-            #'sketch_params': None,
-            #'snap': None,
-            #'title': None,
-            #'transform': None,
-            #'url': None,
-            #'visible': None
-            #'xbound': None,
-            #'xlabel': None,
-            #'xlim': None,
-            #'xmargin': None,
-            #'xscale': None,
-            #'xticklabels': None,
-            #'xticks': None,
-            #'ybound': None,
-            #'ylabel': None,
-            #'ylim': None,
-            #'ymargin': None,
-            #'yscale': None,
-            #'yticklabel': None,
-            #'yticks': None,
-            #'zorder': None
-        }
-        
-        xticklabelProp = {
-            #'fontsize': rcParams['axes.titlesize'],
-            #'fontweight': rcParams['axes.titleweight'],
-            #'verticalalignment': 'baseline',
-            #'horizontalalignment': loc
-        }
-        
-        #given
-        #use kwargs if given
-        ##plt.setp(axs, xticks=[y + 1 for y in range(len(all_data))], xticklabels=['x1', 'x2', 'x3', 'x4'])
-        plt.setp(plt.gca(), **axesProp)
-
-class BoxPlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        fig = self.fig
-        for a, g in zip(axs, grp['grp_keys']):
-            a.boxplot(grp['by_grp'][g], labels=self.col)
-            a.set_title(g)
-        fig.suptitle('Box plot')
-        #self._formatHelper()
-        #a.legend()
-            
-class HistSubplotsPlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        for a, g in zip(axs, grp['grp_keys']):
-            a.hist(grp['by_grp'][g], bins=kwargs['bins'])
-            a.set_title(g)       
-    
-class HistPlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        fig = self.fig
-        a = axs[0]
-        a.hist(grp['all_grp'], bins=kwargs['bins'], density=True, histtype='bar', stacked=True, label=grp['grp_keys'])
-        a.legend()
-        fig.suptitle('Histogram')
-
-class BarStackedPlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        fig = self.fig
-        a = axs[0]
-        bottom = None
-        x_axis = grp['_no_grp'][self.by]
-        for c in self.col:
-            data = grp['_no_grp'][c].to_numpy()
-            a.bar(x_axis, data, bottom=bottom, label=c)
-            if bottom is None: bottom = data
-            else: bottom = np.add(data, bottom)
-        a.legend()
-        a.set_title('Bar plot')
-        
-class LinePlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        fig = self.fig
-        a = axs[0]
-        x_axis = self.col
-        for g, c in zip(grp['grp_keys'], range(len(grp['grp_keys']))):
-            data = grp['by_grp'][g]
-            color = self._colorHelper(c)
-            for index, rows in data.iterrows():
-                # Create list for the current row
-                y_axis =list(rows)
-                #a.plot(x_axis, y_axis, color=color, linewidth=0.5)
-            # plot mean
-            a.plot(x_axis, data.mean(), color=color, linewidth=3, label=g)
-        a.legend()
-        a.set_title('Line plot')
-
-class ScatterPlotHelper(PlotHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        for a, g in zip(axs, grp['grp_keys']):
-            a.scatter()
-            a.set_title(g)       
-    
-    
-
-### PLOTLYHELPER CLASS & SUBCLASSES ###
-        
-class PlotlyHelper(object):
-    
-    def __init__(self, df, col, by, **kwargs):
-        super(PlotHelper, self).__init__()
-        self._df = df
-        self.col = col
-        self.by = by
-        self.kwargs = kwargs
-        self.grp = self._groupingHelper()
-        self.fig, self.axs = self._subplotHelper()
-        
-    def _groupingHelper(self):
-        '''Prepare data into groups in preparation for plotting'''
-        
-        gr_dic = {'_no_grp': self._df}
-        if self.by == None: 
-            gr_dic['num_grp'] = 0
-            if self.col is not None: gr_dic['by_grp'] = {'_no_grp': self._df[self.col]}
-            else: gr_dic['by_grp'] = {'_no_grp': self._df}
-            gr_dic['all_grp'] = list(gr_dic['by_grp'].values())
-            gr_dic['grp_keys'] = sorted(list(gr_dic['by_grp'].keys()))
-        else: 
-            gb = self._df.groupby(self.by)
-            if self.col is not None: grps = {g: gb.get_group(g)[self.col] for g in list(gb.groups.keys())}
-            else: grps = {g: gb.get_group(g) for g in list(gb.groups.keys())}
-            gr_dic['num_grp'] = len(grps)
-            gr_dic['by_grp'] = grps
-            gr_dic['all_grp'] = list(grps.values())
-            gr_dic['grp_keys'] = sorted(list(grps.keys())) 
-        return gr_dic    
-    
-    def _subplotHelper(self):
-        '''Prepare base figure/plot(s)'''
-        subplots=self.kwargs['subplots']
-        numGrps=self.grp['num_grp']
-        
-        # if no grouping OR 1 group OR groups without subplots, just make 1 x 1
-        if numGrps == 0 or numGrps == 1 or subplots == False: 
-            fig, axs = plt.subplots(1, 1)
-        # otherwise, generate
-        else:
-            r = 3 if numGrps >= 3 else numGrps % 3
-            c = 3 if numGrps >= 7 else ((numGrps - 1) // 3) + 1
-            fig, axs = plt.subplots(r, c, sharey=True, tight_layout=True)
-            if isinstance(axs, Iterable): axs = axs.flatten().tolist()
-        # if single axis, add to list for simplified handling later
-        if not isinstance(axs, list): axs = [axs]
-        return fig, axs
-    
-    def plot(self):
-        return
-    
-    def _colorHelper(self, num):
-        num = 9 if num > 9 else num
-        col_pal = {
-            0: 'tab:blue',
-            1: 'tab:orange',
-            2: 'tab:green',
-            3: 'tab:red',
-            4: 'tab:purple',
-            5: 'tab:brown',
-            6: 'tab:pink',
-            7: 'tab:gray',
-            8: 'tab:olive',
-            9: 'tab:cyan'}
-        return col_pal[num]
-    
-    def _formatHelper(self, **kwargs):
-        #default
-        axesProp = {
-            #'adjustable': None,
-            #'agg_filter': None,
-            #'alpha': None,
-            #'anchor': None,
-            #'animated': None,
-            #'aspect': None,
-            #'autoscale_on': None,
-            #'autoscalex_on': None,
-            #'autoscaley_on':None,
-            #'axes_locator': None,
-            #'axisbelow': None,
-            #'box_aspect': None,
-            #'clip_box': None,
-            #'clip_on': None,
-            #'clip_path': None,
-            #'contains': None,
-            #'facecolor': None,
-            #'figure': None,
-            #'frame_on': None,
-            #'gid': None,
-            #'in_layout': None,
-            #'label': None,
-            #'navigate': None,
-            #'navigate_mode': None,
-            #'path_effects': None,
-            #'picker': None,
-            #'position': None,
-            #'prop_cycle': None,
-            #'rasterization_zorder': None,
-            #'rasterized': None,
-            #'sketch_params': None,
-            #'snap': None,
-            #'title': None,
-            #'transform': None,
-            #'url': None,
-            #'visible': None
-            #'xbound': None,
-            #'xlabel': None,
-            #'xlim': None,
-            #'xmargin': None,
-            #'xscale': None,
-            #'xticklabels': None,
-            #'xticks': None,
-            #'ybound': None,
-            #'ylabel': None,
-            #'ylim': None,
-            #'ymargin': None,
-            #'yscale': None,
-            #'yticklabel': None,
-            #'yticks': None,
-            #'zorder': None
-        }
-        
-        xticklabelProp = {
-            #'fontsize': rcParams['axes.titlesize'],
-            #'fontweight': rcParams['axes.titleweight'],
-            #'verticalalignment': 'baseline',
-            #'horizontalalignment': loc
-        }
-        
-        #given
-        #use kwargs if given
-        ##plt.setp(axs, xticks=[y + 1 for y in range(len(all_data))], xticklabels=['x1', 'x2', 'x3', 'x4'])
-        plt.setp(plt.gca(), **axesProp)
-
-class HistPlotlyHelper(PlotlyHelper):
-    
-    def __init__(self, df, col, by, **kwargs):
-        PlotlyHelper.__init__(self, df, col, by, **kwargs) 
-        
-    def plot(self):
-        grp = self.grp
-        axs = self.axs
-        kwargs = self.kwargs
-        
-        fig = px.histogram(df, x="total_bill")
-        fig.show()
-
-        #fig = self.fig
-        #a = axs[0]
-        #a.hist(grp['all_grp'], bins=kwargs['bins'], density=True, histtype='bar', stacked=True, label=grp['grp_keys'])
-        #a.legend()
-        #fig.suptitle('Histogram')
 
 ### PQ CLASS - QUERY INTERFACE ###
 
@@ -421,15 +24,41 @@ class pq(object):
         else:
             self._df = pd.DataFrame()
         self._showFig = False
-        plt.ioff()
-        plt.close("all") # in case of memory needs clearing from previous run
+        self._preview = 'no_chart' #'current_chart' 'all_charts' 'full' 'color_swatches'
+        self._colorSwatch = px.colors.qualitative.Plotly
+        #plt.ioff()
+        #plt.close("all") # in case of memory needs clearing from previous run
         
         self._figs = []
         
+        self._fig_config =  {
+            'displaylogo': False,
+            'toImageButtonOptions': {
+                'format': 'png', # one of png, svg, jpeg, webp
+                'filename': 'custom_image',
+                'height': None,
+                'width': None,
+                'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
+            },
+            'edits': {
+                'axisTitleText': True,
+                'legendPosition': True,
+                'legendText': True,
+                'titleText': True,
+                'annotationPosition': True,
+                'annotationText': True
+            }
+        }
+        
     def _repr_pretty_(self, p, cycle): 
-        if self._showFig:
-            #return display(plt.gcf()), display(self._df)
-            return display(self._figs[-1]), display(self._df)
+        if self._preview == 'current_chart':
+            return self._figs[-1].show(config=self._fig_config), display(self._df)
+        elif self._preview == 'all_charts':
+            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._df)
+        elif self._preview == 'full':
+            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._df), display(self._df.info())
+        elif self._preview == 'color_swatches':
+            return px.colors.qualitative.swatches().show(), display(self._df)
         else:
             return display(self._df)
         
@@ -439,70 +68,89 @@ class pq(object):
     def __str__(self): 
         return self._df.__str__()
     
-    def _fig(self, fig = None):
+    def _fig(self, fig = None, preview = 'no_chart'):
         if fig == None:
-            self._showFig = False
+            self._preview = preview
         else:
-            self._showFig = True
-            fig.update_traces(dict(marker_line_width=0))
+            self._figTidy(fig)
             self._figs.append(fig)
+            self._preview = 'current_chart'
+            
+    def _figTidy(self, fig):
+        #fig.update_traces()
+        fig.update_layout(
+            overwrite=True,
+            #colorway=self._colorSwatch,
+            dragmode='drawopenpath',
+            #newshape_line_color='cyan',
+            #title_text='Draw a path to separate versicolor and virginica',
+            modebar_add=['drawline',
+                'drawcircle',
+                'drawrect',
+                'eraseshape',
+                'pan2d'
+            ],
+            modebar_remove=['select', 'zoom', 'resetScale', 'lasso2d']
+        )
+        #fig.update_annotations()
+        #fig.update_xaxes()
             
     # DATAFRAME 'COLUMN' ACTIONS
     
     def DF_COL_ADD_FIXED(self, value, name = 'new_column'):
         name = self._toUniqueColName(name)
         self._df[name] = value
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_INDEX(self, name = 'new_column'):
         name = self._toUniqueColName(name)
         self._df[name] = range(self._df.shape[0])
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column'):
         name = self._toUniqueColName(name)
         self._df[name] = self._df[column].apply(lmda)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column'):
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[pos:], name = name)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column'):
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:pos], name = name)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column'):
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:chars], name = name)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column'):
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[-chars:], name = name)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column'):
         name = self._toUniqueColName(name)
         self._df[name] = self._df[column]
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_DELETE(self, columns):
         columns = self._colNames(columns)
         self._df = self._df.drop(columns, axis = 1)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_DELETE_EXCEPT(self, columns):
         columns = self._colNames(columns)
         cols = pq._diff(self._df.columns.values.tolist(), columns)
-        self._showFig = False
+        self._fig()
         return self.DF_COL_DELETE(cols)
     
     def DF_COL_RENAME(self, columns):
@@ -511,7 +159,7 @@ class pq(object):
             self._df.rename(columns = columns, inplace = True)
         else:
             self._df.columns = columns
-        self._showFig = False
+        self._fig()
         return self
     
     #col_reorder list of indices, list of colnames
@@ -519,48 +167,48 @@ class pq(object):
     def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None):
         if columns == None: columns = self._df.columns.values.tolist()
         self._df[columns] = self._df[columns].apply(lambda s: s.str.upper(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None):
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.lower(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_TO_TITLECASE(self, columns = None):
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.title(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_STRIP(self, columns = None):
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.strip(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_STRIP_LEFT(self, columns = None):
         df = self._df
         if columns == None: columns = df.columns.values
         df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None):
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.rstrip(), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column):
         self._df[column] = str(prefix) + self._df[column].astype(str)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column):
         self._df[column] = self._df[column].astype(str) + str(suffix)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_TYPE(self, columns, typ = 'str'):
@@ -569,12 +217,12 @@ class pq(object):
         else:
             convert_dict = {c:typ for c in columns}
             self._df = self._df.astype(convert_dict)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COL_FORMAT_ROUND(self, decimals):
         self._df = self._df.round(decimals)
-        self._showFig = False
+        self._fig()
         return self
     
     #ROW
@@ -592,56 +240,56 @@ class pq(object):
     
     def DF_ROW_FILTER(self, criteria):
         self._df.query(criteria, inplace = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_ROW_KEEP_BOTTOM(self, numRows):
         self._df = self._df.tail(numRows)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_ROW_KEEP_TOP(self, numRows):
         self._df = self._df.head(numRows)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_ROW_REVERSE(self):
         self._df = self._df[::-1].reset_index(drop = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_ROW_SORT(self, columns, descending = False):
         ascending = 1
         if descending == True: ascending = 0
         self._df = self._df.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
-        self._showFig = False
+        self._fig()
         return self
     
     #TABLE
     
     def DF__APPEND(self, otherdf):
         self._df = self._df.append(otherdf._df, ignore_index=True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__FILL_DOWN(self):
         self._df = self._df.fillna(method="ffill", axis = 'index', inplace = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__FILL_UP(self):
         self._df = self._df.fillna(method="bfill", axis = 'index', inplace = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__FILL_RIGHT(self):
         self._df = self._df.fillna(method="ffill", axis = 'columns', inplace = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__FILL_LEFT(self):
         self._df = self._df.fillna(method="bfill", axis = 'columns', inplace = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__GROUP(self, groupby, aggregates = None):
@@ -650,17 +298,17 @@ class pq(object):
         else:
             self._df = self._df.groupby(groupby, as_index=False).agg(aggregates)
             self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__MERGE(self, otherdf, on, how = 'left'):
         self._df = pd.merge(self._df, otherdf._df, on=on, how=how)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__REPLACE(self, before, after):
         self._df = self._df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
-        self._showFig = False
+        self._fig()
         return self
     
     '''
@@ -671,13 +319,13 @@ class pq(object):
     
     def DF__UNPIVOT(self, indexCols):
         self._df = pd.melt(self._df, id_vars = indexCols)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__PIVOT(self, indexCols, cols, vals):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
         self._df = self._df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COLHEADER_PROMOTE(self, row = 1):
@@ -693,7 +341,7 @@ class pq(object):
         # delete 'promoted' rows
         self.DF_ROW_DELETE(row)
         
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COLHEADER_DEMOTE(self):
@@ -703,90 +351,199 @@ class pq(object):
         newHeader = ['Col' + str(x) for x in range(len(self._df.columns))]
         # set new col names
         self.DF_COL_RENAME(newHeader)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COLHEADER_REORDER_ASC(self):
         self._df.columns = sorted(self._df.columns.values.tolist())
-        self._showFig = False
+        self._fig()
         return self
     
     def DF_COLHEADER_REORDER_DESC(self):
         self._df.columns = sorted(self._df.columns.values.tolist(), reverse = True)
-        self._showFig = False
+        self._fig()
         return self
     
     def DF__STATS(self):
         self._df = self._df.describe()
-        self._showFig = False
+        self._fig()
         return self
     
     # VIZUALIZATION ACTIONS
     
-    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None):
-        fig = px.box(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row)
+    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        fig = px.box(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
         
-    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None):
-        fig = px.violin(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True)
+    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        fig = px.violin(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
         
-    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, bins=20):
-        fig = px.histogram(self._df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, nbins=bins)
+    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        fig = px.histogram(self._df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
+        return self
+    
+    def VIZ_HIST_LIST(self, color=None, **kwargs):
+        for c in self._df.columns:
+            fig = px.histogram(self._df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
+            self._fig(fig)
+        self._fig(preview = 'all_charts')
+        return self
+    
+    def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, **kwargs):
+        fig = px.scatter(self._df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        self._fig(fig)
         return self
         
-    def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None):
-        fig = px.scatter(self._df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row)
+    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        fig = px.bar(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
-        
-    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None):
-        fig = px.bar(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row)
+    
+    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
+        fig = px.line(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
     
-    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True):
-        fig = px.line(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers)
+    def VIZ_TREEMAP(self, path, values, color=None, **kwargs):
+        fig = px.treemap(self._df, path=path, values=values, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
     
-    def VIZ_TREEMAP(self, path, values, color=None):
-        fig = px.treemap(self._df, path=path, values=values, color=color)
+    def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
+        fig = px.scatter_matrix(self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
-        #fig.show()
         return self
     
-    def ABOUT_DF(self):
-        print(self._df.info())
-        self._showFig = False
+    @property
+    def REPORT_SET_VIZ_COLORS_PLOTLY(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Plotly)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_D3(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.D3)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_G10(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.G10)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_T10(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.T10)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_ALPHABET(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_DARK24(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark24)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_LIGHT24(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Light24)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_SET1(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set1)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_PASTEL1(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_DARK2(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark2)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_SET2(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set2)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_PASTEL2(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_SET3(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set3)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_ANTIQUE(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Antique)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_BOLD(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Bold)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_PASTEL(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_PRISM(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Prism)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_SAFE(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Safe)
+    
+    @property
+    def REPORT_SET_VIZ_COLORS_VIVID(self):
+        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Vivid)
+    
+    def _REPORT_SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
+        self._fig(preview = 'color_swatches')
+        self._colorSwatch = swatch
         return self
     
-    def SAVE_VIZ_PNG(self):
-        #for i in plt.get_fignums():
-        #    plt.figure(i)
-        #    plt.savefig('figure%d.png' % i)
-        for i, fig in enumerate(self._figs):
-            fig.write_image('figure%d.png' % i) 
+    def REPORT_PREVIEW(self):
+        self._fig(preview = 'all_charts')
         return self
     
-    def SAVE_VIZ_HTML(self):
-        for i, fig in enumerate(self._figs):
-            fig.write_html('figure%d.html' % i) 
+    def REPORT_PREVIEW_FULL(self):
+        self._fig(preview = 'full')
         return self
     
-    def SAVE_DF(self, path = 'query_write.csv'):
+    def REPORT_SAVE_ALL(self, path = None):
+        self.REPORT_SAVE_DF(path = path)
+        #self.REPORT_SAVE_VIZ_PNG(path = path)
+        self.REPORT_SAVE_VIZ_HTML(path = path)
+    
+    #def REPORT_SAVE_VIZ_PNG(self, path = None):
+    #    'Save all figures into separate png files'
+    #    path = self._pathHelper(path, filename='figure')
+    #    for i, fig in enumerate(self._figs):
+    #        fig.write_image(path+'%d.png' % i, width=1040, height=360, scale=10) 
+    #    return self
+    
+    def REPORT_SAVE_VIZ_HTML(self, path = None, write_type = 'w'):
+        'Save all figures into a single html file'
+        path = self._pathHelper(path, filename='html_report.html')
+        with open(path, write_type) as f:
+            for i, fig in enumerate(self._figs):
+                f.write(fig.to_html(full_html=False, include_plotlyjs='cdn', default_height=360, default_width='80%', config=self._fig_config))
+            f.write(self._df.describe(include='all').fillna(value='').T.to_html())
+        return self
+    
+    #def REPORT_SAVE_VIZ_HTML_APPEND(self, path = None):
+    #    'Save all figures into a single html file'
+    #    return self.REPORT_SAVE_VIZ_HTML(path=path, write_type='a')
+    
+    def REPORT_SAVE_DF(self, path = None):
+        path = self._pathHelper(path, filename='dataframe.csv') #pandas needs file extension
         self._df.to_csv(path, index=False)
-        self._showFig = False
+        self._fig()
         return self
+    
     
 ### UTILITIES ###
     
@@ -845,151 +602,22 @@ class pq(object):
             if head == True: return df.head(max)
             else: return df.tail(max)
     
-    def DF_ROW_KEEP_TOP(self, numRows):
-        self._df = self._df.head(numRows)
-        self._showFig = False
-    
     def _toUniqueColName(self, name):
         n = 1
         while name in self._df.columns.values.tolist():
             name = name + str(n)
         return name
     
-    '''    
-    def VIZ_BOX_OLD(self, col=None, by=None, **kwargs):
-        col = self._colHelper(col, max=5, type='number', colsOnNone=True)
-        by = self._colHelper(by, max=1, colsOnNone=False)
-        BoxPlotHelper(df=self._df, col=col, by=by, subplots=True, **kwargs).plot()
-        self._showFig = True
-        return self
-        
-    def VIZ_HIST_OLD(self, col=None, by=None, bins=10, **kwargs):
-        col = self._colHelper(col, max=1, colsOnNone=True)
-        by = self._colHelper(by, max=1, colsOnNone=False)
-        #HistPlotHelper(df=self._df, col=col, by=by, subplots=False, bins=bins, **kwargs).plot()
-        HistPlotlyHelper(df=self._df, col=col, by=by, subplots=False, bins=bins, **kwargs).plot()
-        self._showFig = True
-        return self
-
-    def VIZ_SCATTER_OLD(self, col=None, by=None, **kwargs):
-        col = self._colHelper(col, max=2, colsOnNone=True)
-        by = self._colHelper(by, max=1, colsOnNone=False)
-        ScatterPlotHelper(df=self._df, col=col, by=by, subplots=False, **kwargs).plot()
-        self._showFig = True
-        return self
-
-    def VIZ_BAR_OLD(self, col=None, by=None, **kwargs):
-        col = self._colHelper(col, max=1, type='number', colsOnNone=True)
-        by = self._colHelper(by, max=1, colsOnNone=False)
-        df = self._rowHelper(self._df, max = 10, head = True)
-        BarStackedPlotHelper(df=df, col=col, by=by, subplots=False, **kwargs).plot()
-        self._showFig = True
-        return self
-
-    def VIZ_LINE_OLD(self, col=None, by=None, **kwargs):
-        col = self._colHelper(col, type='number')
-        by = self._colHelper(by, max=1, colsOnNone=False)
-        LinePlotHelper(df=self._df, col=col, by=by, subplots=False, **kwargs).plot()
-        self._showFig = True
-        return self
-    
-    def _plotHelper(self, col, by, type, **kwargs):
-        grp = self._groupingHelper(col, by)
-        fig, axs = self._subplotHelper(subplots=kwargs['subplots'], numGrps=grp['num_grp'])
-        
-        # 1 - n plots
-        if type=='hist':
-            for a, g in zip(axs, grp['grp_keys']):
-                a.hist(grp['by_grp'][g], bins=kwargs['bins'])
-                a.set_title(g)
-        # 1 plot only
-        elif type=='hist_stacked':
-                a = axs[0]
-                a.hist(grp['all_grp'], bins=kwargs['bins'], density=True, histtype='bar', stacked=True, label=grp['grp_keys'])
-                a.legend()
-                fig.suptitle('Histogram: ' + col + ' by ' + by)
-        # 1 - n plots
-        elif type=='box':
-                a = axs[0]
-                a.boxplot(grp['all_grp'], labels=grp['grp_keys'])
-                #a.legend()
-                fig.suptitle('Box plot: ' + col + ' by ' + by)
-        # 1 plot only
-        elif type=='bar_stacked':
-                a = axs[0]
-                bottom = None
-                x_axis = grp['no_grp'][by]
-                for c in col:
-                    print(bottom)
-                    data = grp['no_grp'][c].to_numpy()
-                    a.bar(x_axis, data, bottom=bottom, label=c)
-                    if bottom is None: bottom = data
-                    else: bottom = np.add(data, bottom)
-                a.legend()
-                a.set_title('Bar plot')
-        # 1 plot, 
-        elif type=='line':
-                a = axs[0]
-                x_axis = col
-                for g, c in zip(grp['grp_keys'], range(len(grp['grp_keys']))):
-                    data = grp['by_grp'][g]
-                    color = self._colorHelper(c)
-                    for index, rows in data.iterrows():
-                        # Create list for the current row
-                        y_axis =list(rows)
-                        #a.plot(x_axis, y_axis, color=color, linewidth=0.5)
-                    # plot mean
-                    a.plot(x_axis, data.mean(), color=color, linewidth=3, label=g)
-                a.legend()
-                a.set_title('Line plot')
+    def _pathHelper(self, path, filename):
+        import os
+        if path == None:
+            from pathlib import Path
+            home = str(Path.home())
+            path = os.path.join(home, 'report')
         else:
-            return
+            path = os.path.join(path, 'report')
+        os.makedirs(path, exist_ok = True)
+        path = os.path.join(path, filename)
+        return path
     
-    def _colorHelper(self, num):
-        num = 9 if num > 9 else num
-        col_pal = {
-            0: 'tab:blue',
-            1: 'tab:orange',
-            2: 'tab:green',
-            3: 'tab:red',
-            4: 'tab:purple',
-            5: 'tab:brown',
-            6: 'tab:pink',
-            7: 'tab:gray',
-            8: 'tab:olive',
-            9: 'tab:cyan'}
-        return col_pal[num]
-            
-    def _groupingHelper(self, col, by):
-        gr_dic = {'no_grp': self._df}
-        if by == None: 
-            gr_dic['num_grp'] = 0
-            gr_dic['by_grp'] = {'no_grp': self._df[col]}
-            gr_dic['all_grp'] = list(gr_dic['by_grp'].values())
-            gr_dic['grp_keys'] = sorted(list(gr_dic['by_grp'].keys()))
-        else: 
-            gb = self._df.groupby(by)
-            grps = {g: gb.get_group(g)[col] for g in list(gb.groups.keys())}
-            gr_dic['num_grp'] = len(grps)
-            gr_dic['by_grp'] = grps
-            gr_dic['all_grp'] = list(grps.values())
-            gr_dic['grp_keys'] = sorted(list(grps.keys())) 
-        return gr_dic    
-    
-    def _subplotHelper(self, subplots, numGrps):
-        # if no grouping OR 1 group OR groups without subplots, just make 1 x 1
-        if numGrps == 0 or numGrps == 1 or subplots == False: 
-            fig, axs = plt.subplots(1, 1)
-        # otherwise, generate
-        else:
-            r = 3 if numGrps >= 3 else numGrps % 3
-            c = 3 if numGrps >= 7 else ((numGrps - 1) // 3) + 1
-            fig, axs = plt.subplots(r, c, sharey=True, tight_layout=True)
-            if isinstance(axs, Iterable): axs = axs.flatten().tolist()
-        # if single axis, add to list for simplified handling later
-        if not isinstance(axs, list): axs = [axs]
-        return fig, axs
-'''
-    
-
     
