@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # %%
-import sys
-sys.path.append('C:\\Users\\mdaws\\pyKintone')
 import pykintone
 from pykintone import model, kintoneService as ks
 from pykintone.structure import kintoneStructure as kst
