@@ -1,28 +1,25 @@
 # pyPowerQ
 
 A python library with a similar feel to Microsoft Power Query. 
-By using this library, python novices familiar with Power Query or similary tools can quickly do most of the same things in python.
+By using this library, python novices familiar with Power Query or similar tools can quickly do most of the same things & much more!
 
-TAB_ = TABLE transformations, COL_ = COLUMN transformations, ROW_ = ROW transformations
+Methods are grouped by function: DF_ = dataframe operations, VIZ_ = vizualizations, REPORT_ = save data/vizualizations are report
 
 ## Example
 
 ```python
 from scripts import SOURCE
 (
-    SOURCE('pyQuery_data.csv')
-    .COL_ADD_FIXED('test')
-    .COL_DELETE(['workclass', 'race', 'sex', 'y', 'relationship'])
-    .COL_DELETE('education')
-    .COL_DELETE('age')
-    .COL_ADD_FIXED('more', '固定')
-    .COL_DELETE(['capital-loss', 'occupation', 'capital-gain', 'marital-status'])
-    .COL_DELETE('固定')
-    .COL_ADD_FIXED(12345, 'Num')
-    .COL_ADD_INDEX('no')
-    .COL_REORDER_ASC()
-    .TAB_GROUP('hours-per-week', {'education-num': ['mean', 'max']})
-    .WRITE('query_write.csv')
+    SOURCE('kintone_app1')
+    .DF_COL_DELETE(['revision', 'record_id'])
+    .REPORT_SET_VIZ_COLORS_ANTIQUE
+    .VIZ_HIST_LIST('Attrition')
+    .DF_ROW_FILTER('Age < 29')
+    .DF__GROUP('Department', {'Age': ['mean', 'count']})
+    .DF_COL_RENAME({'Age_mean': 'AvgAge', 'Age_count': 'NoEmployees'})
+    .DF_COL_ADD_INDEX_FROM_1('DeptID')
+    .VIZ_BAR('Department', 'NoEmployees')
+    .REPORT_SAVE_VIZ_HTML('html_report')
 )
 ```
 
@@ -31,7 +28,7 @@ from scripts import SOURCE
 
 ## Requirements
 
-pandas, numpy, plotly, pathlib
+pandas, plotly, optional: pycurl
 
 ## Methods
 
