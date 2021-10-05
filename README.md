@@ -8,9 +8,9 @@ TAB_ = TABLE transformations, COL_ = COLUMN transformations, ROW_ = ROW transfor
 ## Example
 
 ```python
-from pyPquery.base import pq as READ
+from scripts import SOURCE
 (
-    READ('pyQuery_data.csv')
+    SOURCE('pyQuery_data.csv')
     .COL_ADD_FIXED('test')
     .COL_DELETE(['workclass', 'race', 'sex', 'y', 'relationship'])
     .COL_DELETE('education')
