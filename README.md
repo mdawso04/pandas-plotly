@@ -1,7 +1,8 @@
-# pyPowerQ
+# pandas-plotly
 
-A python library with a similar feel to Microsoft Power Query. 
-By using this library, python novices familiar with Power Query or similar tools can quickly do most of the same things & much more!
+A python wrapper library for pandas & plotly that has a similar feel to Microsoft Power Query. 
+By using this library, python novices familiar with Power Query or similar tools can 
+quickly 1) get & transform data, 2) vizualize the data and 3) save the data as a report.
 
 Methods are grouped by function: DF_ = dataframe operations, VIZ_ = vizualizations, REPORT_ = save data/vizualizations are report
 
