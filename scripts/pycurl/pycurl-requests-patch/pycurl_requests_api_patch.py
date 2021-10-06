@@ -12,10 +12,11 @@ def _pycurlSessionWithSettings():
             session.curl.setopt(pycurl.PROXYAUTH, getattr(pycurl, _config['pycurl_config']['proxyauth']))
             session.curl.setopt(pycurl.PROXYUSERPWD, _config['pycurl_config']['proxyuserpwd'])
             session.curl.setopt(pycurl.HTTPPROXYTUNNEL, _config.getboolean('pycurl_config','httpproxytunnel'))
-            print(_config['pycurl_config']['proxy'])
-            print(getattr(pycurl, _config['pycurl_config']['proxyauth']))
-            print(_config['pycurl_config']['proxyuserpwd'])
-            print(_config.getboolean('pycurl_config','httpproxytunnel'))
+            #DEBUG
+            #print(_config['pycurl_config']['proxy'])
+            #print(getattr(pycurl, _config['pycurl_config']['proxyauth']))
+            #print(_config['pycurl_config']['proxyuserpwd'])
+            #print(_config.getboolean('pycurl_config','httpproxytunnel'))
         return session
 
 def request(method, url, **kwargs):

@@ -5,7 +5,7 @@ import pathlib
 #import matplotlib.pyplot as plt
 from collections.abc import Iterable
 import plotly.express as px
-from .PK import *
+from PK import *
 from configparser import ConfigParser
 
 # ## PQ CLASS - QUERY INTERFACE ###
