@@ -35,8 +35,8 @@ pandas, plotly, optional: pycurl
 
 | Method |  Description & example
 | --- | --- |
-| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content  ```.DF_COL_ADD_FIXED('Tokyo')```  ```.DF_COL_ADD_FIXED('Tokyo', 'City')``` 
-| ```DF_COL_ADD_INDEX``` |  Add a new column with a index/serial number as content  ```.DF_COL_ADD_INDEX()```  ```.DF_COL_ADD_INDEX('No.')```  ```.DF_COL_ADD_INDEX('No.', 0)```
+| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content  ```.DF_COL_ADD_FIXED('Tokyo')```__ ```.DF_COL_ADD_FIXED('Tokyo', 'City')``` 
+| ```DF_COL_ADD_INDEX``` |  Add a new column with a index/serial number as content  ```.DF_COL_ADD_INDEX()```__ ```.DF_COL_ADD_INDEX('No.')```__ ```.DF_COL_ADD_INDEX('No.', 0)```
 | ```DF_COL_ADD_INDEX_FROM_0``` |  Convenience method for DF_COL_ADD_INDEX  ```.DF_COL_ADD_INDEX_FROM_0()```  ```.DF_COL_ADD_INDEX_FROM_0('No.')```
 | ```DF_COL_ADD_INDEX_FROM_1``` |  Convenience method for DF_COL_ADD_INDEX  ```.DF_COL_ADD_INDEX_FROM_1()```  ```.DF_COL_ADD_INDEX_FROM_1('No.')```
 | ```DF_COL_ADD_CUSTOM``` |  Add a new column with custom (lambda) content  
