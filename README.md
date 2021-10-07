@@ -33,20 +33,20 @@ pandas, plotly, optional: pycurl
 
 ## Methods
 
-| Method |  Description | Example
+| Method |  Description & example
 | --- | --- | ---
-| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content  ```.DF_COL_ADD_FIXED('Tokyo')``` ```.DF_COL_ADD_FIXED('Tokyo', 'City')``` | ```.DF_COL_ADD_FIXED('Tokyo')``` ```.DF_COL_ADD_FIXED('Tokyo', 'City')```  
-| ```DF_COL_ADD_INDEX``` |  Add a new column with a index/serial number as content | ```.DF_COL_ADD_INDEX()``` ```.DF_COL_ADD_INDEX('No.')``` ```.DF_COL_ADD_INDEX('No.', 0)```
-| ```DF_COL_ADD_INDEX_FROM_0``` |  Convenience method for DF_COL_ADD_INDEX | ```.DF_COL_ADD_INDEX_FROM_0()``` ```.DF_COL_ADD_INDEX_FROM_0('No.')```
-| ```DF_COL_ADD_INDEX_FROM_1``` |  Convenience method for DF_COL_ADD_INDEX | ```.DF_COL_ADD_INDEX_FROM_1()``` ```.DF_COL_ADD_INDEX_FROM_1('No.')```
+| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content  ```.DF_COL_ADD_FIXED('Tokyo')``` ```.DF_COL_ADD_FIXED('Tokyo', 'City')``` 
+| ```DF_COL_ADD_INDEX``` |  Add a new column with a index/serial number as content ```.DF_COL_ADD_INDEX()``` ```.DF_COL_ADD_INDEX('No.')``` ```.DF_COL_ADD_INDEX('No.', 0)```
+| ```DF_COL_ADD_INDEX_FROM_0``` |  Convenience method for DF_COL_ADD_INDEX ```.DF_COL_ADD_INDEX_FROM_0()``` ```.DF_COL_ADD_INDEX_FROM_0('No.')```
+| ```DF_COL_ADD_INDEX_FROM_1``` |  Convenience method for DF_COL_ADD_INDEX ```.DF_COL_ADD_INDEX_FROM_1()``` ```.DF_COL_ADD_INDEX_FROM_1('No.')```
 | ```DF_COL_ADD_CUSTOM``` |  Add a new column with custom (lambda) content  
-| ```DF_COL_ADD_EXTRACT_POSITION_AFTER``` |  Add a new column with content extracted from after char pos in existing column |  ```.DF_COL_ADD_EXTRACT_POSITION_AFTER('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_POSITION_AFTER('OldCol', 5, 'NewCol')```
-| ```DF_COL_ADD_EXTRACT_POSITION_BEFORE``` |  Add a new column with content extracted from before char pos in existing column |  ```.DF_COL_ADD_EXTRACT_POSITION_BEFORE('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_POSITION_BEFORE('OldCol', 5, 'NewCol')```
-| ```DF_COL_ADD_EXTRACT_CHARS_FIRST``` |  Add a new column with first N chars extracted from column |  ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5, 'NewCol')```
-| ```DF_COL_ADD_EXTRACT_CHARS_LAST``` |  Add a new column with last N chars extracted from column |  ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5, 'NewCol')```
+| ```DF_COL_ADD_EXTRACT_POSITION_AFTER``` |  Add a new column with content extracted from after char pos in existing column  ```.DF_COL_ADD_EXTRACT_POSITION_AFTER('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_POSITION_AFTER('OldCol', 5, 'NewCol')```
+| ```DF_COL_ADD_EXTRACT_POSITION_BEFORE``` |  Add a new column with content extracted from before char pos in existing column  ```.DF_COL_ADD_EXTRACT_POSITION_BEFORE('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_POSITION_BEFORE('OldCol', 5, 'NewCol')```
+| ```DF_COL_ADD_EXTRACT_CHARS_FIRST``` |  Add a new column with first N chars extracted from column  ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5, 'NewCol')```
+| ```DF_COL_ADD_EXTRACT_CHARS_LAST``` |  Add a new column with last N chars extracted from column  ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5)``` ```.DF_COL_ADD_EXTRACT_CHARS_FIRST('OldCol', 5, 'NewCol')```
 | ```DF_COL_ADD_DUPLICATE``` | Add a new column by copying an existing column
 | DF_COL_DELETE |  Delete specified column/s 
-| DF_COL_DELETE_EXCEPT |  Deleted all column/s except specified  | ```.COL_DELETE_EXCEPT('Age')``` ```.COL_DELETE_EXCEPT([0,3,6])``` ```.COL_DELETE_EXCEPT(slice(0,3))```
+| DF_COL_DELETE_EXCEPT |  Deleted all column/s except specified ```.COL_DELETE_EXCEPT('Age')``` ```.COL_DELETE_EXCEPT([0,3,6])``` ```.COL_DELETE_EXCEPT(slice(0,3))```
 | DF_COL_RENAME |  Rename specfied column/s
 | DF_COL_FORMAT_TO_UPPERCASE |  Format specified column/s values to uppercase
 | DF_COL_FORMAT_TO_LOWERCASE |  Format specified column/s values to lowercase
