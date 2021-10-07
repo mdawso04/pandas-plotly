@@ -36,9 +36,7 @@ pandas, plotly, optional: pycurl
 | Method |  Description & example
 | --- | --- |
 
-| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content
-```.DF_COL_ADD_FIXED('Tokyo')```
-```.DF_COL_ADD_FIXED('Tokyo', 'City')``` 
+| ```DF_COL_ADD_FIXED``` | Add a new column with a 'fixed' value as content ```.DF_COL_ADD_FIXED('Tokyo')``` ```.DF_COL_ADD_FIXED('Tokyo', 'City')``` 
 
 | ```DF_COL_ADD_INDEX``` |  Add a new column with a index/serial number as content
 <br /> ```.DF_COL_ADD_INDEX()```<br /> ```.DF_COL_ADD_INDEX('No.')```<br /> ```.DF_COL_ADD_INDEX('No.', 0)```
