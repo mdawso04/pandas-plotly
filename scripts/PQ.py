@@ -120,45 +120,54 @@ class SOURCE(object):
     # DATAFRAME 'COLUMN' ACTIONS
     
     def DF_COL_ADD_FIXED(self, value, name = 'new_column'):
+        '''Add a new column with a 'fixed' value as content'''
         name = self._toUniqueColName(name)
         self._df[name] = value
         self._fig()
         return self
     
     def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1):
+        '''Add a new column with a index/serial number as content'''
         name = self._toUniqueColName(name)
         self._df[name] = range(start, self._df.shape[0] + start)
         self._fig()
         return self
     
     def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column'):
+        '''Convenience method for DF_COL_ADD_INDEX'''
         return self.DF_COL_ADD_INDEX(name, start = 0)
     
     def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column'):
+        '''Convenience method for DF_COL_ADD_INDEX'''
         return self.DF_COL_ADD_INDEX(name, start = 1)
     
     def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column'):
+        '''Add a new column with custom (lambda) content'''
         name = self._toUniqueColName(name)
         self._df[name] = self._df[column].apply(lmda)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column'):
+        '''Add a new column with content extracted from after char pos in existing column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[pos:], name = name)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column'):
+        '''Add a new column with content extracted from before char pos in existing column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:pos], name = name)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column'):
+        '''Add a new column with first N chars extracted from column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:chars], name = name)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column'):
+        '''Add a new column with last N chars extracted from column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[-chars:], name = name)
         self._fig()
         return self
