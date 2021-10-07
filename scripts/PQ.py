@@ -125,7 +125,7 @@ class SOURCE(object):
         self._fig()
         return self
     
-    def DF_COL_ADD_INDEX(self, name = 'new_column', start = 0):
+    def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1):
         name = self._toUniqueColName(name)
         self._df[name] = range(start, self._df.shape[0] + start)
         self._fig()
