@@ -501,97 +501,97 @@ class SOURCE(object):
     
     @property
     def REPORT_SET_VIZ_COLORS_PLOTLY(self):
-        '''Set plot/report colors to 'Plotly''''
+        '''Set plot/report colors to 'Plotly'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Plotly)
     
     @property
     def REPORT_SET_VIZ_COLORS_D3(self):
-        '''Set plot/report colors to 'D3''''
+        '''Set plot/report colors to 'D3'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.D3)
     
     @property
     def REPORT_SET_VIZ_COLORS_G10(self):
-        '''Set plot/report colors to 'G10''''
+        '''Set plot/report colors to 'G10'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.G10)
     
     @property
     def REPORT_SET_VIZ_COLORS_T10(self):
-        '''Set plot/report colors to 'T10''''
+        '''Set plot/report colors to 'T10'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.T10)
     
     @property
     def REPORT_SET_VIZ_COLORS_ALPHABET(self):
-        '''Set plot/report colors to 'Alphabet''''
+        '''Set plot/report colors to 'Alphabet'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
     
     @property
     def REPORT_SET_VIZ_COLORS_DARK24(self):
-        '''Set plot/report colors to 'Dark24''''
+        '''Set plot/report colors to 'Dark24'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark24)
     
     @property
     def REPORT_SET_VIZ_COLORS_LIGHT24(self):
-        '''Set plot/report colors to 'Light24''''
+        '''Set plot/report colors to 'Light24'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Light24)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET1(self):
-        '''Set plot/report colors to 'Set1''''
+        '''Set plot/report colors to 'Set1'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set1)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL1(self):
-        '''Set plot/report colors to 'Pastel1''''
+        '''Set plot/report colors to 'Pastel1'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
     
     @property
     def REPORT_SET_VIZ_COLORS_DARK2(self):
-        '''Set plot/report colors to 'Dark2''''
+        '''Set plot/report colors to 'Dark2'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark2)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET2(self):
-        '''Set plot/report colors to 'Set2''''
+        '''Set plot/report colors to 'Set2'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set2)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL2(self):
-        '''Set plot/report colors to 'Pastel2''''
+        '''Set plot/report colors to 'Pastel2'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET3(self):
-        '''Set plot/report colors to 'Set3''''
+        '''Set plot/report colors to 'Set3'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set3)
     
     @property
     def REPORT_SET_VIZ_COLORS_ANTIQUE(self):
-        '''Set plot/report colors to 'Antique''''
+        '''Set plot/report colors to 'Antique'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Antique)
     
     @property
     def REPORT_SET_VIZ_COLORS_BOLD(self):
-        '''Set plot/report colors to 'Bold''''
+        '''Set plot/report colors to 'Bold'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Bold)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL(self):
-        '''Set plot/report colors to 'Pastel''''
+        '''Set plot/report colors to 'Pastel'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel)
     
     @property
     def REPORT_SET_VIZ_COLORS_PRISM(self):
-        '''Set plot/report colors to 'Prism''''
+        '''Set plot/report colors to 'Prism'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Prism)
     
     @property
     def REPORT_SET_VIZ_COLORS_SAFE(self):
-        '''Set plot/report colors to 'Safe''''
+        '''Set plot/report colors to 'Safe'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Safe)
     
     @property
     def REPORT_SET_VIZ_COLORS_VIVID(self):
-        '''Set plot/report colors to 'Vivid''''
+        '''Set plot/report colors to 'Vivid'''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Vivid)
     
     def _REPORT_SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
