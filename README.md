@@ -1,18 +1,13 @@
 # pandas-plotly
 
-A python wrapper library for pandas & plotly that has a similar feel to Microsoft Power Query. 
-By using this library, python novices familiar with Power Query or similar tools can 
-quickly 1) get & transform data, 2) vizualize the data and 3) save the data as a report.
-
-Methods are grouped by function: DF_ = dataframe operations, VIZ_ = vizualizations, REPORT_ = save data/vizualizations are report
+A simple, unified interface for pandas & plotly for data wrangling, vizualization & report generating. 
 
 ## Example
 
 ```python
 from scripts import SOURCE
 (
-    SOURCE('kintone_app1')
-    .DF_COL_DELETE(['revision', 'record_id'])
+    SOURCE('attrition_csv')
     .REPORT_SET_VIZ_COLORS_ANTIQUE
     .VIZ_HIST_LIST('Attrition')
     .DF_ROW_FILTER('Age < 29')
@@ -26,6 +21,19 @@ from scripts import SOURCE
 
 ![image](https://user-images.githubusercontent.com/87593190/133514752-5eb39b13-ca8d-4cd9-a058-2c8a411db05f.png)
 
+
+## Use cases
+
+1) Basic data wrangling / vizualization /report generation
+Use in JupyterLab to see data wrangling & vizualization results in real time. When you
+find an interesting vizualization or data, save on the spot with no need to keep your script.
+
+2) Automated data wrangling / vizualization / report generation
+As above play in JupyterLab to make the results you want. Once your script is ready,
+save to use whenever needed.
+
+For Windows users: Copy the supplied Windows .bat template to quickly call your script manually, 
+from Windows Task Scheduler, or if in corporate environment, user start up tasks.
 
 ## Requirements
 

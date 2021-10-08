@@ -16,8 +16,7 @@
 
 from scripts import SOURCE
 (
-    SOURCE('kintone_app1')
-    .DF_COL_DELETE(['revision', 'record_id'])
+    SOURCE('attrition_csv')
     .REPORT_SET_VIZ_COLORS_ANTIQUE
     .VIZ_HIST_LIST('Attrition')
     .DF_ROW_FILTER('Age < 29')
