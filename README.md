@@ -24,20 +24,21 @@ from scripts import SOURCE
 
 ## Use cases
 
-1) Basic data wrangling / vizualization /report generation
+1) Basic data wrangling / vizualization /report generation  
 Use in JupyterLab to see data wrangling & vizualization results in real time. When you
 find an interesting vizualization or data, save on the spot with no need to keep your script.
 
-2) Automated data wrangling / vizualization / report generation
+2) Automated data wrangling / vizualization / report generation  
 As above play in JupyterLab to make the results you want. Once your script is ready,
 save to use whenever needed.
 
-For Windows users: Copy the supplied Windows .bat template to quickly call your script manually, 
+For Windows users: Copy the supplied Windows .bat template so you can quickly call your script manually from a shortcut on your pc, 
 from Windows Task Scheduler, or if in corporate environment, user start up tasks.
 
 ## Requirements
 
-pandas, plotly, optional: pycurl (needed for corporate networks with authenticated proxy servers due to current limitations with requests)
+pandas, plotly  
+optional: pycurl (needed for corporate networks with authenticated proxy servers due to current limitations with requests)
 
 ## Methods
 
