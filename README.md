@@ -37,7 +37,7 @@ from Windows Task Scheduler, or if in corporate environment, user start up tasks
 
 ## Requirements
 
-pandas, plotly, optional: pycurl
+pandas, plotly, optional: pycurl (needed for corporate networks with authenticated proxy servers due to current limitations with requests)
 
 ## Methods
 
