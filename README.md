@@ -19,6 +19,7 @@ from scripts import SOURCE
 )
 ```
 
+## JupyterLab screenshot
 ![image](https://user-images.githubusercontent.com/87593190/136625699-3d0d11a0-3268-44fb-9c33-eb9f41f94fa3.png)
 
 ## Use cases
