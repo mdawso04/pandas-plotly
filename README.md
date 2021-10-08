@@ -19,8 +19,7 @@ from scripts import SOURCE
 )
 ```
 
-![image](https://user-images.githubusercontent.com/87593190/133514752-5eb39b13-ca8d-4cd9-a058-2c8a411db05f.png)
-
+![image](https://user-images.githubusercontent.com/87593190/136625699-3d0d11a0-3268-44fb-9c33-eb9f41f94fa3.png)
 
 ## Use cases
 
