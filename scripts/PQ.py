@@ -173,24 +173,28 @@ class SOURCE(object):
         return self
     
     def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column'):
+        '''Add a new column by copying an existing column'''
         name = self._toUniqueColName(name)
         self._df[name] = self._df[column]
         self._fig()
         return self
     
     def DF_COL_DELETE(self, columns):
+        '''Delete specified column/s'''
         columns = self._colHelper(columns)
         self._df = self._df.drop(columns, axis = 1)
         self._fig()
         return self
     
     def DF_COL_DELETE_EXCEPT(self, columns):
+        '''Deleted all column/s except specified'''
         columns = self._colHelper(columns)
         cols = pq._diff(self._df.columns.values.tolist(), columns)
         self._fig()
         return self.DF_COL_DELETE(cols)
     
     def DF_COL_RENAME(self, columns):
+        '''Rename specfied column/s'''
         # we handle dict for all or subset, OR list for all
         if isinstance(columns, dict):
             self._df.rename(columns = columns, inplace = True)
@@ -202,30 +206,35 @@ class SOURCE(object):
     #col_reorder list of indices, list of colnames
     
     def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None):
+        '''Format specified column/s values to uppercase'''
         if columns == None: columns = self._df.columns.values.tolist()
         self._df[columns] = self._df[columns].apply(lambda s: s.str.upper(), axis=0)
         self._fig()
         return self
     
     def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None):
+        '''Format specified column/s values to lowercase'''
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.lower(), axis=0)
         self._fig()
         return self
     
     def DF_COL_FORMAT_TO_TITLECASE(self, columns = None):
+        '''Format specified column/s values to titlecase'''
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.title(), axis=0)
         self._fig()
         return self
     
     def DF_COL_FORMAT_STRIP(self, columns = None):
+        '''Format specified column/s values by stripping invisible characters'''
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.strip(), axis=0)
         self._fig()
         return self
     
     def DF_COL_FORMAT_STRIP_LEFT(self, columns = None):
+        '''Convenience method for DF_COL_FORMAT_STRIP'''
         df = self._df
         if columns == None: columns = df.columns.values
         df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
@@ -233,17 +242,20 @@ class SOURCE(object):
         return self
     
     def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None):
+        '''Convenience method for DF_COL_FORMAT_STRIP'''
         if columns == None: columns = self._df.columns.values
         self._df[columns] = self._df[columns].apply(lambda s: s.str.rstrip(), axis=0)
         self._fig()
         return self
     
     def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column):
+        '''Format specified single column values by adding prefix'''
         self._df[column] = str(prefix) + self._df[column].astype(str)
         self._fig()
         return self
     
     def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column):
+        '''Format specified single column values by adding suffix'''
         self._df[column] = self._df[column].astype(str) + str(suffix)
         self._fig()
         return self
@@ -258,6 +270,7 @@ class SOURCE(object):
         return self
     
     def DF_COL_FORMAT_ROUND(self, decimals):
+        '''Round numerical column values to specified decimal'''
         self._df = self._df.round(decimals)
         self._fig()
         return self
@@ -276,26 +289,31 @@ class SOURCE(object):
     #    return self
     
     def DF_ROW_FILTER(self, criteria):
+        '''Filter rows with specified filter criteria'''
         self._df.query(criteria, inplace = True)
         self._fig()
         return self
     
     def DF_ROW_KEEP_BOTTOM(self, numRows):
+        '''Delete all rows except specified bottom N rows'''
         self._df = self._df.tail(numRows)
         self._fig()
         return self
     
     def DF_ROW_KEEP_TOP(self, numRows):
+        '''Delete all rows except specified top N rows'''
         self._df = self._df.head(numRows)
         self._fig()
         return self
     
     def DF_ROW_REVERSE(self):
+        '''Reorder all rows in reverse order'''
         self._df = self._df[::-1].reset_index(drop = True)
         self._fig()
         return self
     
     def DF_ROW_SORT(self, columns, descending = False):
+        '''Reorder dataframe by specified columns in ascending/descending order'''
         ascending = 1
         if descending == True: ascending = 0
         self._df = self._df.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
@@ -305,31 +323,37 @@ class SOURCE(object):
     #TABLE
     
     def DF__APPEND(self, otherdf):
+        '''Append a table to bottom of current table'''
         self._df = self._df.append(otherdf._df, ignore_index=True)
         self._fig()
         return self
     
     def DF__FILL_DOWN(self):
+        '''Fill blank cells with values from last non-blank cell above'''
         self._df = self._df.fillna(method="ffill", axis = 'index', inplace = True)
         self._fig()
         return self
     
     def DF__FILL_UP(self):
+        '''Fill blank cells with values from last non-blank cell below'''
         self._df = self._df.fillna(method="bfill", axis = 'index', inplace = True)
         self._fig()
         return self
     
     def DF__FILL_RIGHT(self):
+        '''Fill blank cells with values from last non-blank cell from left'''
         self._df = self._df.fillna(method="ffill", axis = 'columns', inplace = True)
         self._fig()
         return self
     
     def DF__FILL_LEFT(self):
+        '''Fill blank cells with values from last non-blank cell from right'''
         self._df = self._df.fillna(method="bfill", axis = 'columns', inplace = True)
         self._fig()
         return self
     
     def DF__GROUP(self, groupby, aggregates = None):
+        '''Group table contents by specified columns with optional aggregation (sum/max/min etc)'''
         if aggregates == None:
             self._df = self._df.groupby(groupby, as_index=False).first()
         else:
@@ -366,6 +390,7 @@ class SOURCE(object):
         return self
     
     def DF_COLHEADER_PROMOTE(self, row = 1):
+        '''Promote row at specified index to column headers'''
         # make new header, fill in blank values with ColN
         i = row - 1
         newHeader = self._df.iloc[i:row].squeeze()
@@ -382,6 +407,7 @@ class SOURCE(object):
         return self
     
     def DF_COLHEADER_DEMOTE(self):
+        '''Demote column headers to make 1st row of table'''
         # insert 'demoted' column headers
         self.DF_ROW_ADD(self._df.columns)
         # make new header as Col1, Col2, Coln
@@ -392,16 +418,19 @@ class SOURCE(object):
         return self
     
     def DF_COLHEADER_REORDER_ASC(self):
+        '''Reorder column titles in ascending order'''
         self._df.columns = sorted(self._df.columns.values.tolist())
         self._fig()
         return self
     
     def DF_COLHEADER_REORDER_DESC(self):
+        '''Reorder column titles in descending order'''
         self._df.columns = sorted(self._df.columns.values.tolist(), reverse = True)
         self._fig()
         return self
     
     def DF__STATS(self):
+        '''Show basic summary statistics of table contents'''
         self._df = self._df.describe()
         self._fig()
         return self
@@ -409,24 +438,28 @@ class SOURCE(object):
     # VIZUALIZATION ACTIONS
     
     def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a box plot'''
         fig = px.box(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a violin plot'''
         fig = px.violin(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a hisotgram'''
         fig = px.histogram(self._df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_HIST_LIST(self, color=None, **kwargs):
+        '''Draw a histogram for all fields in current dataframe'''
         for c in self._df.columns:
             fig = px.histogram(self._df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
             self._fig(fig)
@@ -434,107 +467,131 @@ class SOURCE(object):
         return self
     
     def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a scatter plot'''
         fig = px.scatter(self._df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a bar plot'''
         fig = px.bar(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
+        '''Draw a line plot'''
         fig = px.line(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_TREEMAP(self, path, values, color=None, **kwargs):
+        '''Draw a treemap plot'''
         fig = px.treemap(self._df, path=path, values=values, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
+        '''Draw a scatter matrix plot'''
         fig = px.scatter_matrix(self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
         return self
     
     @property
     def REPORT_SET_VIZ_COLORS_PLOTLY(self):
+        '''Set plot/report colors to 'Plotly''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Plotly)
     
     @property
     def REPORT_SET_VIZ_COLORS_D3(self):
+        '''Set plot/report colors to 'D3''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.D3)
     
     @property
     def REPORT_SET_VIZ_COLORS_G10(self):
+        '''Set plot/report colors to 'G10''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.G10)
     
     @property
     def REPORT_SET_VIZ_COLORS_T10(self):
+        '''Set plot/report colors to 'T10''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.T10)
     
     @property
     def REPORT_SET_VIZ_COLORS_ALPHABET(self):
+        '''Set plot/report colors to 'Alphabet''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
     
     @property
     def REPORT_SET_VIZ_COLORS_DARK24(self):
+        '''Set plot/report colors to 'Dark24''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark24)
     
     @property
     def REPORT_SET_VIZ_COLORS_LIGHT24(self):
+        '''Set plot/report colors to 'Light24''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Light24)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET1(self):
+        '''Set plot/report colors to 'Set1''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set1)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL1(self):
+        '''Set plot/report colors to 'Pastel1''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
     
     @property
     def REPORT_SET_VIZ_COLORS_DARK2(self):
+        '''Set plot/report colors to 'Dark2''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark2)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET2(self):
+        '''Set plot/report colors to 'Set2''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set2)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL2(self):
+        '''Set plot/report colors to 'Pastel2''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
     
     @property
     def REPORT_SET_VIZ_COLORS_SET3(self):
+        '''Set plot/report colors to 'Set3''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set3)
     
     @property
     def REPORT_SET_VIZ_COLORS_ANTIQUE(self):
+        '''Set plot/report colors to 'Antique''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Antique)
     
     @property
     def REPORT_SET_VIZ_COLORS_BOLD(self):
+        '''Set plot/report colors to 'Bold''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Bold)
     
     @property
     def REPORT_SET_VIZ_COLORS_PASTEL(self):
+        '''Set plot/report colors to 'Pastel''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel)
     
     @property
     def REPORT_SET_VIZ_COLORS_PRISM(self):
+        '''Set plot/report colors to 'Prism''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Prism)
     
     @property
     def REPORT_SET_VIZ_COLORS_SAFE(self):
+        '''Set plot/report colors to 'Safe''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Safe)
     
     @property
     def REPORT_SET_VIZ_COLORS_VIVID(self):
+        '''Set plot/report colors to 'Vivid''''
         return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Vivid)
     
     def _REPORT_SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
