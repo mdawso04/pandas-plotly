@@ -5,8 +5,53 @@ import pathlib
 #import matplotlib.pyplot as plt
 from collections.abc import Iterable
 import plotly.express as px
+import plotly.graph_objects as go
 from PK import *
 from configparser import ConfigParser
+
+import numpy as np
+from sklearn import datasets, linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+
+import pickle
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline
+# for transformer caching
+from tempfile import mkdtemp
+from shutil import rmtree
+
+# vizualize pipeline
+from sklearn import set_config
+set_config(display='diagram')  
+from sklearn.utils import estimator_html_repr
+
+from sklearn.compose import make_column_transformer
+from sklearn.compose import ColumnTransformer
+from sklearn.compose import make_column_selector as selector
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.svm import LinearSVC
+from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.decomposition import PCA, NMF
+from sklearn.feature_selection import SelectKBest, chi2
+
+from sklearn.metrics import make_scorer
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import precision_recall_curve, auc
 
 # ## PQ CLASS - QUERY INTERFACE ###
 
@@ -189,9 +234,25 @@ class SOURCE(object):
     def DF_COL_DELETE_EXCEPT(self, columns):
         '''Deleted all column/s except specified'''
         columns = self._colHelper(columns)
-        cols = pq._diff(self._df.columns.values.tolist(), columns)
+        cols = self._removeElementsFromList(self._df.columns.values.tolist(), columns)
         self._fig()
-        return self.DF_COL_DELETE(cols)
+        return self.DF_COL_DELETE(cols).DF_COL_MOVE_TO_FRONT(columns)
+    
+    def DF_COL_MOVE_TO_FRONT(self, columns):
+        '''Move specified column/s to new index'''
+        colsToMove = self._colHelper(columns)
+        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
+        self._df = self._df[colsToMove + otherCols]
+        self._fig()
+        return self
+    
+    def DF_COL_MOVE_TO_BACK(self, columns):
+        '''Move specified column/s to new index'''
+        colsToMove = self._colHelper(columns)
+        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
+        self._df = self._df[otherCols + colsToMove]
+        self._fig()
+        return self
     
     def DF_COL_RENAME(self, columns):
         '''Rename specfied column/s'''
@@ -275,7 +336,7 @@ class SOURCE(object):
         self._fig()
         return self
     
-    #ROW
+    # DATAFRAME 'ROW' ACTIONS
     
     #def DF_ROW_ADD(self, row, index = 0):
     #    self._df.loc[index] = row
@@ -320,7 +381,7 @@ class SOURCE(object):
         self._fig()
         return self
     
-    #TABLE
+    # DATAFRAME ACTIONS
     
     def DF__APPEND(self, otherdf):
         '''Append a table to bottom of current table'''
@@ -429,6 +490,11 @@ class SOURCE(object):
         self._fig()
         return self
     
+    def DF_COLHEADER_REORDER(self, columns):
+        '''Reorder column titles in specified order'''
+        # if not all columns are specified, we order to front and add others to end
+        return self.DF_COL_MOVE_TO_FRONT(columns)
+    
     def DF__STATS(self):
         '''Show basic summary statistics of table contents'''
         self._df = self._df.describe()
@@ -480,16 +546,29 @@ class SOURCE(object):
         self._fig(fig)
         return self
     
-    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
+    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
-        fig = px.line(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
+        if data_frame is None: self._df
+        fig = px.line(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_TREEMAP(self, path, values, color=None, **kwargs):
+    def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
+        '''Draw a line plot'''
+        if data_frame is None: self._df
+        fig = px.area(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        self._fig(fig)
+        return self
+    
+    def VIZ_TREEMAP(self, path, values, root='Top', data_frame=None, **kwargs):
         '''Draw a treemap plot'''
-        fig = px.treemap(self._df, path=path, values=values, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
+        path = [px.Constant("Top")] + path
+        if data_frame is None: self._df
+        fig = px.treemap(data_frame=data_frame, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         self._fig(fig)
         return self
     
@@ -498,6 +577,283 @@ class SOURCE(object):
         fig = px.scatter_matrix(self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
         return self
+    
+    # MACHINE LEARNING 'FEATURE SELECTION' ACTIONS
+    
+    def ML_SELECT_FEATURES_NONE_ZERO_VARIANCE(self):
+        '''Select numerical features / columns with non-zero variance'''
+        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold'))
+    
+    def ML_SELECT_FEATURES_N_BEST(self, target, n=10):
+        '''Select best n numerical features / columns for classifying target column'''
+        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n))
+    
+    @ignore_warnings
+    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib', split=True):
+        '''Train several classification models & select the best one'''
+        
+        # PREP TRAIN/TEST DATA
+        
+        # separate features, target
+        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
+        y = self._df[target]
+        
+        # train/test split
+        if split:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        else:
+            X_train, X_test, y_train, y_test = X, None, y, None
+        
+        # FEATURE TRANSFORMERS
+        
+        numeric_transformer = Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='median')),
+            ('scaler', StandardScaler())])
+
+        categorical_transformer = OneHotEncoder(handle_unknown='ignore')
+
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', numeric_transformer, selector(dtype_include='number')),
+                ('cat', categorical_transformer, selector(dtype_include=['object', 'category']))])
+
+        # PIPELINE
+        
+        # prepare cache
+        cachedir = mkdtemp()
+        
+        # Append classifier to preprocessing pipeline.
+        # Now we have a full prediction pipeline.
+        clf = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('classifier', LogisticRegression())
+        ], memory=cachedir)
+        
+        param_grid = {
+            'preprocessor__num__imputer__strategy': ['mean', 'median'],
+            'classifier__C': [0.1, 1.0, 10, 100],
+        }
+        
+        # SCORERS
+        
+        # The scorers can be either one of the predefined metric strings or a scorer
+        # callable, like the one returned by make_scorer
+        scoring = {
+            'AUC': 'roc_auc', 
+            'Accuracy': make_scorer(accuracy_score)
+        }
+        
+        # BUILD GRID FOR PARAM SEARCH
+        
+        # Setting refit='AUC', refits an estimator on the whole dataset with the
+        # parameter setting that has the best cross-validated AUC score.
+        # That estimator is made available at ``gs.best_estimator_`` along with
+        # parameters like ``gs.best_score_``, ``gs.best_params_`` and
+        # ``gs.best_index_``
+        
+        grid = GridSearchCV(clf,
+                            n_jobs=1, 
+                            param_grid=param_grid, 
+                            cv=10,
+                            scoring=scoring, 
+                            refit='AUC', 
+                            return_train_score=True)
+        
+        # FIT!
+        
+        # fit with 'train' only!
+        grid.fit(X_train, y_train)
+        
+        # after hard work of model fitting, we can clear pipeline/transformer cache
+        rmtree(cachedir)
+        
+        # SAVE/'PICKLE' MODEL
+        
+        # generate path
+        if path in self._config.sections() and 'model' in self._config[path]:
+            path = self._config[path]['model']
+        
+        # save
+        from joblib import dump
+        dump(grid.best_estimator_, path, compress = 1) 
+        
+        # load saved model again to be sure
+        #new_clf = load(path) 
+        
+        # force evaluation
+        return self._ML_EVAL_CLASSIFIER(path, X_test, y_test, pos_label='Yes')
+    
+    def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes'):
+        '''Evaluate a classfier with TEST data'''
+        # separate features, target
+        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
+        y = self._df[target]
+        
+        return self._ML_EVAL_CLASSIFIER(path, X, y, pos_label)
+        
+    def _ML_EVAL_CLASSIFIER(self, path, X_test, y_test, pos_label, **kwargs):
+        '''Draw a ROC plot'''
+        
+        # generate path
+        if path in self._config.sections() and 'model' in self._config[path]:
+            path = self._config[path]['model']
+            
+        from joblib import load
+        # load saved model again to be sure
+        clf = load(path) 
+        
+        # predict/score
+        y_predict = clf.predict(X_test)
+        y_score = clf.predict_proba(X_test)[:, 1]
+        
+        # classification report
+        #print(classification_report(y_test, y_predict))
+
+        # confusion matrix
+        np = confusion_matrix(y_test, y_predict, labels=['No', 'Yes'], normalize='all')
+        df = pd.DataFrame(data=np.ravel(), columns=['value']) 
+        df['true'] = ['Negative', 'Negative', 'Positive', 'Positive']
+        df['name'] = ['True negative', 'False Positive', 'False negative', 'True positive']
+        
+        # show confusion matrix as 'treemap'
+        self.VIZ_TREEMAP(data_frame=df, 
+                         path=['true', 'name'], 
+                         values='value',
+                         root='Top',
+                         #width=600,
+                         #height=450,
+                         title='Classification Results (Confusion Matrix)')
+        
+        # histogram of scores compared to true labels
+        self.VIZ_HIST(x=y_score, 
+                      color=y_test, 
+                      nbins=50, 
+                      labels=dict(color='True Labels', x='Score'),
+                      title='Classifier score vs True labels')
+        
+        # preliminary viz & roc
+        fpr, tpr, thresholds = roc_curve(y_test, y_score, pos_label=pos_label)
+        
+        # tpr, fpr by threshold chart
+        df = pd.DataFrame({
+            'False Positive Rate': fpr,
+            'True Positive Rate': tpr
+        }, index=thresholds)
+        df.index.name = "Thresholds"
+        df.columns.name = "Rate"
+        
+        self.VIZ_LINE(data_frame=df, 
+                      title='True Positive Rate and False Positive Rate at every threshold', 
+                      width=600, 
+                      height=450,
+                      range_x=[0,1], 
+                      range_y=[0,1],
+                      markers=False)
+        
+        # roc chart
+        self.VIZ_AREA(x=fpr, y=tpr,
+                      title=f'ROC Curve (AUC: %.2f)'% roc_auc_score(y_test, y_score),
+                      width=600, 
+                      height=450,
+                      labels=dict(x='False Positive Rate', y='True Positive Rate'),
+                      range_x=[0,1], 
+                      range_y=[0,1],
+                      markers=False)
+        
+        self._figs[-1].add_shape(type='line', line=dict(dash='dash', color='firebrick'),x0=0, x1=1, y0=0, y1=1)
+
+        precision, recall, thresholds = precision_recall_curve(y_test, y_score, pos_label=pos_label)
+
+        # precision/recall chart
+        self.VIZ_AREA(x=recall, y=precision,
+                      title=f'Precision-Recall Curve (AUC={auc(fpr, tpr):.4f})',
+                      width=600, 
+                      height=450,
+                      labels=dict(x='Recall', y='Precision'),
+                      range_x=[0,1], 
+                      range_y=[0,1],
+                      markers=False)
+        
+        self._figs[-1].add_shape(type='line', line=dict(dash='dash', color='firebrick'),x0=0, x1=1, y0=0, y1=1)
+        
+        return self
+        
+    
+    def _selectFeatures(self, method=None, target=None, n=10):
+        from sklearn.feature_selection import VarianceThreshold
+        from sklearn.feature_selection import SelectKBest
+        from sklearn.feature_selection import chi2
+        
+        if method == 'VarianceThreshold':
+            sel = VarianceThreshold() #remove '0 variance'
+            x = self._df[self._colHelper(type='number')]
+            sel.fit_transform(x)
+            return sel.get_feature_names_out().tolist()
+        elif method == 'SelectKBest':
+            sel = SelectKBest(k=n)
+            x = self._df[self._colHelper(type='number')]
+            y = self._df[target]
+            sel.fit_transform(X=x, y=y)
+            features = sel.get_feature_names_out().tolist()
+            features.append(target)
+            return features
+    
+    # MACHINE LEARNING 'MODEL TRAINING' ACTIONS
+    
+    def ML_TRAIN_MODEL_REGRESSION(self, y, x=None):
+        
+        # drop missing values
+        #cols = self._colHelper(x) + self._colHelper(y)
+        #temp_df = self._df[cols]
+        #temp_df.dropna(inplace=True)
+        
+        x = self._df[self._colHelper(columns=x, type='number', colsOnNone=True)]
+        x.drop(y, axis=1, inplace=True)
+        y = self._df[y]
+        
+        # handle categorical variables
+        #pd.get_dummies(x,drop_first=True)
+        
+        # splitting the data
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 42)
+        print(x_train.size, y_train.size, x_test.size, y_test.size)
+
+        # Create, fit & predict
+        LR = linear_model.LinearRegression()
+        LR.fit(x_train, y_train)
+        print(x_train)
+        LR_y_pred = LR.predict(x_test)
+        
+        RF = RandomForestRegressor(max_depth=2, random_state=0)
+        RF.fit(x_train, y_train)
+        RF_y_pred = RF.predict(x_test)
+        
+        #filename = 'regr'
+        #outfile = open(filename,'wb')
+        #pickle.dump(regr,outfile)
+        #outfile.close()
+        
+        #infile = open(filename,'rb')
+        #new_regr = pickle.load(infile)
+        #infile.close()
+
+        # The coefficients
+        #print('Coefficients: \n', new_regr.coef_)
+        
+        # LR mean squared error
+        print('LR Mean squared error: %.2f'% mean_squared_error(y_test, LR_y_pred))
+        
+        # LR coefficient of determination: 1 is perfect prediction
+        print('LR Coefficient of determination: %.2f'% r2_score(y_test, LR_y_pred))
+        
+        # RF mean squared error
+        print('RF Mean squared error: %.2f'% mean_squared_error(y_test, RF_y_pred))
+        
+        # RF coefficient of determination: 1 is perfect prediction
+        print('RF Coefficient of determination: %.2f'% r2_score(y_test, RF_y_pred))
+        
+        d = {'y_test': y_test, 'LR_y_pred': LR_y_pred, 'RF_y_pred': RF_y_pred}
+        print(pd.DataFrame(data=d))
     
     @property
     def REPORT_SET_VIZ_COLORS_PLOTLY(self):
@@ -681,15 +1037,6 @@ class SOURCE(object):
             print('Config section not in config.ini: ' + config_section)
         return self
     
-    def MAKE_WINDOWS_SCRIPT_FILES(self):
-        return
-        #get this filename (except extension)
-        #make .bat file with same name
-        # write:
-        # call C:\Users\mdaws\anaconda3\Scripts\activate.bat
-        # call FILENAME.py
-        # do same for .py file (don't use extensions)
-    
     def REPORT_DASH(self):
         from jupyter_dash import JupyterDash
         import dash_core_components as dcc
@@ -731,8 +1078,8 @@ class SOURCE(object):
 
 # ## UTILITIES ###
 
-    @staticmethod
-    def _diff(l1, l2):
+    def _removeElementsFromList(self, l1, l2):
+        '''Remove from list1 any elements also in list2'''
         # if not list type ie string then covert
         if not isinstance(l1, list):
             list1 = []
@@ -742,22 +1089,24 @@ class SOURCE(object):
             list2 = []
             list2.append(l2)
             l2 = list2
-        return list(set(l1) - set(l2)) + list(set(l2) - set(l1))
+        #return list(set(l1) - set(l2)) + list(set(l2) - set(l1))
+        return [i for i in l1 if i not in l2]
     
-    def _common(self, l1, l2):
+    def _commonElementsInList(self, l1, l2):
         if l1 is None or l2 is None: return None
         if not isinstance(l1, list): l1 = [l1]
         if not isinstance(l2, list): l2 = [l2]
-        a_set = set(l1)
-        b_set = set(l2)
+        #a_set = set(l1)
+        #b_set = set(l2)
         
         # check length
-        if len(a_set.intersection(b_set)) > 0:
-            return list(a_set.intersection(b_set)) 
-        else:
-            return None
+        #if len(a_set.intersection(b_set)) > 0:
+        #    return list(a_set.intersection(b_set)) 
+        #else:
+        #    return None
+        return [i for i in l1 if i in l2]
     
-    def _colHelper(self, columns, max = None, type = None, colsOnNone = True):
+    def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True):
         
         # pre-process: translate to column names
         if isinstance(columns, slice) or isinstance(columns, int):
@@ -771,7 +1120,7 @@ class SOURCE(object):
         #process: fit to limited column scope
         if colsOnNone == True and columns is None: columns = df.columns.values.tolist()
         elif columns is None: return None
-        else: columns = self._common(columns, df.columns.values.tolist())           
+        else: columns = self._commonElementsInList(columns, df.columns.values.tolist())           
         
         # apply 'max' check    
         if isinstance(columns, list) and max != None: 
