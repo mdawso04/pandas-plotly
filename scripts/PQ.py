@@ -11,39 +11,41 @@ from configparser import ConfigParser
 
 import numpy as np
 from sklearn import datasets, linear_model
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split
-
-from sklearn.utils._testing import ignore_warnings
-from sklearn.exceptions import ConvergenceWarning
-
-import pickle
-
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.pipeline import Pipeline
-# for transformer caching
-from tempfile import mkdtemp
-from shutil import rmtree
-
 # vizualize pipeline
 from sklearn import set_config
 set_config(display='diagram')  
+
+# for transformer caching
+from tempfile import mkdtemp
+from shutil import rmtree
+import pickle
+
+#from sklearn.utils._testing import ignore_warnings
+#from sklearn.exceptions import ConvergenceWarning
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 from sklearn.utils import estimator_html_repr
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split, GridSearchCV
+
 
 from sklearn.compose import make_column_transformer
 from sklearn.compose import ColumnTransformer
 from sklearn.compose import make_column_selector as selector
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import KBinsDiscretizer
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA, NMF
 from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.ensemble import RandomForestRegressor
 
 from sklearn.metrics import make_scorer
 from sklearn.metrics import accuracy_score
@@ -52,6 +54,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import mean_squared_error, r2_score
 
 # ## PQ CLASS - QUERY INTERFACE ###
 
@@ -503,52 +506,58 @@ class SOURCE(object):
     
     # VIZUALIZATION ACTIONS
     
-    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a box plot'''
-        fig = px.box(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+        if data_frame is None: data_frame = self._df
+        fig = px.box(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
-    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a violin plot'''
-        fig = px.violin(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
+        if data_frame is None: data_frame = self._df
+        fig = px.violin(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
-    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, **kwargs):
+    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a hisotgram'''
-        fig = px.histogram(self._df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
+        if data_frame is None: data_frame = self._df
+        fig = px.histogram(data_frame=data_frame, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_HIST_LIST(self, color=None, **kwargs):
+    def VIZ_HIST_LIST(self, color=None, data_frame=None, **kwargs):
         '''Draw a histogram for all fields in current dataframe'''
-        for c in self._df.columns:
-            fig = px.histogram(self._df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
+        if data_frame is None: data_frame = self._df
+        for c in data_frame.columns:
+            fig = px.histogram(data_frame=data_frame, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
             self._fig(fig)
         self._fig(preview = 'all_charts')
         return self
     
-    def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, **kwargs):
+    def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a scatter plot'''
-        fig = px.scatter(self._df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
+        if data_frame is None: data_frame = self._df
+        fig = px.scatter(data_frame=data_frame, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
-    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a bar plot'''
-        fig = px.bar(self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+        if data_frame is None: data_frame = self._df
+        fig = px.bar(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
-        if data_frame is None: self._df
+        if data_frame is None: data_frame = self._df
         fig = px.line(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
@@ -556,7 +565,7 @@ class SOURCE(object):
     
     def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
-        if data_frame is None: self._df
+        if data_frame is None: data_frame = self._df
         fig = px.area(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
@@ -565,16 +574,17 @@ class SOURCE(object):
     def VIZ_TREEMAP(self, path, values, root='Top', data_frame=None, **kwargs):
         '''Draw a treemap plot'''
         path = [px.Constant("Top")] + path
-        if data_frame is None: self._df
+        if data_frame is None: data_frame = self._df
         fig = px.treemap(data_frame=data_frame, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
         fig.update_traces(root_color="lightgrey")
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         self._fig(fig)
         return self
     
-    def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
+    def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, data_frame=None, **kwargs):
         '''Draw a scatter matrix plot'''
-        fig = px.scatter_matrix(self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
+        if data_frame is None: data_frame = self._df
+        fig = px.scatter_matrix(data_frame=data_frame, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
         return self
     
@@ -588,8 +598,8 @@ class SOURCE(object):
         '''Select best n numerical features / columns for classifying target column'''
         return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n))
     
-    @ignore_warnings
-    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib', split=True):
+    #@ignore_warnings
+    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib'):
         '''Train several classification models & select the best one'''
         
         # PREP TRAIN/TEST DATA
@@ -599,12 +609,13 @@ class SOURCE(object):
         y = self._df[target]
         
         # train/test split
-        if split:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-        else:
-            X_train, X_test, y_train, y_test = X, None, y, None
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
         
         # FEATURE TRANSFORMERS
+        
+        # temporary manual addition of method to SimpleImputer class
+        SimpleImputer.get_feature_names_out = (lambda self, names=None:
+                                       self.feature_names_in_)
         
         numeric_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer(strategy='median')),
@@ -800,60 +811,173 @@ class SOURCE(object):
     
     # MACHINE LEARNING 'MODEL TRAINING' ACTIONS
     
-    def ML_TRAIN_MODEL_REGRESSION(self, y, x=None):
+    #@ignore_warnings
+    def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib'):
+        '''Train several classification models & select the best one'''
         
-        # drop missing values
-        #cols = self._colHelper(x) + self._colHelper(y)
-        #temp_df = self._df[cols]
-        #temp_df.dropna(inplace=True)
+        # PREP TRAIN/TEST DATA
         
-        x = self._df[self._colHelper(columns=x, type='number', colsOnNone=True)]
-        x.drop(y, axis=1, inplace=True)
-        y = self._df[y]
+        # separate features, target
+        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
+        y = self._df[target]
         
-        # handle categorical variables
-        #pd.get_dummies(x,drop_first=True)
+        # train/test split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
         
-        # splitting the data
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 42)
-        print(x_train.size, y_train.size, x_test.size, y_test.size)
+        # FEATURE TRANSFORMERS
+        
+        # temporary manual addition of method to SimpleImputer class
+        SimpleImputer.get_feature_names_out = (lambda self, names=None:
+                                       self.feature_names_in_)
+        
+        numeric_transformer = Pipeline(steps=[
+            ('imputer', SimpleImputer(strategy='median')),
+            ('scaler', StandardScaler())])
 
-        # Create, fit & predict
-        LR = linear_model.LinearRegression()
-        LR.fit(x_train, y_train)
-        print(x_train)
-        LR_y_pred = LR.predict(x_test)
-        
-        RF = RandomForestRegressor(max_depth=2, random_state=0)
-        RF.fit(x_train, y_train)
-        RF_y_pred = RF.predict(x_test)
-        
-        #filename = 'regr'
-        #outfile = open(filename,'wb')
-        #pickle.dump(regr,outfile)
-        #outfile.close()
-        
-        #infile = open(filename,'rb')
-        #new_regr = pickle.load(infile)
-        #infile.close()
+        categorical_transformer = OneHotEncoder(handle_unknown='ignore')
 
-        # The coefficients
-        #print('Coefficients: \n', new_regr.coef_)
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', numeric_transformer, selector(dtype_include='number')),
+                ('cat', categorical_transformer, selector(dtype_include=['object', 'category']))])
+
+        # PIPELINE
         
-        # LR mean squared error
-        print('LR Mean squared error: %.2f'% mean_squared_error(y_test, LR_y_pred))
+        # prepare cache
+        cachedir = mkdtemp()
         
-        # LR coefficient of determination: 1 is perfect prediction
-        print('LR Coefficient of determination: %.2f'% r2_score(y_test, LR_y_pred))
+        # Append classifier to preprocessing pipeline.
+        # Now we have a full prediction pipeline.
+        clf = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            #('classifier', LogisticRegression())
+            ('regressor',  LinearRegression())
+        ], memory=cachedir)
         
-        # RF mean squared error
-        print('RF Mean squared error: %.2f'% mean_squared_error(y_test, RF_y_pred))
+        param_grid = {
+            'preprocessor__num__imputer__strategy': ['mean', 'median'],
+            #'classifier__C': [0.1, 1.0, 10, 100],
+        }
         
-        # RF coefficient of determination: 1 is perfect prediction
-        print('RF Coefficient of determination: %.2f'% r2_score(y_test, RF_y_pred))
+        # SCORERS
         
-        d = {'y_test': y_test, 'LR_y_pred': LR_y_pred, 'RF_y_pred': RF_y_pred}
-        print(pd.DataFrame(data=d))
+        # The scorers can be either one of the predefined metric strings or a scorer
+        # callable, like the one returned by make_scorer
+        scoring = {
+            'Mean_squared_error': 'neg_mean_squared_error',
+            'r2': 'r2'
+        }
+        
+        # BUILD GRID FOR PARAM SEARCH
+        
+        # Setting refit='AUC', refits an estimator on the whole dataset with the
+        # parameter setting that has the best cross-validated AUC score.
+        # That estimator is made available at ``gs.best_estimator_`` along with
+        # parameters like ``gs.best_score_``, ``gs.best_params_`` and
+        # ``gs.best_index_``
+        
+        grid = GridSearchCV(clf,
+                            n_jobs=1, 
+                            param_grid=param_grid, 
+                            cv=10,
+                            scoring=scoring, 
+                            refit='r2', 
+                            return_train_score=True)
+        
+        # FIT!
+        
+        # fit with 'train' only!
+        grid.fit(X_train, y_train)
+        
+        # after hard work of model fitting, we can clear pipeline/transformer cache
+        rmtree(cachedir)
+        
+        # SAVE/'PICKLE' MODEL
+        
+        # generate path
+        if path in self._config.sections() and 'model' in self._config[path]:
+            path = self._config[path]['model']
+        
+        # save
+        from joblib import dump
+        dump(grid.best_estimator_, path, compress = 1) 
+        
+        # load saved model again to be sure
+        #new_clf = load(path) 
+        
+        # force evaluation
+        return self._ML_EVAL_REGRESSOR(path, X_test, y_test)
+    
+    def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib'):
+        '''Evaluate a regressor with TEST data'''
+        # separate features, target
+        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
+        y = self._df[target]
+        
+        return self._ML_EVAL_REGRESSOR(path, X, y)
+        
+    def _ML_EVAL_REGRESSOR(self, path, X_test, y_test, **kwargs):
+        '''Evaluate a regressor'''
+        
+        # generate path
+        if path in self._config.sections() and 'model' in self._config[path]:
+            path = self._config[path]['model']
+            
+        from joblib import load
+        # load saved model again to be sure
+        clf = load(path) 
+        
+        # predict/score
+        #y_predict = clf.predict(X_test)
+        #y_score = clf.predict_proba(X_test)[:, 1]
+        
+        #print(clf)
+        #print(clf.named_steps['preprocessor'].get_feature_names_out())
+        #print(clf.get_feature_names_out())
+        
+        if(len(X_test.columns) == 1):
+            df = pd.DataFrame({
+                'X': X_test.iloc[:, 0].to_numpy(),
+                'y': y_test.to_numpy()
+            })
+            #df.index.name = "Thresholds"
+            #df.columns.name = "Rate"
+
+            # chart
+            self.VIZ_SCATTER(data_frame=df,
+                             x='X',
+                             y='y',
+                          title='Regression plot (r2: TBD)',
+                          width=600, 
+                          height=450,
+                          #labels=dict(x='False Positive Rate', y='True Positive Rate'),
+                          #range_x=[0,1], 
+                          #range_y=[0,1],
+                          #markers=False
+                        )
+            # add prediction line
+            #x_range = np.linspace(X_test.min(), X_test.max(), 100)
+            x_range = X_test.sort_values(by=list(X_test)[0])
+            y_range = clf.predict(x_range)
+            self._figs[-1].add_traces(go.Scatter(x=x_range.iloc[:, 0].to_numpy(), y=y_range, name='Regression Fit'))
+        
+        else:
+            df = pd.DataFrame({
+                'X': clf.named_steps['preprocessor'].get_feature_names_out(),  #X_test.columns,
+                'y': clf.named_steps['regressor'].coef_
+            })
+            colors = ['Positive' if c > 0 else 'Negative' for c in clf.named_steps['regressor'].coef_]
+            self.VIZ_BAR(
+                x='X', 
+                y='y',
+                data_frame=df,
+                color=colors,
+                #color_discrete_sequence=['red', 'blue'],
+                labels=dict(x='Feature', y='Linear coefficient'),
+                title='Weight of each feature for predicting DailyRate'
+            )
+        
+        return self
     
     @property
     def REPORT_SET_VIZ_COLORS_PLOTLY(self):
