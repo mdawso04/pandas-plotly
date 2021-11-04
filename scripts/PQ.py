@@ -931,9 +931,52 @@ class SOURCE(object):
         #y_predict = clf.predict(X_test)
         #y_score = clf.predict_proba(X_test)[:, 1]
         
-        #print(clf)
-        #print(clf.named_steps['preprocessor'].get_feature_names_out())
-        #print(clf.get_feature_names_out())
+        #PREDICTIONS VS ACTUAL
+        y_predict = clf.predict(X_test)
+        
+        df = pd.DataFrame({
+                'X': y_test.to_numpy(),
+                'y': y_predict
+            })
+        
+        self.VIZ_SCATTER(data_frame=df,
+                         x='X',
+                         y='y',
+                         title='Prediction vs Actual',
+                         width=800,
+                         height=600,
+                         labels={'x': 'ground truth', 'y': 'prediction'},
+                         marginal_x='histogram', marginal_y='histogram',
+                        )
+        self._figs[-1].add_shape(
+           type="line", line=dict(dash='dash'),
+           x0=y_predict.min(), y0=y_predict.min(),
+           x1=y_predict.max(), y1=y_predict.max()
+        )
+        
+        #RESIDUALS
+        y_predict = clf.predict(X_test)
+        
+        #pd.concat([df1, df2], axis=1)
+        
+        df = pd.DataFrame({
+                'Actual': y_test.to_numpy(),
+                'Prediction': y_predict
+            })
+        df['Residual'] = df['Prediction'] - df['Actual']
+        
+        self.VIZ_SCATTER(data_frame=df,
+                         x='Prediction',
+                         y='Residual',
+                         title='Residuals',
+                         width=800,
+                         height=600,
+                         marginal_y='histogram',
+                         trendline='ols'
+                         #color='split'
+                        )
+        
+        # COEFFICIENT/S
         
         if(len(X_test.columns) == 1):
             df = pd.DataFrame({
