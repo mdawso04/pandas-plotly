@@ -598,6 +598,25 @@ class SOURCE(object):
         '''Select best n numerical features / columns for classifying target column'''
         return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n))
     
+    def _selectFeatures(self, method=None, target=None, n=10):
+        from sklearn.feature_selection import VarianceThreshold
+        from sklearn.feature_selection import SelectKBest
+        from sklearn.feature_selection import chi2
+        
+        if method == 'VarianceThreshold':
+            sel = VarianceThreshold() #remove '0 variance'
+            x = self._df[self._colHelper(type='number')]
+            sel.fit_transform(x)
+            return sel.get_feature_names_out().tolist()
+        elif method == 'SelectKBest':
+            sel = SelectKBest(k=n)
+            x = self._df[self._colHelper(type='number')]
+            y = self._df[target]
+            sel.fit_transform(X=x, y=y)
+            features = sel.get_feature_names_out().tolist()
+            features.append(target)
+            return features
+    
     #@ignore_warnings
     def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib'):
         '''Train several classification models & select the best one'''
@@ -790,25 +809,6 @@ class SOURCE(object):
         return self
         
     
-    def _selectFeatures(self, method=None, target=None, n=10):
-        from sklearn.feature_selection import VarianceThreshold
-        from sklearn.feature_selection import SelectKBest
-        from sklearn.feature_selection import chi2
-        
-        if method == 'VarianceThreshold':
-            sel = VarianceThreshold() #remove '0 variance'
-            x = self._df[self._colHelper(type='number')]
-            sel.fit_transform(x)
-            return sel.get_feature_names_out().tolist()
-        elif method == 'SelectKBest':
-            sel = SelectKBest(k=n)
-            x = self._df[self._colHelper(type='number')]
-            y = self._df[target]
-            sel.fit_transform(X=x, y=y)
-            features = sel.get_feature_names_out().tolist()
-            features.append(target)
-            return features
-    
     # MACHINE LEARNING 'MODEL TRAINING' ACTIONS
     
     #@ignore_warnings
@@ -816,16 +816,15 @@ class SOURCE(object):
         '''Train several classification models & select the best one'''
         
         # PREP TRAIN/TEST DATA
-        
         # separate features, target
         X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
         y = self._df[target]
         
-        # train/test split
+        # train/test split - returns df/series
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-        
-        # FEATURE TRANSFORMERS
-        
+       
+    
+        # FEATURE TRANSFORMERS    
         # temporary manual addition of method to SimpleImputer class
         SimpleImputer.get_feature_names_out = (lambda self, names=None:
                                        self.feature_names_in_)
@@ -902,11 +901,8 @@ class SOURCE(object):
         from joblib import dump
         dump(grid.best_estimator_, path, compress = 1) 
         
-        # load saved model again to be sure
-        #new_clf = load(path) 
-        
         # force evaluation
-        return self._ML_EVAL_REGRESSOR(path, X_test, y_test)
+        return self._ML_EVAL_REGRESSOR(path, X_test, y_test, X_train, y_train)
     
     def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib'):
         '''Evaluate a regressor with TEST data'''
@@ -914,9 +910,9 @@ class SOURCE(object):
         X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
         y = self._df[target]
         
-        return self._ML_EVAL_REGRESSOR(path, X, y)
+        return self._ML_EVAL_REGRESSOR(path, X, y, None, None)
         
-    def _ML_EVAL_REGRESSOR(self, path, X_test, y_test, **kwargs):
+    def _ML_EVAL_REGRESSOR(self, path, X_test, y_test, X_train, y_train, **kwargs):
         '''Evaluate a regressor'''
         
         # generate path
@@ -928,53 +924,50 @@ class SOURCE(object):
         clf = load(path) 
         
         # predict/score
-        #y_predict = clf.predict(X_test)
         #y_score = clf.predict_proba(X_test)[:, 1]
         
         #PREDICTIONS VS ACTUAL
-        y_predict = clf.predict(X_test)
+        test_df = pd.DataFrame(y_test)
+        test_df['Split'] = 'test'
+        test_df['Prediction'] = clf.predict(X_test)
         
-        df = pd.DataFrame({
-                'X': y_test.to_numpy(),
-                'y': y_predict
-            })
+        train_df = pd.DataFrame(y_train)
+        train_df['Split'] = 'train'
+        train_df['Prediction'] = clf.predict(X_train)
         
-        self.VIZ_SCATTER(data_frame=df,
-                         x='X',
-                         y='y',
+        eval_df = test_df.append(train_df)
+        target = eval_df.columns[0]
+        eval_df['Residual'] = eval_df['Prediction'] - eval_df[target]
+                
+        self.VIZ_SCATTER(data_frame=eval_df,
+                         x=target,
+                         y='Prediction',
                          title='Prediction vs Actual',
                          width=800,
                          height=600,
                          labels={'x': 'ground truth', 'y': 'prediction'},
                          marginal_x='histogram', marginal_y='histogram',
+                         color='Split', trendline='ols'
                         )
         self._figs[-1].add_shape(
            type="line", line=dict(dash='dash'),
-           x0=y_predict.min(), y0=y_predict.min(),
-           x1=y_predict.max(), y1=y_predict.max()
+           x0=eval_df[target].min(), y0=eval_df[target].min(),
+           x1=eval_df[target].max(), y1=eval_df[target].max()
         )
+        self._figs[-1].update_yaxes(nticks=10).update_xaxes(nticks=10)
         
         #RESIDUALS
-        y_predict = clf.predict(X_test)
-        
-        #pd.concat([df1, df2], axis=1)
-        
-        df = pd.DataFrame({
-                'Actual': y_test.to_numpy(),
-                'Prediction': y_predict
-            })
-        df['Residual'] = df['Prediction'] - df['Actual']
-        
-        self.VIZ_SCATTER(data_frame=df,
+        self.VIZ_SCATTER(data_frame=eval_df,
                          x='Prediction',
                          y='Residual',
                          title='Residuals',
                          width=800,
                          height=600,
-                         marginal_y='histogram',
-                         trendline='ols'
-                         #color='split'
+                         marginal_y='violin',
+                         trendline='ols',
+                         color='Split'
                         )
+        self._figs[-1].update_yaxes(nticks=10).update_xaxes(nticks=10)
         
         # COEFFICIENT/S
         
@@ -983,30 +976,21 @@ class SOURCE(object):
                 'X': X_test.iloc[:, 0].to_numpy(),
                 'y': y_test.to_numpy()
             })
-            #df.index.name = "Thresholds"
-            #df.columns.name = "Rate"
-
-            # chart
             self.VIZ_SCATTER(data_frame=df,
                              x='X',
                              y='y',
                           title='Regression plot (r2: TBD)',
                           width=600, 
-                          height=450,
-                          #labels=dict(x='False Positive Rate', y='True Positive Rate'),
-                          #range_x=[0,1], 
-                          #range_y=[0,1],
-                          #markers=False
+                          height=450
                         )
             # add prediction line
-            #x_range = np.linspace(X_test.min(), X_test.max(), 100)
             x_range = X_test.sort_values(by=list(X_test)[0])
             y_range = clf.predict(x_range)
             self._figs[-1].add_traces(go.Scatter(x=x_range.iloc[:, 0].to_numpy(), y=y_range, name='Regression Fit'))
         
         else:
             df = pd.DataFrame({
-                'X': clf.named_steps['preprocessor'].get_feature_names_out(),  #X_test.columns,
+                'X': clf.named_steps['preprocessor'].get_feature_names_out(),
                 'y': clf.named_steps['regressor'].coef_
             })
             colors = ['Positive' if c > 0 else 'Negative' for c in clf.named_steps['regressor'].coef_]
