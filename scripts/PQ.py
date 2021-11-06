@@ -23,7 +23,9 @@ import pickle
 #from sklearn.utils._testing import ignore_warnings
 #from sklearn.exceptions import ConvergenceWarning
 import warnings
+from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 from sklearn.utils import estimator_html_repr
 
@@ -119,6 +121,8 @@ class SOURCE(object):
                 'annotationText': True
             }
         }
+        # format floats as percentages for readability
+        #pd.options.display.float_format = '{:.2%}'.format
         
     def _repr_pretty_(self, p, cycle): 
         if self._preview == 'current_chart':
@@ -558,22 +562,22 @@ class SOURCE(object):
     def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
         if data_frame is None: data_frame = self._df
-        fig = px.line(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        fig = px.line(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
+                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
         if data_frame is None: data_frame = self._df
-        fig = px.area(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, markers=markers, 
+        fig = px.area(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_TREEMAP(self, path, values, root='Top', data_frame=None, **kwargs):
+    def VIZ_TREEMAP(self, path, values, root='All data', data_frame=None, **kwargs):
         '''Draw a treemap plot'''
-        path = [px.Constant("Top")] + path
+        path = [px.Constant("All data")] + path
         if data_frame is None: data_frame = self._df
         fig = px.treemap(data_frame=data_frame, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
         fig.update_traces(root_color="lightgrey")
@@ -585,6 +589,30 @@ class SOURCE(object):
         '''Draw a scatter matrix plot'''
         if data_frame is None: data_frame = self._df
         fig = px.scatter_matrix(data_frame=data_frame, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
+        self._fig(fig)
+        return self
+    
+    def VIZ_TABLE(self, x=None, data_frame=None, **kwargs):
+        '''Draw a table'''
+        if data_frame is None: data_frame = self._df
+        
+        cell_values = data_frame[x].to_numpy().T
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=x,
+                       align='left',
+                       font_size=12,
+                       height=30),
+            cells=dict(values=cell_values,
+                      align='left',
+                       font_size=12,
+                       height=30))
+        ])
+        #fig.update_layout(
+            #title="Plot Title",
+            #width=600, 
+            #height=450,
+        #    )
+        
         self._fig(fig)
         return self
     
@@ -610,7 +638,7 @@ class SOURCE(object):
             return sel.get_feature_names_out().tolist()
         elif method == 'SelectKBest':
             sel = SelectKBest(k=n)
-            x = self._df[self._colHelper(type='number')]
+            x = self._df[self._removeElementsFromList(self._colHelper(type='number'), [target])]
             y = self._df[target]
             sel.fit_transform(X=x, y=y)
             features = sel.get_feature_names_out().tolist()
@@ -707,11 +735,8 @@ class SOURCE(object):
         from joblib import dump
         dump(grid.best_estimator_, path, compress = 1) 
         
-        # load saved model again to be sure
-        #new_clf = load(path) 
-        
         # force evaluation
-        return self._ML_EVAL_CLASSIFIER(path, X_test, y_test, pos_label='Yes')
+        return self._ML_EVAL_CLASSIFIER(path, X_test, y_test, X_train, y_train, pos_label='Yes')
     
     def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes'):
         '''Evaluate a classfier with TEST data'''
@@ -719,9 +744,9 @@ class SOURCE(object):
         X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
         y = self._df[target]
         
-        return self._ML_EVAL_CLASSIFIER(path, X, y, pos_label)
+        return self._ML_EVAL_CLASSIFIER(path, X, y, None, None, pos_label)
         
-    def _ML_EVAL_CLASSIFIER(self, path, X_test, y_test, pos_label, **kwargs):
+    def _ML_EVAL_CLASSIFIER(self, path, X_test, y_test,  X_train, y_train, pos_label, **kwargs):
         '''Draw a ROC plot'''
         
         # generate path
@@ -733,14 +758,28 @@ class SOURCE(object):
         clf = load(path) 
         
         # predict/score
-        y_predict = clf.predict(X_test)
-        y_score = clf.predict_proba(X_test)[:, 1]
+        #y_predict = clf.predict(X_test)
+        #y_score = clf.predict_proba(X_test)[:, 1]
         
-        # classification report
-        #print(classification_report(y_test, y_predict))
+        #PREDICTIONS VS ACTUAL
+        test_df = pd.DataFrame(y_test)
+        test_df['Split'] = 'test'
+        test_df['Prediction'] = clf.predict(X_test)
+        test_df['Score'] = clf.predict_proba(X_test)[:, 1]
+        test_df.sort_values(by = 'Score', inplace=True)
+        test_df.insert(0, 'Count', range(1, test_df.shape[0] + 1))
+        
+        train_df = pd.DataFrame(y_train)
+        train_df['Split'] = 'train'
+        train_df['Prediction'] = clf.predict(X_train)
+        train_df['Score'] = clf.predict_proba(X_train)[:, 1]
+        
+        eval_df = test_df.append(train_df)
+        target = test_df.columns[1]
+        
 
-        # confusion matrix
-        np = confusion_matrix(y_test, y_predict, labels=['No', 'Yes'], normalize='all')
+        # make confusion matrix
+        np = confusion_matrix(test_df[target], test_df['Prediction'], labels=['No', 'Yes'], normalize='all')
         df = pd.DataFrame(data=np.ravel(), columns=['value']) 
         df['true'] = ['Negative', 'Negative', 'Positive', 'Positive']
         df['name'] = ['True negative', 'False Positive', 'False negative', 'True positive']
@@ -754,15 +793,28 @@ class SOURCE(object):
                          #height=450,
                          title='Classification Results (Confusion Matrix)')
         
+        # table of actual target, classifier scores and predictions based on those scores
+        self.VIZ_TABLE(data_frame=test_df,
+                      x=['Count', target, 'Score', 'Prediction'], 
+                      )
+        self._figs[-1].update_layout(
+            title="Classification Results (Details)",
+            width=600, 
+            height=450,
+        ) 
+        
         # histogram of scores compared to true labels
-        self.VIZ_HIST(x=y_score, 
-                      color=y_test, 
+        self.VIZ_HIST(data_frame=test_df,
+                      title='Classifier score vs True labels',
+                      x='Score', 
+                      color=target,
+                      height=400,
                       nbins=50, 
-                      labels=dict(color='True Labels', x='Score'),
-                      title='Classifier score vs True labels')
+                      labels=dict(color='True Labels', x='Classifier Score')
+                     )
         
         # preliminary viz & roc
-        fpr, tpr, thresholds = roc_curve(y_test, y_score, pos_label=pos_label)
+        fpr, tpr, thresholds = roc_curve(test_df[target], test_df['Score'], pos_label=pos_label)
         
         # tpr, fpr by threshold chart
         df = pd.DataFrame({
@@ -778,21 +830,23 @@ class SOURCE(object):
                       height=450,
                       range_x=[0,1], 
                       range_y=[0,1],
-                      markers=False)
+                      markers=False
+                     )
         
         # roc chart
         self.VIZ_AREA(x=fpr, y=tpr,
-                      title=f'ROC Curve (AUC: %.2f)'% roc_auc_score(y_test, y_score),
+                      #title=f'ROC Curve (AUC: %.2f)'% roc_auc_score(y_test, y_score),
                       width=600, 
                       height=450,
                       labels=dict(x='False Positive Rate', y='True Positive Rate'),
                       range_x=[0,1], 
                       range_y=[0,1],
-                      markers=False)
+                      markers=False
+                     )
         
         self._figs[-1].add_shape(type='line', line=dict(dash='dash', color='firebrick'),x0=0, x1=1, y0=0, y1=1)
 
-        precision, recall, thresholds = precision_recall_curve(y_test, y_score, pos_label=pos_label)
+        precision, recall, thresholds = precision_recall_curve(test_df[target], test_df['Score'], pos_label=pos_label)
 
         # precision/recall chart
         self.VIZ_AREA(x=recall, y=precision,
@@ -805,7 +859,6 @@ class SOURCE(object):
                       markers=False)
         
         self._figs[-1].add_shape(type='line', line=dict(dash='dash', color='firebrick'),x0=0, x1=1, y0=0, y1=1)
-        
         return self
         
     
@@ -929,6 +982,7 @@ class SOURCE(object):
         #PREDICTIONS VS ACTUAL
         test_df = pd.DataFrame(y_test)
         test_df['Split'] = 'test'
+        
         test_df['Prediction'] = clf.predict(X_test)
         
         train_df = pd.DataFrame(y_train)
@@ -942,12 +996,14 @@ class SOURCE(object):
         self.VIZ_SCATTER(data_frame=eval_df,
                          x=target,
                          y='Prediction',
-                         title='Prediction vs Actual',
+                         title='Predicted ' + target + ' vs actual ' + target,
                          width=800,
                          height=600,
-                         labels={'x': 'ground truth', 'y': 'prediction'},
+                         labels={target: 'Actual '+target, 'Prediction': 'Predicted '+target},
                          marginal_x='histogram', marginal_y='histogram',
-                         color='Split', trendline='ols'
+                         trendline='ols',
+                         color='Split'
+                         #opacity=0.65
                         )
         self._figs[-1].add_shape(
            type="line", line=dict(dash='dash'),
@@ -960,12 +1016,14 @@ class SOURCE(object):
         self.VIZ_SCATTER(data_frame=eval_df,
                          x='Prediction',
                          y='Residual',
-                         title='Residuals',
+                         title='Gap between predicted '+target +' and actual '+ target,
+                         labels={'Prediction': 'Predicted '+target, 'Residual': 'Gap (predicted - actual)'},
                          width=800,
                          height=600,
                          marginal_y='violin',
                          trendline='ols',
                          color='Split'
+                         #opacity=0.65
                         )
         self._figs[-1].update_yaxes(nticks=10).update_xaxes(nticks=10)
         
@@ -999,9 +1057,11 @@ class SOURCE(object):
                 y='y',
                 data_frame=df,
                 color=colors,
+                width=1200,
+                height=600,
                 #color_discrete_sequence=['red', 'blue'],
                 labels=dict(x='Feature', y='Linear coefficient'),
-                title='Weight of each feature for predicting DailyRate'
+                title='Weight of each feature when predicting '+target
             )
         
         return self
