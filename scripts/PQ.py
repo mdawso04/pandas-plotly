@@ -171,175 +171,195 @@ class SOURCE(object):
             
     # DATAFRAME 'COLUMN' ACTIONS
     
-    def DF_COL_ADD_FIXED(self, value, name = 'new_column'):
+    def DF_COL_ADD_FIXED(self, value, name = 'new_column', data_frame=None):
         '''Add a new column with a 'fixed' value as content'''
+        if data_frame is None: data_frame = self._df
         name = self._toUniqueColName(name)
-        self._df[name] = value
+        data_frame[name] = value
         self._fig()
         return self
     
-    def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1):
+    def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1, data_frame=None):
         '''Add a new column with a index/serial number as content'''
+        if data_frame is None: data_frame = self._df
         name = self._toUniqueColName(name)
-        self._df[name] = range(start, self._df.shape[0] + start)
+        data_frame[name] = range(start, data_frame.shape[0] + start)
         self._fig()
         return self
     
-    def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column'):
+    def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 0)
+        return self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
     
-    def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column'):
+    def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 1)
+        return self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
     
-    def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column'):
+    def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column', data_frame=None):
         '''Add a new column with custom (lambda) content'''
+        if data_frame is None: data_frame = self._df
         name = self._toUniqueColName(name)
-        self._df[name] = self._df[column].apply(lmda)
+        data_frame[name] = data_frame[column].apply(lmda)
         self._fig()
         return self
     
-    def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column'):
+    #check
+    
+    def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from after char pos in existing column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[pos:], name = name)
         self._fig()
         return self
     
-    def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column'):
+    def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from before char pos in existing column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:pos], name = name)
         self._fig()
         return self
     
-    def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column'):
+    def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with first N chars extracted from column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:chars], name = name)
         self._fig()
         return self
     
-    def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column'):
+    def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with last N chars extracted from column'''
         self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[-chars:], name = name)
         self._fig()
         return self
     
-    def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column'):
+    def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column', data_frame=None):
         '''Add a new column by copying an existing column'''
+        if data_frame is None: data_frame = self._df
         name = self._toUniqueColName(name)
-        self._df[name] = self._df[column]
+        data_frame[name] = data_frame[column]
         self._fig()
         return self
     
-    def DF_COL_DELETE(self, columns):
+    def DF_COL_DELETE(self, columns, data_frame=None):
         '''Delete specified column/s'''
+        if data_frame is None: data_frame = self._df
         columns = self._colHelper(columns)
-        self._df = self._df.drop(columns, axis = 1)
+        data_frame = data_frame.drop(columns, axis = 1)
         self._fig()
         return self
     
-    def DF_COL_DELETE_EXCEPT(self, columns):
+    def DF_COL_DELETE_EXCEPT(self, columns, data_frame=None):
         '''Deleted all column/s except specified'''
+        if data_frame is None: data_frame = self._df
         columns = self._colHelper(columns)
-        cols = self._removeElementsFromList(self._df.columns.values.tolist(), columns)
+        cols = self._removeElementsFromList(data_frame.columns.values.tolist(), columns)
         self._fig()
         return self.DF_COL_DELETE(cols).DF_COL_MOVE_TO_FRONT(columns)
     
-    def DF_COL_MOVE_TO_FRONT(self, columns):
+    def DF_COL_MOVE_TO_FRONT(self, columns, data_frame=None):
         '''Move specified column/s to new index'''
+        if data_frame is None: data_frame = self._df
         colsToMove = self._colHelper(columns)
-        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
-        self._df = self._df[colsToMove + otherCols]
+        otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
+        data_frame = data_frame[colsToMove + otherCols]
         self._fig()
         return self
     
-    def DF_COL_MOVE_TO_BACK(self, columns):
+    def DF_COL_MOVE_TO_BACK(self, columns, data_frame=None):
         '''Move specified column/s to new index'''
+        if data_frame is None: data_frame = self._df
         colsToMove = self._colHelper(columns)
-        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
-        self._df = self._df[otherCols + colsToMove]
+        otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
+        data_frame = data_frame[otherCols + colsToMove]
         self._fig()
         return self
     
-    def DF_COL_RENAME(self, columns):
+    def DF_COL_RENAME(self, columns, data_frame=None):
         '''Rename specfied column/s'''
+        if data_frame is None: data_frame = self._df
         # we handle dict for all or subset, OR list for all
         if isinstance(columns, dict):
-            self._df.rename(columns = columns, inplace = True)
+            data_frame.rename(columns = columns, inplace = True)
         else:
-            self._df.columns = columns
+            data_frame.columns = columns
         self._fig()
         return self
     
     #col_reorder list of indices, list of colnames
     
-    def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None):
+    def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to uppercase'''
-        if columns == None: columns = self._df.columns.values.tolist()
-        self._df[columns] = self._df[columns].apply(lambda s: s.str.upper(), axis=0)
+        if data_frame is None: data_frame = self._df
+        if columns == None: columns = data_frame.columns.values.tolist()
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.upper(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None):
+    def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to lowercase'''
-        if columns == None: columns = self._df.columns.values
-        self._df[columns] = self._df[columns].apply(lambda s: s.str.lower(), axis=0)
+        if data_frame is None: data_frame = self._df
+        if columns == None: columns = data_frame.columns.values
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.lower(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_TO_TITLECASE(self, columns = None):
+    def DF_COL_FORMAT_TO_TITLECASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to titlecase'''
-        if columns == None: columns = self._df.columns.values
-        self._df[columns] = self._df[columns].apply(lambda s: s.str.title(), axis=0)
+        if data_frame is None: data_frame = self._df
+        if columns == None: columns = data_frame.columns.values
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.title(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_STRIP(self, columns = None):
+    def DF_COL_FORMAT_STRIP(self, columns = None, data_frame=None):
         '''Format specified column/s values by stripping invisible characters'''
-        if columns == None: columns = self._df.columns.values
-        self._df[columns] = self._df[columns].apply(lambda s: s.str.strip(), axis=0)
+        if data_frame is None: data_frame = self._df
+        if columns == None: columns = data_frame.columns.values
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.strip(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_STRIP_LEFT(self, columns = None):
+    def DF_COL_FORMAT_STRIP_LEFT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
-        df = self._df
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
+        if data_frame is None: data_frame = self._df
+        #df = self._df
+        if columns == None: columns = data_frame.columns.values
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.lstrip(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None):
+    def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None, data_frame=None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
-        if columns == None: columns = self._df.columns.values
-        self._df[columns] = self._df[columns].apply(lambda s: s.str.rstrip(), axis=0)
+        if data_frame is None: data_frame = self._df
+        if columns == None: columns = data_frame.columns.values
+        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.rstrip(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column):
+    def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column, data_frame=None):
         '''Format specified single column values by adding prefix'''
-        self._df[column] = str(prefix) + self._df[column].astype(str)
+        if data_frame is None: data_frame = self._df
+        data_frame[column] = str(prefix) + data_frame[column].astype(str)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column):
+    def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column, data_frame=None):
         '''Format specified single column values by adding suffix'''
-        self._df[column] = self._df[column].astype(str) + str(suffix)
+        data_frame[column] = data_frame[column].astype(str) + str(suffix)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_TYPE(self, columns, typ = 'str'):
+    def DF_COL_FORMAT_TYPE(self, columns, typ = 'str', data_frame=None):
+        if data_frame is None: data_frame = self._df
         if columns == None: 
-            self._df = self._df.astype(typ)
+            data_frame = data_frame.astype(typ)
         else:
             convert_dict = {c:typ for c in columns}
-            self._df = self._df.astype(convert_dict)
+            data_frame = data_frame.astype(convert_dict)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_ROUND(self, decimals):
+    def DF_COL_FORMAT_ROUND(self, decimals, data_frame=None):
         '''Round numerical column values to specified decimal'''
-        self._df = self._df.round(decimals)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.round(decimals)
         self._fig()
         return self
     
@@ -356,87 +376,99 @@ class SOURCE(object):
     #    self._showFig = False
     #    return self
     
-    def DF_ROW_FILTER(self, criteria):
+    def DF_ROW_FILTER(self, criteria, data_frame=None):
         '''Filter rows with specified filter criteria'''
-        self._df.query(criteria, inplace = True)
+        if data_frame is None: data_frame = self._df
+        data_frame.query(criteria, inplace = True)
         self._fig()
         return self
     
-    def DF_ROW_KEEP_BOTTOM(self, numRows):
+    def DF_ROW_KEEP_BOTTOM(self, numRows, data_frame=None):
         '''Delete all rows except specified bottom N rows'''
-        self._df = self._df.tail(numRows)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.tail(numRows)
         self._fig()
         return self
     
-    def DF_ROW_KEEP_TOP(self, numRows):
+    def DF_ROW_KEEP_TOP(self, numRows, data_frame=None):
         '''Delete all rows except specified top N rows'''
-        self._df = self._df.head(numRows)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.head(numRows)
         self._fig()
         return self
     
-    def DF_ROW_REVERSE(self):
+    def DF_ROW_REVERSE(self, data_frame=None):
         '''Reorder all rows in reverse order'''
-        self._df = self._df[::-1].reset_index(drop = True)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame[::-1].reset_index(drop = True)
         self._fig()
         return self
     
-    def DF_ROW_SORT(self, columns, descending = False):
+    def DF_ROW_SORT(self, columns, descending = False, data_frame=None):
         '''Reorder dataframe by specified columns in ascending/descending order'''
+        if data_frame is None: data_frame = self._df
         ascending = 1
         if descending == True: ascending = 0
-        self._df = self._df.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
+        data_frame = data_frame.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
         self._fig()
         return self
     
     # DATAFRAME ACTIONS
     
-    def DF__APPEND(self, otherdf):
+    def DF__APPEND(self, otherdf, data_frame=None):
         '''Append a table to bottom of current table'''
-        self._df = self._df.append(otherdf._df, ignore_index=True)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.append(otherdf, ignore_index=True)
         self._fig()
         return self
     
-    def DF__FILL_DOWN(self):
+    def DF__FILL_DOWN(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell above'''
-        self._df = self._df.fillna(method="ffill", axis = 'index', inplace = True)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.fillna(method="ffill", axis = 'index', inplace = True)
         self._fig()
         return self
     
-    def DF__FILL_UP(self):
+    def DF__FILL_UP(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell below'''
-        self._df = self._df.fillna(method="bfill", axis = 'index', inplace = True)
+        data_frame = data_frame.fillna(method="bfill", axis = 'index', inplace = True)
         self._fig()
         return self
     
-    def DF__FILL_RIGHT(self):
+    def DF__FILL_RIGHT(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell from left'''
-        self._df = self._df.fillna(method="ffill", axis = 'columns', inplace = True)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.fillna(method="ffill", axis = 'columns', inplace = True)
         self._fig()
         return self
     
-    def DF__FILL_LEFT(self):
+    def DF__FILL_LEFT(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell from right'''
-        self._df = self._df.fillna(method="bfill", axis = 'columns', inplace = True)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.fillna(method="bfill", axis = 'columns', inplace = True)
         self._fig()
         return self
     
-    def DF__GROUP(self, groupby, aggregates = None):
+    def DF__GROUP(self, groupby, aggregates = None, data_frame=None):
         '''Group table contents by specified columns with optional aggregation (sum/max/min etc)'''
+        if data_frame is None: data_frame = self._df
         if aggregates == None:
-            self._df = self._df.groupby(groupby, as_index=False).first()
+            data_frame = data_frame.groupby(groupby, as_index=False).first()
         else:
-            self._df = self._df.groupby(groupby, as_index=False).agg(aggregates)
-            self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
+            data_frame = data_frame.groupby(groupby, as_index=False).agg(aggregates)
+            data_frame.columns = ['_'.join(col).rstrip('_') for col in data_frame.columns.values]
         self._fig()
         return self
     
-    def DF__MERGE(self, otherdf, on, how = 'left'):
-        self._df = pd.merge(self._df, otherdf._df, on=on, how=how)
+    def DF__MERGE(self, otherdf, on, how = 'left', data_frame=None):
+        if data_frame is None: data_frame = self._df
+        data_frame = pd.merge(data_frame, otherdf, on=on, how=how)
         self._fig()
         return self
     
-    def DF__REPLACE(self, before, after):
-        self._df = self._df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
+    def DF__REPLACE(self, before, after, data_frame=None):
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
         self._fig()
         return self
     
@@ -446,22 +478,25 @@ class SOURCE(object):
         return self
     '''
     
-    def DF__UNPIVOT(self, indexCols):
-        self._df = pd.melt(self._df, id_vars = indexCols)
+    def DF__UNPIVOT(self, indexCols, data_frame=None):
+        if data_frame is None: data_frame = self._df
+        data_frame = pd.melt(data_frame, id_vars = indexCols)
         self._fig()
         return self
     
-    def DF__PIVOT(self, indexCols, cols, vals):
+    def DF__PIVOT(self, indexCols, cols, vals, data_frame=None):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
-        self._df = self._df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
         self._fig()
         return self
     
-    def DF_COLHEADER_PROMOTE(self, row = 1):
+    def DF_COLHEADER_PROMOTE(self, row = 1, data_frame=None):
         '''Promote row at specified index to column headers'''
+        if data_frame is None: data_frame = self._df
         # make new header, fill in blank values with ColN
         i = row - 1
-        newHeader = self._df.iloc[i:row].squeeze()
+        newHeader = data_frame.iloc[i:row].squeeze()
         newHeader = newHeader.values.tolist()
         for i in newHeader:
             if i == None: i = 'Col'
@@ -474,37 +509,41 @@ class SOURCE(object):
         self._fig()
         return self
     
-    def DF_COLHEADER_DEMOTE(self):
+    def DF_COLHEADER_DEMOTE(self, data_frame=None):
         '''Demote column headers to make 1st row of table'''
+        if data_frame is None: data_frame = self._df
         # insert 'demoted' column headers
-        self.DF_ROW_ADD(self._df.columns)
+        self.DF_ROW_ADD(data_frame.columns)
         # make new header as Col1, Col2, Coln
-        newHeader = ['Col' + str(x) for x in range(len(self._df.columns))]
+        newHeader = ['Col' + str(x) for x in range(len(data_frame.columns))]
         # set new col names
         self.DF_COL_RENAME(newHeader)
         self._fig()
         return self
     
-    def DF_COLHEADER_REORDER_ASC(self):
+    def DF_COLHEADER_REORDER_ASC(self, data_frame=None):
         '''Reorder column titles in ascending order'''
-        self._df.columns = sorted(self._df.columns.values.tolist())
+        if data_frame is None: data_frame = self._df
+        data_frame.columns = sorted(data_frame.columns.values.tolist())
         self._fig()
         return self
     
-    def DF_COLHEADER_REORDER_DESC(self):
+    def DF_COLHEADER_REORDER_DESC(self, data_frame=None):
         '''Reorder column titles in descending order'''
-        self._df.columns = sorted(self._df.columns.values.tolist(), reverse = True)
+        if data_frame is None: data_frame = self._df
+        data_frame.columns = sorted(data_frame.columns.values.tolist(), reverse = True)
         self._fig()
         return self
     
-    def DF_COLHEADER_REORDER(self, columns):
+    def DF_COLHEADER_REORDER(self, columns, data_frame=None):
         '''Reorder column titles in specified order'''
         # if not all columns are specified, we order to front and add others to end
         return self.DF_COL_MOVE_TO_FRONT(columns)
     
-    def DF__STATS(self):
+    def DF__STATS(self, data_frame=None):
         '''Show basic summary statistics of table contents'''
-        self._df = self._df.describe()
+        if data_frame is None: data_frame = self._df
+        data_frame = data_frame.describe()
         self._fig()
         return self
     
@@ -607,12 +646,6 @@ class SOURCE(object):
                        font_size=12,
                        height=30))
         ])
-        #fig.update_layout(
-            #title="Plot Title",
-            #width=600, 
-            #height=450,
-        #    )
-        
         self._fig(fig)
         return self
     
@@ -649,14 +682,7 @@ class SOURCE(object):
     def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib'):
         '''Train several classification models & select the best one'''
         
-        # PREP TRAIN/TEST DATA
-        
-        # separate features, target
-        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
-        y = self._df[target]
-        
-        # train/test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        # BUILD MODEL
         
         # FEATURE TRANSFORMERS
         
@@ -717,10 +743,11 @@ class SOURCE(object):
                             refit='AUC', 
                             return_train_score=True)
         
-        # FIT!
+        # SPLIT & FIT!
         
-        # fit with 'train' only!
-        grid.fit(X_train, y_train)
+        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
+        grid.fit(train_df.drop(target, axis=1), train_df[target])
+        
         
         # after hard work of model fitting, we can clear pipeline/transformer cache
         rmtree(cachedir)
@@ -736,17 +763,13 @@ class SOURCE(object):
         dump(grid.best_estimator_, path, compress = 1) 
         
         # force evaluation
-        return self._ML_EVAL_CLASSIFIER(path, X_test, y_test, X_train, y_train, pos_label='Yes')
+        return self._ML_EVAL_CLASSIFIER(path, target, test_df, train_df, pos_label='Yes')
     
     def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes'):
         '''Evaluate a classfier with TEST data'''
-        # separate features, target
-        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
-        y = self._df[target]
+        return self._ML_EVAL_CLASSIFIER(path, target, test_df=self._df, trainf_df=None, pos_label=pos_label)
         
-        return self._ML_EVAL_CLASSIFIER(path, X, y, None, None, pos_label)
-        
-    def _ML_EVAL_CLASSIFIER(self, path, X_test, y_test,  X_train, y_train, pos_label, **kwargs):
+    def _ML_EVAL_CLASSIFIER(self, path, target, test_df, train_df, pos_label, **kwargs):
         '''Draw a ROC plot'''
         
         # generate path
@@ -757,29 +780,35 @@ class SOURCE(object):
         # load saved model again to be sure
         clf = load(path) 
         
-        # predict/score
-        #y_predict = clf.predict(X_test)
-        #y_score = clf.predict_proba(X_test)[:, 1]
+        #PREPARE DATA
         
-        #PREDICTIONS VS ACTUAL
-        test_df = pd.DataFrame(y_test)
+        # X, y columns
+        X, y = self._removeElementsFromList(list(test_df.columns), target), target
+        
+        # test
         test_df['Split'] = 'test'
-        test_df['Prediction'] = clf.predict(X_test)
-        test_df['Score'] = clf.predict_proba(X_test)[:, 1]
+        test_df['Prediction'] = clf.predict(test_df[X])
+        test_df['Score'] = clf.predict_proba(test_df[X])[:, 1]
+        
+        # train
+        train_df['Split'] = 'train'
+        train_df['Prediction'] = clf.predict(train_df[X])
+        train_df['Score'] = clf.predict_proba(train_df[X])[:, 1]
+        
+        # combined test/train
+        eval_df = test_df.append(train_df)
+        
+        # separately add count column, sort
         test_df.sort_values(by = 'Score', inplace=True)
         test_df.insert(0, 'Count', range(1, test_df.shape[0] + 1))
+        train_df.sort_values(by = 'Score', inplace=True)
+        train_df.insert(0, 'Count', range(1, train_df.shape[0] + 1))
+        eval_df.sort_values(by = 'Score', inplace=True)
+        eval_df.insert(0, 'Count', range(1, eval_df.shape[0] + 1))
         
-        train_df = pd.DataFrame(y_train)
-        train_df['Split'] = 'train'
-        train_df['Prediction'] = clf.predict(X_train)
-        train_df['Score'] = clf.predict_proba(X_train)[:, 1]
-        
-        eval_df = test_df.append(train_df)
-        target = test_df.columns[1]
-        
-
-        # make confusion matrix
-        np = confusion_matrix(test_df[target], test_df['Prediction'], labels=['No', 'Yes'], normalize='all')
+        # CONFUSION MATRIX
+        # use test
+        np = confusion_matrix(test_df[y], test_df['Prediction'], labels=['No', 'Yes'], normalize='all')
         df = pd.DataFrame(data=np.ravel(), columns=['value']) 
         df['true'] = ['Negative', 'Negative', 'Positive', 'Positive']
         df['name'] = ['True negative', 'False Positive', 'False negative', 'True positive']
@@ -793,9 +822,9 @@ class SOURCE(object):
                          #height=450,
                          title='Classification Results (Confusion Matrix)')
         
-        # table of actual target, classifier scores and predictions based on those scores
+        # table of actual target, classifier scores and predictions based on those scores: use test
         self.VIZ_TABLE(data_frame=test_df,
-                      x=['Count', target, 'Score', 'Prediction'], 
+                      x=['Count', y, 'Score', 'Prediction'], 
                       )
         self._figs[-1].update_layout(
             title="Classification Results (Details)",
@@ -803,7 +832,7 @@ class SOURCE(object):
             height=450,
         ) 
         
-        # histogram of scores compared to true labels
+        # histogram of scores compared to true labels: use test
         self.VIZ_HIST(data_frame=test_df,
                       title='Classifier score vs True labels',
                       x='Score', 
@@ -814,7 +843,7 @@ class SOURCE(object):
                      )
         
         # preliminary viz & roc
-        fpr, tpr, thresholds = roc_curve(test_df[target], test_df['Score'], pos_label=pos_label)
+        fpr, tpr, thresholds = roc_curve(test_df[y], test_df['Score'], pos_label=pos_label)
         
         # tpr, fpr by threshold chart
         df = pd.DataFrame({
@@ -868,15 +897,8 @@ class SOURCE(object):
     def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib'):
         '''Train several classification models & select the best one'''
         
-        # PREP TRAIN/TEST DATA
-        # separate features, target
-        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
-        y = self._df[target]
+        # BUILD MODEL
         
-        # train/test split - returns df/series
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-       
-    
         # FEATURE TRANSFORMERS    
         # temporary manual addition of method to SimpleImputer class
         SimpleImputer.get_feature_names_out = (lambda self, names=None:
@@ -936,10 +958,10 @@ class SOURCE(object):
                             refit='r2', 
                             return_train_score=True)
         
-        # FIT!
+        # PREPARE DATA & FIT!
         
-        # fit with 'train' only!
-        grid.fit(X_train, y_train)
+        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
+        grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         # after hard work of model fitting, we can clear pipeline/transformer cache
         rmtree(cachedir)
@@ -955,17 +977,17 @@ class SOURCE(object):
         dump(grid.best_estimator_, path, compress = 1) 
         
         # force evaluation
-        return self._ML_EVAL_REGRESSOR(path, X_test, y_test, X_train, y_train)
+        #return self._ML_EVAL_REGRESSOR(path, X_test, y_test, X_train, y_train)
+        return self._ML_EVAL_REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
     
     def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib'):
         '''Evaluate a regressor with TEST data'''
         # separate features, target
-        X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
-        y = self._df[target]
+        #X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
+        #y = self._df[target]
+        return self._ML_EVAL_REGRESSOR(path, target, test_df=self._df, train_df=None)
         
-        return self._ML_EVAL_REGRESSOR(path, X, y, None, None)
-        
-    def _ML_EVAL_REGRESSOR(self, path, X_test, y_test, X_train, y_train, **kwargs):
+    def _ML_EVAL_REGRESSOR(self, path, target, test_df, train_df, **kwargs):
         '''Evaluate a regressor'''
         
         # generate path
@@ -976,30 +998,41 @@ class SOURCE(object):
         # load saved model again to be sure
         clf = load(path) 
         
-        # predict/score
-        #y_score = clf.predict_proba(X_test)[:, 1]
+        # PREPARE DATA
         
-        #PREDICTIONS VS ACTUAL
-        test_df = pd.DataFrame(y_test)
+        # X, y columns
+        X, y = self._removeElementsFromList(list(test_df.columns), target), target
+        
+        # test
         test_df['Split'] = 'test'
+        test_df['Prediction'] = clf.predict(test_df[X])
+        test_df['Residual'] = test_df['Prediction'] - test_df[y]
         
-        test_df['Prediction'] = clf.predict(X_test)
-        
-        train_df = pd.DataFrame(y_train)
+        # train
         train_df['Split'] = 'train'
-        train_df['Prediction'] = clf.predict(X_train)
+        train_df['Prediction'] = clf.predict(train_df[X])
+        train_df['Residual'] = train_df['Prediction'] - train_df[y]
         
+        # combined test/train
         eval_df = test_df.append(train_df)
-        target = eval_df.columns[0]
-        eval_df['Residual'] = eval_df['Prediction'] - eval_df[target]
+        
+        # separately add count column, sort
+        test_df.sort_values(by = 'Prediction', inplace=True)
+        test_df.insert(0, 'Count', range(1, test_df.shape[0] + 1))
+        train_df.sort_values(by = 'Prediction', inplace=True)
+        train_df.insert(0, 'Count', range(1, train_df.shape[0] + 1))
+        eval_df.sort_values(by = 'Prediction', inplace=True)
+        eval_df.insert(0, 'Count', range(1, eval_df.shape[0] + 1))
                 
+        #PREDICTIONS VS ACTUAL
+        # scatter: use combined test/train
         self.VIZ_SCATTER(data_frame=eval_df,
-                         x=target,
+                         x=y,
                          y='Prediction',
-                         title='Predicted ' + target + ' vs actual ' + target,
+                         title='Predicted ' + y + ' vs actual ' + y,
                          width=800,
                          height=600,
-                         labels={target: 'Actual '+target, 'Prediction': 'Predicted '+target},
+                         labels={target: 'Actual '+y, 'Prediction': 'Predicted '+y},
                          marginal_x='histogram', marginal_y='histogram',
                          trendline='ols',
                          color='Split'
@@ -1007,17 +1040,28 @@ class SOURCE(object):
                         )
         self._figs[-1].add_shape(
            type="line", line=dict(dash='dash'),
-           x0=eval_df[target].min(), y0=eval_df[target].min(),
-           x1=eval_df[target].max(), y1=eval_df[target].max()
+           x0=eval_df[y].min(), y0=eval_df[y].min(),
+           x1=eval_df[y].max(), y1=eval_df[y].max()
         )
         self._figs[-1].update_yaxes(nticks=10).update_xaxes(nticks=10)
         
+        # table of actual target, classifier scores and predictions based on those scores: use test
+        self.VIZ_TABLE(data_frame=test_df,
+                      x=['Count', y, 'Prediction', 'Residual'], 
+                      )
+        self._figs[-1].update_layout(
+            title="Regression Results (Details)",
+            width=600, 
+            height=450,
+        )
+        
         #RESIDUALS
+        # use combined train/test
         self.VIZ_SCATTER(data_frame=eval_df,
                          x='Prediction',
                          y='Residual',
-                         title='Gap between predicted '+target +' and actual '+ target,
-                         labels={'Prediction': 'Predicted '+target, 'Residual': 'Gap (predicted - actual)'},
+                         title='Gap between predicted '+y +' and actual '+ y,
+                         labels={'Prediction': 'Predicted '+y, 'Residual': 'Gap (predicted - actual)'},
                          width=800,
                          height=600,
                          marginal_y='violin',
@@ -1029,10 +1073,14 @@ class SOURCE(object):
         
         # COEFFICIENT/S
         
-        if(len(X_test.columns) == 1):
+        # use test
+        
+        if(len(test_df[X]) == 1):
             df = pd.DataFrame({
-                'X': X_test.iloc[:, 0].to_numpy(),
-                'y': y_test.to_numpy()
+                'X': test_df[X].to_numpy(),
+                'y': test_df[y].to_numpy()
+                #'X': X_test.iloc[:, 0].to_numpy(),
+                #'y': y_test.to_numpy()
             })
             self.VIZ_SCATTER(data_frame=df,
                              x='X',
@@ -1042,7 +1090,7 @@ class SOURCE(object):
                           height=450
                         )
             # add prediction line
-            x_range = X_test.sort_values(by=list(X_test)[0])
+            x_range = test_df[X].sort_values(by=X)
             y_range = clf.predict(x_range)
             self._figs[-1].add_traces(go.Scatter(x=x_range.iloc[:, 0].to_numpy(), y=y_range, name='Regression Fit'))
         
