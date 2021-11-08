@@ -1,41 +1,25 @@
 import pandas as pd
 from pandas.plotting import scatter_matrix as pdsm 
-#import numpy as np
 import pathlib
-#import matplotlib.pyplot as plt
 from collections.abc import Iterable
 import plotly.express as px
 import plotly.graph_objects as go
 from PK import *
 from configparser import ConfigParser
-
 import numpy as np
-from sklearn import datasets, linear_model
-# vizualize pipeline
-from sklearn import set_config
-set_config(display='diagram')  
 
-# for transformer caching
-from tempfile import mkdtemp
-from shutil import rmtree
-import pickle
-
-#from sklearn.utils._testing import ignore_warnings
-#from sklearn.exceptions import ConvergenceWarning
+# catch sklearn verbose warnings
 import warnings
 from sklearn.exceptions import ConvergenceWarning
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
-
+from sklearn import datasets, linear_model
 from sklearn.utils import estimator_html_repr
-
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split, GridSearchCV
-
-
 from sklearn.compose import make_column_transformer
 from sklearn.compose import ColumnTransformer
 from sklearn.compose import make_column_selector as selector
@@ -48,7 +32,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA, NMF
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn.metrics import make_scorer
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
@@ -57,6 +40,16 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve, auc
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+# vizualize pipeline
+from sklearn import set_config
+set_config(display='diagram')  
+# for sklearn transformer caching
+from tempfile import mkdtemp
+from shutil import rmtree
+import pickle
 
 # ## PQ CLASS - QUERY INTERFACE ###
 
@@ -133,6 +126,8 @@ class SOURCE(object):
             return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._df), display(self._df.info())
         elif self._preview == 'color_swatches':
             return px.colors.qualitative.swatches().show(), display(self._df)
+        elif isinstance(self._preview, int):
+            return tuple([f.show(config=self._fig_config) for f in self._figs[-self._preview:]]), display(self._df)
         else:
             return display(self._df)
         
@@ -182,57 +177,59 @@ class SOURCE(object):
     def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1, data_frame=None):
         '''Add a new column with a index/serial number as content'''
         if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name)
+        name = self._toUniqueColName(name, data_frame=data_frame)
         data_frame[name] = range(start, data_frame.shape[0] + start)
         self._fig()
         return self
     
     def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
+        self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
+        self._fig()
+        return self
     
     def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
+        self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
+        self._fig()
+        return self
     
     def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column', data_frame=None):
         '''Add a new column with custom (lambda) content'''
         if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name)
+        name = self._toUniqueColName(name, data_frame=data_frame)
         data_frame[name] = data_frame[column].apply(lmda)
         self._fig()
         return self
     
-    #check
-    
     def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from after char pos in existing column'''
-        self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[pos:], name = name)
+        self.DF_COL_ADD_CUSTOM(column, lambda x: x[pos:], name = name, data_frame=data_frame)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from before char pos in existing column'''
-        self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:pos], name = name)
+        self.DF_COL_ADD_CUSTOM(column, lambda x: x[:pos], name = name, data_frame=data_frame)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with first N chars extracted from column'''
-        self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[:chars], name = name)
+        self.DF_COL_ADD_CUSTOM(column, lambda x: x[:chars], name = name, data_frame=data_frame)
         self._fig()
         return self
     
     def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with last N chars extracted from column'''
-        self._df = self.DF_COL_ADD_CUSTOM(self._df, column, lambda x: x[-chars:], name = name)
+        self.DF_COL_ADD_CUSTOM(column, lambda x: x[-chars:], name = name, data_frame=data_frame)
         self._fig()
         return self
     
     def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column', data_frame=None):
         '''Add a new column by copying an existing column'''
         if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name)
+        name = self._toUniqueColName(name, data_frame=data_frame)
         data_frame[name] = data_frame[column]
         self._fig()
         return self
@@ -240,7 +237,7 @@ class SOURCE(object):
     def DF_COL_DELETE(self, columns, data_frame=None):
         '''Delete specified column/s'''
         if data_frame is None: data_frame = self._df
-        columns = self._colHelper(columns)
+        columns = self._colHelper(columns, data_frame=data_frame)
         data_frame = data_frame.drop(columns, axis = 1)
         self._fig()
         return self
@@ -248,15 +245,17 @@ class SOURCE(object):
     def DF_COL_DELETE_EXCEPT(self, columns, data_frame=None):
         '''Deleted all column/s except specified'''
         if data_frame is None: data_frame = self._df
-        columns = self._colHelper(columns)
+        columns = self._colHelper(columns, data_frame=data_frame)
         cols = self._removeElementsFromList(data_frame.columns.values.tolist(), columns)
+        self.DF_COL_DELETE(cols, data_frame=data_frame)
+        self.DF_COL_MOVE_TO_FRONT(columns, data_frame=data_frame)
         self._fig()
-        return self.DF_COL_DELETE(cols).DF_COL_MOVE_TO_FRONT(columns)
+        return self
     
     def DF_COL_MOVE_TO_FRONT(self, columns, data_frame=None):
         '''Move specified column/s to new index'''
         if data_frame is None: data_frame = self._df
-        colsToMove = self._colHelper(columns)
+        colsToMove = self._colHelper(columns, data_frame=data_frame)
         otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
         data_frame = data_frame[colsToMove + otherCols]
         self._fig()
@@ -265,7 +264,7 @@ class SOURCE(object):
     def DF_COL_MOVE_TO_BACK(self, columns, data_frame=None):
         '''Move specified column/s to new index'''
         if data_frame is None: data_frame = self._df
-        colsToMove = self._colHelper(columns)
+        colsToMove = self._colHelper(columns, data_frame=data_frame)
         otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
         data_frame = data_frame[otherCols + colsToMove]
         self._fig()
@@ -319,13 +318,12 @@ class SOURCE(object):
     def DF_COL_FORMAT_STRIP_LEFT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         if data_frame is None: data_frame = self._df
-        #df = self._df
         if columns == None: columns = data_frame.columns.values
         data_frame[columns] = data_frame[columns].apply(lambda s: s.str.lstrip(), axis=0)
         self._fig()
         return self
     
-    def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None, data_frame=None, data_frame=None):
+    def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         if data_frame is None: data_frame = self._df
         if columns == None: columns = data_frame.columns.values
@@ -431,6 +429,7 @@ class SOURCE(object):
     
     def DF__FILL_UP(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell below'''
+        if data_frame is None: data_frame = self._df
         data_frame = data_frame.fillna(method="bfill", axis = 'index', inplace = True)
         self._fig()
         return self
@@ -472,11 +471,11 @@ class SOURCE(object):
         self._fig()
         return self
     
-    '''
-    def TAB_TRANSPOSE(self):
-        self.df = self.df.transpose(copy = True)
+    def TAB_TRANSPOSE(self, data_frame=None):
+        if data_frame is None: data_frame = self._df
+        data_frame.transpose()
+        self._fig()
         return self
-    '''
     
     def DF__UNPIVOT(self, indexCols, data_frame=None):
         if data_frame is None: data_frame = self._df
@@ -501,10 +500,10 @@ class SOURCE(object):
         for i in newHeader:
             if i == None: i = 'Col'
         # set new col names
-        self.DF_COL_RENAME(newHeader)
+        self.DF_COL_RENAME(newHeader, data_frame=data_frame)
         
         # delete 'promoted' rows
-        self.DF_ROW_DELETE(row)
+        self.DF_ROW_DELETE(row, data_frame=data_frame)
         
         self._fig()
         return self
@@ -517,7 +516,7 @@ class SOURCE(object):
         # make new header as Col1, Col2, Coln
         newHeader = ['Col' + str(x) for x in range(len(data_frame.columns))]
         # set new col names
-        self.DF_COL_RENAME(newHeader)
+        self.DF_COL_RENAME(newHeader, data_frame=data_frame)
         self._fig()
         return self
     
@@ -538,13 +537,19 @@ class SOURCE(object):
     def DF_COLHEADER_REORDER(self, columns, data_frame=None):
         '''Reorder column titles in specified order'''
         # if not all columns are specified, we order to front and add others to end
-        return self.DF_COL_MOVE_TO_FRONT(columns)
+        self.DF_COL_MOVE_TO_FRONT(columns, data_frame=data_frame)
+        self._fig()
+        return self
     
     def DF__STATS(self, data_frame=None):
         '''Show basic summary statistics of table contents'''
         if data_frame is None: data_frame = self._df
-        data_frame = data_frame.describe()
-        self._fig()
+        stats =  data_frame.describe().T
+        stats.insert(0, 'Feature', stats.index)
+        self.DF_COL_ADD_INDEX_FROM_1(name='No', data_frame=stats)
+        self.DF_COL_MOVE_TO_FRONT(columns='No', data_frame=stats)
+        self.VIZ_TABLE(x=stats.columns.values, data_frame=stats)
+        self._fig(preview = 1)
         return self
     
     # VIZUALIZATION ACTIONS
@@ -579,7 +584,7 @@ class SOURCE(object):
         for c in data_frame.columns:
             fig = px.histogram(data_frame=data_frame, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
             self._fig(fig)
-        self._fig(preview = 'all_charts')
+        self._fig(preview = len(data_frame.columns))
         return self
     
     def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
@@ -651,36 +656,40 @@ class SOURCE(object):
     
     # MACHINE LEARNING 'FEATURE SELECTION' ACTIONS
     
-    def ML_SELECT_FEATURES_NONE_ZERO_VARIANCE(self):
+    def ML_SELECT_FEATURES_NONE_ZERO_VARIANCE(self, data_frame=None):
         '''Select numerical features / columns with non-zero variance'''
-        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold'))
+        self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold', data_frame=data_frame), data_frame=data_frame)
+        self._fig(fig)
+        return self
     
-    def ML_SELECT_FEATURES_N_BEST(self, target, n=10):
+    def ML_SELECT_FEATURES_N_BEST(self, target, n=10, data_frame=None):
         '''Select best n numerical features / columns for classifying target column'''
-        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n))
+        self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n, data_frame=data_frame), data_frame=data_frame)
+        self._fig(fig)
+        return self
     
-    def _selectFeatures(self, method=None, target=None, n=10):
-        from sklearn.feature_selection import VarianceThreshold
-        from sklearn.feature_selection import SelectKBest
-        from sklearn.feature_selection import chi2
+    def _selectFeatures(self, method=None, target=None, n=10, data_frame=None):
+        if data_frame is None: data_frame = self._df
         
         if method == 'VarianceThreshold':
             sel = VarianceThreshold() #remove '0 variance'
-            x = self._df[self._colHelper(type='number')]
+            x = data_frame[self._colHelper(type='number', data_frame=data_frame)]
             sel.fit_transform(x)
             return sel.get_feature_names_out().tolist()
         elif method == 'SelectKBest':
             sel = SelectKBest(k=n)
-            x = self._df[self._removeElementsFromList(self._colHelper(type='number'), [target])]
-            y = self._df[target]
+            x = data_frame[self._removeElementsFromList(self._colHelper(type='number', data_frame=data_frame), [target])]
+            y = data_frame[target]
             sel.fit_transform(X=x, y=y)
             features = sel.get_feature_names_out().tolist()
             features.append(target)
             return features
     
     #@ignore_warnings
-    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib'):
+    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib', data_frame=None):
         '''Train several classification models & select the best one'''
+        
+        if data_frame is None: data_frame = self._df
         
         # BUILD MODEL
         
@@ -745,7 +754,7 @@ class SOURCE(object):
         
         # SPLIT & FIT!
         
-        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(data_frame, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         
@@ -763,11 +772,14 @@ class SOURCE(object):
         dump(grid.best_estimator_, path, compress = 1) 
         
         # force evaluation
-        return self._ML_EVAL_CLASSIFIER(path, target, test_df, train_df, pos_label='Yes')
+        self._ML_EVAL_CLASSIFIER(path, target, test_df, train_df, pos_label='Yes')
+        return self
     
-    def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes'):
+    def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes', data_frame=None):
         '''Evaluate a classfier with TEST data'''
-        return self._ML_EVAL_CLASSIFIER(path, target, test_df=self._df, trainf_df=None, pos_label=pos_label)
+        if data_frame is None: data_frame = self._df
+        self._ML_EVAL_CLASSIFIER(path, target, test_df=data_frame, trainf_df=None, pos_label=pos_label)
+        return self
         
     def _ML_EVAL_CLASSIFIER(self, path, target, test_df, train_df, pos_label, **kwargs):
         '''Draw a ROC plot'''
@@ -888,14 +900,18 @@ class SOURCE(object):
                       markers=False)
         
         self._figs[-1].add_shape(type='line', line=dict(dash='dash', color='firebrick'),x0=0, x1=1, y0=0, y1=1)
-        return self
+        
+        self._fig(preview = 6)
+        return
         
     
     # MACHINE LEARNING 'MODEL TRAINING' ACTIONS
     
     #@ignore_warnings
-    def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib'):
+    def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib', data_frame=None):
         '''Train several classification models & select the best one'''
+        
+        if data_frame is None: data_frame = self._df
         
         # BUILD MODEL
         
@@ -960,7 +976,7 @@ class SOURCE(object):
         
         # PREPARE DATA & FIT!
         
-        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(data_frame, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         # after hard work of model fitting, we can clear pipeline/transformer cache
@@ -978,14 +994,14 @@ class SOURCE(object):
         
         # force evaluation
         #return self._ML_EVAL_REGRESSOR(path, X_test, y_test, X_train, y_train)
-        return self._ML_EVAL_REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
+        self._ML_EVAL_REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
+        return self
     
     def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib'):
         '''Evaluate a regressor with TEST data'''
         # separate features, target
-        #X = self._df[self._removeElementsFromList(self._colHelper(colsOnNone=True), [target])]
-        #y = self._df[target]
-        return self._ML_EVAL_REGRESSOR(path, target, test_df=self._df, train_df=None)
+        self._ML_EVAL_REGRESSOR(path, target, test_df=self._df, train_df=None)
+        return self
         
     def _ML_EVAL_REGRESSOR(self, path, target, test_df, train_df, **kwargs):
         '''Evaluate a regressor'''
@@ -1112,7 +1128,8 @@ class SOURCE(object):
                 title='Weight of each feature when predicting '+target
             )
         
-        return self
+        self._fig(preview = 4)
+        return
     
     @property
     def REPORT_SET_VIZ_COLORS_PLOTLY(self):
@@ -1365,16 +1382,18 @@ class SOURCE(object):
         #    return None
         return [i for i in l1 if i in l2]
     
-    def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True):
+    def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True, data_frame=None):
+        
+        if data_frame is None: data_frame = self._df
         
         # pre-process: translate to column names
         if isinstance(columns, slice) or isinstance(columns, int):
-            columns = self._df.columns.values.tolist()[columns]
+            columns = data_frame.columns.values.tolist()[columns]
         elif isinstance(columns, list) and all(isinstance(c, int) for c in columns):
-            columns = self._df.columns[columns].values.tolist()
+            columns = data_frame.columns[columns].values.tolist()
         
         # process: limit possible columns by type (number, object, datetime)
-        df = self._df.select_dtypes(include=type) if type is not None else self._df
+        df = data_frame.select_dtypes(include=type) if type is not None else data_frame
         
         #process: fit to limited column scope
         if colsOnNone == True and columns is None: columns = df.columns.values.tolist()
@@ -1394,9 +1413,10 @@ class SOURCE(object):
             if head == True: return df.head(max)
             else: return df.tail(max)
     
-    def _toUniqueColName(self, name):
+    def _toUniqueColName(self, name, data_frame=None):
+        if data_frame is None: data_frame = self._df
         n = 1
-        while name in self._df.columns.values.tolist():
+        while name in data_frame.columns.values.tolist():
             name = name + str(n)
         return name
     
