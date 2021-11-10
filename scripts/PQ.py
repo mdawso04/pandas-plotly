@@ -168,205 +168,235 @@ class SOURCE(object):
     
     def DF_COL_ADD_FIXED(self, value, name = 'new_column', data_frame=None):
         '''Add a new column with a 'fixed' value as content'''
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name)
-        data_frame[name] = value
+        df[name] = value
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1, data_frame=None):
         '''Add a new column with a index/serial number as content'''
-        if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name, data_frame=data_frame)
-        data_frame[name] = range(start, data_frame.shape[0] + start)
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = range(start, df.shape[0] + start)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column', data_frame=None):
         '''Add a new column with custom (lambda) content'''
-        if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name, data_frame=data_frame)
-        data_frame[name] = data_frame[column].apply(lmda)
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column].apply(lmda)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from after char pos in existing column'''
-        self.DF_COL_ADD_CUSTOM(column, lambda x: x[pos:], name = name, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[pos:], name = name, data_frame=data_frame)
+        #if data_frame is None: self._df = df
+        #self._fig()
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column', data_frame=None):
         '''Add a new column with content extracted from before char pos in existing column'''
-        self.DF_COL_ADD_CUSTOM(column, lambda x: x[:pos], name = name, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[:pos], name = name, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with first N chars extracted from column'''
-        self.DF_COL_ADD_CUSTOM(column, lambda x: x[:chars], name = name, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[:chars], name = name, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column', data_frame=None):
         '''Add a new column with last N chars extracted from column'''
-        self.DF_COL_ADD_CUSTOM(column, lambda x: x[-chars:], name = name, data_frame=data_frame)
-        self._fig()
-        return self
-    
+        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[-chars:], name = name, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column', data_frame=None):
         '''Add a new column by copying an existing column'''
-        if data_frame is None: data_frame = self._df
-        name = self._toUniqueColName(name, data_frame=data_frame)
-        data_frame[name] = data_frame[column]
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column]
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_DELETE(self, columns, data_frame=None):
         '''Delete specified column/s'''
-        if data_frame is None: data_frame = self._df
-        columns = self._colHelper(columns, data_frame=data_frame)
-        data_frame = data_frame.drop(columns, axis = 1)
+        df = self._df if data_frame is None else data_frame
+        columns = self._colHelper(columns, data_frame=df)
+        df = df.drop(columns, axis = 1)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_DELETE_EXCEPT(self, columns, data_frame=None):
         '''Deleted all column/s except specified'''
-        if data_frame is None: data_frame = self._df
-        columns = self._colHelper(columns, data_frame=data_frame)
-        cols = self._removeElementsFromList(data_frame.columns.values.tolist(), columns)
-        self.DF_COL_DELETE(cols, data_frame=data_frame)
-        self.DF_COL_MOVE_TO_FRONT(columns, data_frame=data_frame)
+        df = self._df if data_frame is None else data_frame
+        columns = self._colHelper(columns, data_frame=df)
+        cols = self._removeElementsFromList(df.columns.values.tolist(), columns)
+        df = self.DF_COL_DELETE(cols, data_frame=df)
+        df = self.DF_COL_MOVE_TO_FRONT(columns, data_frame=df)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_MOVE_TO_FRONT(self, columns, data_frame=None):
-        '''Move specified column/s to new index'''
-        if data_frame is None: data_frame = self._df
-        colsToMove = self._colHelper(columns, data_frame=data_frame)
-        otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
-        data_frame = data_frame[colsToMove + otherCols]
+        '''Move specified column/s to front'''
+        df = self._df if data_frame is None else data_frame
+        colsToMove = self._colHelper(columns, data_frame=df)
+        otherCols = self._removeElementsFromList(df.columns.values.tolist(), colsToMove)
+        df = df[colsToMove + otherCols]
+        if data_frame is None: self._df = df
         self._fig()
-        return self
+        return self if data_frame is None else df
     
     def DF_COL_MOVE_TO_BACK(self, columns, data_frame=None):
-        '''Move specified column/s to new index'''
-        if data_frame is None: data_frame = self._df
-        colsToMove = self._colHelper(columns, data_frame=data_frame)
-        otherCols = self._removeElementsFromList(data_frame.columns.values.tolist(), colsToMove)
-        data_frame = data_frame[otherCols + colsToMove]
+        '''Move specified column/s to back'''
+        df = self._df if data_frame is None else data_frame
+        colsToMove = self._colHelper(columns, data_frame=df)
+        otherCols = self._removeElementsFromList(df.columns.values.tolist(), colsToMove)
+        df = df[otherCols + colsToMove]
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_RENAME(self, columns, data_frame=None):
         '''Rename specfied column/s'''
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         # we handle dict for all or subset, OR list for all
         if isinstance(columns, dict):
-            data_frame.rename(columns = columns, inplace = True)
+            df.rename(columns = columns, inplace = True)
         else:
-            data_frame.columns = columns
+            df.columns = columns
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     #col_reorder list of indices, list of colnames
     
     def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to uppercase'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values.tolist()
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.upper(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values.tolist()
+        df[columns] = df[columns].apply(lambda s: s.str.upper(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to lowercase'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.lower(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values
+        df[columns] = df[columns].apply(lambda s: s.str.lower(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_TO_TITLECASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to titlecase'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.title(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values
+        df[columns] = df[columns].apply(lambda s: s.str.title(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_STRIP(self, columns = None, data_frame=None):
         '''Format specified column/s values by stripping invisible characters'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.strip(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values
+        df[columns] = df[columns].apply(lambda s: s.str.strip(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_STRIP_LEFT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.lstrip(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values
+        df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
-        if data_frame is None: data_frame = self._df
-        if columns == None: columns = data_frame.columns.values
-        data_frame[columns] = data_frame[columns].apply(lambda s: s.str.rstrip(), axis=0)
+        df = self._df if data_frame is None else data_frame
+        if columns == None: columns = df.columns.values
+        df[columns] = df[columns].apply(lambda s: s.str.rstrip(), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column, data_frame=None):
         '''Format specified single column values by adding prefix'''
-        if data_frame is None: data_frame = self._df
-        data_frame[column] = str(prefix) + data_frame[column].astype(str)
+        df = self._df if data_frame is None else data_frame
+        df[column] = str(prefix) + df[column].astype(str)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column, data_frame=None):
         '''Format specified single column values by adding suffix'''
-        data_frame[column] = data_frame[column].astype(str) + str(suffix)
+        df = self._df if data_frame is None else data_frame
+        df[column] = df[column].astype(str) + str(suffix)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_TYPE(self, columns, typ = 'str', data_frame=None):
-        if data_frame is None: data_frame = self._df
+        '''Format specified columns as specfied type'''
+        df = self._df if data_frame is None else data_frame
         if columns == None: 
-            data_frame = data_frame.astype(typ)
+            df = df.astype(typ)
         else:
             convert_dict = {c:typ for c in columns}
-            data_frame = data_frame.astype(convert_dict)
+            df = df.astype(convert_dict)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COL_FORMAT_ROUND(self, decimals, data_frame=None):
         '''Round numerical column values to specified decimal'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.round(decimals)
+        df = self._df if data_frame is None else data_frame
+        df = df.round(decimals)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     # DATAFRAME 'ROW' ACTIONS
     
-    #def DF_ROW_ADD(self, row, index = 0):
-    #    self._df.loc[index] = row
-    #    self._showFig = False
-    #    return self
+    def DF_ROW_ADD(self, row, index = 0, data_frame=None):
+        '''Add row at specified index'''
+        df = self._df if data_frame is None else data_frame
+        df.loc[index] = row
+        if data_frame is None: self._df = df
+        self._fig()
+        return self if data_frame is None else df
     
     #def DF_ROW_DELETE(self, rowNums):
     #    pos = rowNums - 1
@@ -376,245 +406,248 @@ class SOURCE(object):
     
     def DF_ROW_FILTER(self, criteria, data_frame=None):
         '''Filter rows with specified filter criteria'''
-        if data_frame is None: data_frame = self._df
-        data_frame.query(criteria, inplace = True)
+        df = self._df if data_frame is None else data_frame
+        df.query(criteria, inplace = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_ROW_KEEP_BOTTOM(self, numRows, data_frame=None):
         '''Delete all rows except specified bottom N rows'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.tail(numRows)
+        df = self._df if data_frame is None else data_frame
+        df = df.tail(numRows)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_ROW_KEEP_TOP(self, numRows, data_frame=None):
         '''Delete all rows except specified top N rows'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.head(numRows)
+        df = self._df if data_frame is None else data_frame
+        df = df.head(numRows)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_ROW_REVERSE(self, data_frame=None):
         '''Reorder all rows in reverse order'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame[::-1].reset_index(drop = True)
+        df = self._df if data_frame is None else data_frame
+        df = df[::-1].reset_index(drop = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_ROW_SORT(self, columns, descending = False, data_frame=None):
         '''Reorder dataframe by specified columns in ascending/descending order'''
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         ascending = 1
         if descending == True: ascending = 0
-        data_frame = data_frame.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
+        df = df.sort_values(by = columns, axis = 0, ascending = ascending, na_position ='last')
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     # DATAFRAME ACTIONS
     
     def DF__APPEND(self, otherdf, data_frame=None):
         '''Append a table to bottom of current table'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.append(otherdf, ignore_index=True)
+        df = self._df if data_frame is None else data_frame
+        df = df.append(otherdf, ignore_index=True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__FILL_DOWN(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell above'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.fillna(method="ffill", axis = 'index', inplace = True)
+        df = self._df if data_frame is None else data_frame
+        df = df.fillna(method="ffill", axis = 'index', inplace = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__FILL_UP(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell below'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.fillna(method="bfill", axis = 'index', inplace = True)
+        df = self._df if data_frame is None else data_frame
+        df = df.fillna(method="bfill", axis = 'index', inplace = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__FILL_RIGHT(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell from left'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.fillna(method="ffill", axis = 'columns', inplace = True)
+        df = self._df if data_frame is None else data_frame
+        df = df.fillna(method="ffill", axis = 'columns', inplace = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__FILL_LEFT(self, data_frame=None):
         '''Fill blank cells with values from last non-blank cell from right'''
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.fillna(method="bfill", axis = 'columns', inplace = True)
+        df = self._df if data_frame is None else data_frame
+        df = df.fillna(method="bfill", axis = 'columns', inplace = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__GROUP(self, groupby, aggregates = None, data_frame=None):
         '''Group table contents by specified columns with optional aggregation (sum/max/min etc)'''
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         if aggregates == None:
-            data_frame = data_frame.groupby(groupby, as_index=False).first()
+            df = df.groupby(groupby, as_index=False).first()
         else:
-            data_frame = data_frame.groupby(groupby, as_index=False).agg(aggregates)
-            data_frame.columns = ['_'.join(col).rstrip('_') for col in data_frame.columns.values]
+            df = df.groupby(groupby, as_index=False).agg(aggregates)
+            df.columns = ['_'.join(col).rstrip('_') for col in df.columns.values]
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__MERGE(self, otherdf, on, how = 'left', data_frame=None):
-        if data_frame is None: data_frame = self._df
-        data_frame = pd.merge(data_frame, otherdf, on=on, how=how)
+        df = self._df if data_frame is None else data_frame
+        df = pd.merge(df, otherdf, on=on, how=how)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__REPLACE(self, before, after, data_frame=None):
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
+        df = self._df if data_frame is None else data_frame
+        df = df.apply(lambda s: s.str.replace(before, after, regex=False), axis=0)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
-    def TAB_TRANSPOSE(self, data_frame=None):
-        if data_frame is None: data_frame = self._df
-        data_frame.transpose()
+        return self if data_frame is None else df
+
+    def DF__TRANSPOSE(self, data_frame=None):
+        df = self._df if data_frame is None else data_frame
+        df.transpose()
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__UNPIVOT(self, indexCols, data_frame=None):
-        if data_frame is None: data_frame = self._df
-        data_frame = pd.melt(data_frame, id_vars = indexCols)
+        df = self._df if data_frame is None else data_frame
+        df = pd.melt(df, id_vars = indexCols)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF__PIVOT(self, indexCols, cols, vals, data_frame=None):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
-        if data_frame is None: data_frame = self._df
-        data_frame = data_frame.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
+        df = self._df if data_frame is None else data_frame
+        df = df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COLHEADER_PROMOTE(self, row = 1, data_frame=None):
         '''Promote row at specified index to column headers'''
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         # make new header, fill in blank values with ColN
         i = row - 1
-        newHeader = data_frame.iloc[i:row].squeeze()
+        newHeader = df.iloc[i:row].squeeze()
         newHeader = newHeader.values.tolist()
         for i in newHeader:
             if i == None: i = 'Col'
-        # set new col names
-        self.DF_COL_RENAME(newHeader, data_frame=data_frame)
-        
-        # delete 'promoted' rows
-        self.DF_ROW_DELETE(row, data_frame=data_frame)
-        
+        df = self.DF_COL_RENAME(newHeader, data_frame=df)
+        df = self.DF_ROW_DELETE(row, data_frame=df)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COLHEADER_DEMOTE(self, data_frame=None):
         '''Demote column headers to make 1st row of table'''
-        if data_frame is None: data_frame = self._df
-        # insert 'demoted' column headers
-        self.DF_ROW_ADD(data_frame.columns)
-        # make new header as Col1, Col2, Coln
-        newHeader = ['Col' + str(x) for x in range(len(data_frame.columns))]
-        # set new col names
-        self.DF_COL_RENAME(newHeader, data_frame=data_frame)
+        df = self._df if data_frame is None else data_frame
+        df = self.DF_ROW_ADD(df.columns, data_frame=df)
+        newHeader = ['Col' + str(x) for x in range(len(df.columns))]
+        df = self.DF_COL_RENAME(newHeader, data_frame=df)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COLHEADER_REORDER_ASC(self, data_frame=None):
         '''Reorder column titles in ascending order'''
-        if data_frame is None: data_frame = self._df
-        data_frame.columns = sorted(data_frame.columns.values.tolist())
+        df = self._df if data_frame is None else data_frame
+        df.columns = sorted(df.columns.values.tolist())
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COLHEADER_REORDER_DESC(self, data_frame=None):
         '''Reorder column titles in descending order'''
-        if data_frame is None: data_frame = self._df
-        data_frame.columns = sorted(data_frame.columns.values.tolist(), reverse = True)
+        df = self._df if data_frame is None else data_frame
+        df.columns = sorted(df.columns.values.tolist(), reverse = True)
+        if data_frame is None: self._df = df
         self._fig()
-        return self
-    
+        return self if data_frame is None else df
+
     def DF_COLHEADER_REORDER(self, columns, data_frame=None):
-        '''Reorder column titles in specified order'''
+        '''Reorder column titles in specified order. Convenience method for DF_COL_MOVE_TO_FRONT'''
         # if not all columns are specified, we order to front and add others to end
-        self.DF_COL_MOVE_TO_FRONT(columns, data_frame=data_frame)
-        self._fig()
-        return self
-    
-    def DF__STATS(self, data_frame=None):
-        '''Show basic summary statistics of table contents'''
-        if data_frame is None: data_frame = self._df
-        stats =  data_frame.describe().T
-        stats.insert(0, 'Feature', stats.index)
-        self.DF_COL_ADD_INDEX_FROM_1(name='No', data_frame=stats)
-        self.DF_COL_MOVE_TO_FRONT(columns='No', data_frame=stats)
-        self.VIZ_TABLE(x=stats.columns.values, data_frame=stats)
-        self._fig(preview = 1)
-        return self
-    
+        return self.DF_COL_MOVE_TO_FRONT(columns, data_frame=data_frame)
+        #self._fig()
+        #if data_frame is None: self._df = df
+        #return self if data_frame is None else df
+
     # VIZUALIZATION ACTIONS
     
     def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a box plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.box(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.box(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a violin plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.violin(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.violin(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a hisotgram'''
-        if data_frame is None: data_frame = self._df
-        fig = px.histogram(data_frame=data_frame, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.histogram(data_frame=df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_HIST_LIST(self, color=None, data_frame=None, **kwargs):
         '''Draw a histogram for all fields in current dataframe'''
-        if data_frame is None: data_frame = self._df
-        for c in data_frame.columns:
-            fig = px.histogram(data_frame=data_frame, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
+        df = self._df if data_frame is None else data_frame
+        for c in df.columns:
+            fig = px.histogram(data_frame=df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
             self._fig(fig)
-        self._fig(preview = len(data_frame.columns))
+        self._fig(preview = len(df.columns))
         return self
     
     def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a scatter plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.scatter(data_frame=data_frame, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.scatter(data_frame=df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
         
     def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
         '''Draw a bar plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.bar(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.bar(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
         '''Draw a line plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.line(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
+        df = self._df if data_frame is None else data_frame
+        fig = px.line(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
                       color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
-        '''Draw a line plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.area(data_frame=data_frame, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
+        '''Draw a line plot with shaded area'''
+        df = self._df if data_frame is None else data_frame
+        fig = px.area(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
@@ -622,8 +655,8 @@ class SOURCE(object):
     def VIZ_TREEMAP(self, path, values, root='All data', data_frame=None, **kwargs):
         '''Draw a treemap plot'''
         path = [px.Constant("All data")] + path
-        if data_frame is None: data_frame = self._df
-        fig = px.treemap(data_frame=data_frame, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        df = self._df if data_frame is None else data_frame
+        fig = px.treemap(data_frame=df, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
         fig.update_traces(root_color="lightgrey")
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         self._fig(fig)
@@ -631,16 +664,15 @@ class SOURCE(object):
     
     def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, data_frame=None, **kwargs):
         '''Draw a scatter matrix plot'''
-        if data_frame is None: data_frame = self._df
-        fig = px.scatter_matrix(data_frame=data_frame, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
+        df = self._df if data_frame is None else data_frame
+        fig = px.scatter_matrix(data_frame=df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
         return self
     
     def VIZ_TABLE(self, x=None, data_frame=None, **kwargs):
         '''Draw a table'''
-        if data_frame is None: data_frame = self._df
-        
-        cell_values = data_frame[x].to_numpy().T
+        df = self._df if data_frame is None else data_frame
+        cell_values = df[x].to_numpy().T
         fig = go.Figure(data=[go.Table(
             header=dict(values=x,
                        align='left',
@@ -654,32 +686,43 @@ class SOURCE(object):
         self._fig(fig)
         return self
     
+    def VIZ_DFSTATS(self, data_frame=None):
+        '''Show basic summary statistics of table contents'''
+        df = self._df if data_frame is None else data_frame
+        stats = df.describe().T
+        stats.insert(0, 'Feature', stats.index)
+        stats = self.DF_COL_ADD_INDEX_FROM_1(name='No', data_frame=stats)
+        stats = self.DF_COL_MOVE_TO_FRONT(columns='No', data_frame=stats)
+        self.VIZ_TABLE(x=stats.columns.values, data_frame=stats)
+        #self._fig(preview = 1)
+        return self
+    
     # MACHINE LEARNING 'FEATURE SELECTION' ACTIONS
     
     def ML_SELECT_FEATURES_NONE_ZERO_VARIANCE(self, data_frame=None):
         '''Select numerical features / columns with non-zero variance'''
-        self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold', data_frame=data_frame), data_frame=data_frame)
-        self._fig(fig)
-        return self
+        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold', data_frame=data_frame), data_frame=data_frame)
+        #self._fig(fig)
+        #return self
     
     def ML_SELECT_FEATURES_N_BEST(self, target, n=10, data_frame=None):
         '''Select best n numerical features / columns for classifying target column'''
-        self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n, data_frame=data_frame), data_frame=data_frame)
-        self._fig(fig)
-        return self
+        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n, data_frame=data_frame), data_frame=data_frame)
+        #self._fig(fig)
+        #return self
     
     def _selectFeatures(self, method=None, target=None, n=10, data_frame=None):
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         
         if method == 'VarianceThreshold':
             sel = VarianceThreshold() #remove '0 variance'
-            x = data_frame[self._colHelper(type='number', data_frame=data_frame)]
+            x = df[self._colHelper(type='number', data_frame=df)]
             sel.fit_transform(x)
             return sel.get_feature_names_out().tolist()
         elif method == 'SelectKBest':
             sel = SelectKBest(k=n)
-            x = data_frame[self._removeElementsFromList(self._colHelper(type='number', data_frame=data_frame), [target])]
-            y = data_frame[target]
+            x = df[self._removeElementsFromList(self._colHelper(type='number', data_frame=df), [target])]
+            y = df[target]
             sel.fit_transform(X=x, y=y)
             features = sel.get_feature_names_out().tolist()
             features.append(target)
@@ -687,9 +730,9 @@ class SOURCE(object):
     
     #@ignore_warnings
     def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib', data_frame=None):
-        '''Train several classification models & select the best one'''
+        '''Train a classification model for provided target, save model to specified location and display summary of model performance'''
         
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         
         # BUILD MODEL
         
@@ -754,7 +797,7 @@ class SOURCE(object):
         
         # SPLIT & FIT!
         
-        train_df, test_df = train_test_split(data_frame, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(df, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         
@@ -776,14 +819,13 @@ class SOURCE(object):
         return self
     
     def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes', data_frame=None):
-        '''Evaluate a classfier with TEST data'''
-        if data_frame is None: data_frame = self._df
-        self._ML_EVAL_CLASSIFIER(path, target, test_df=data_frame, trainf_df=None, pos_label=pos_label)
+        '''Load a save classifier model from specified location and evaluate with current dataframe data'''
+        df = self._df if data_frame is None else data_frame
+        self._ML_EVAL_CLASSIFIER(path, target, test_df=df, trainf_df=None, pos_label=pos_label)
         return self
         
     def _ML_EVAL_CLASSIFIER(self, path, target, test_df, train_df, pos_label, **kwargs):
-        '''Draw a ROC plot'''
-        
+                
         # generate path
         if path in self._config.sections() and 'model' in self._config[path]:
             path = self._config[path]['model']
@@ -909,9 +951,9 @@ class SOURCE(object):
     
     #@ignore_warnings
     def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib', data_frame=None):
-        '''Train several classification models & select the best one'''
+        '''Train a regression model for provided target, save model to specified location and display summary of model performance'''
         
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         
         # BUILD MODEL
         
@@ -976,7 +1018,7 @@ class SOURCE(object):
         
         # PREPARE DATA & FIT!
         
-        train_df, test_df = train_test_split(data_frame, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(df, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         # after hard work of model fitting, we can clear pipeline/transformer cache
@@ -997,10 +1039,10 @@ class SOURCE(object):
         self._ML_EVAL_REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
         return self
     
-    def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib'):
+    def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib', data_frame=None):
         '''Evaluate a regressor with TEST data'''
-        # separate features, target
-        self._ML_EVAL_REGRESSOR(path, target, test_df=self._df, train_df=None)
+        df = self._df if data_frame is None else data_frame
+        self._ML_EVAL_REGRESSOR(path, target, test_df=df, train_df=None)
         return self
         
     def _ML_EVAL_REGRESSOR(self, path, target, test_df, train_df, **kwargs):
@@ -1384,16 +1426,16 @@ class SOURCE(object):
     
     def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True, data_frame=None):
         
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         
         # pre-process: translate to column names
         if isinstance(columns, slice) or isinstance(columns, int):
-            columns = data_frame.columns.values.tolist()[columns]
+            columns = df.columns.values.tolist()[columns]
         elif isinstance(columns, list) and all(isinstance(c, int) for c in columns):
-            columns = data_frame.columns[columns].values.tolist()
+            columns = df.columns[columns].values.tolist()
         
         # process: limit possible columns by type (number, object, datetime)
-        df = data_frame.select_dtypes(include=type) if type is not None else data_frame
+        df = df.select_dtypes(include=type) if type is not None else df
         
         #process: fit to limited column scope
         if colsOnNone == True and columns is None: columns = df.columns.values.tolist()
@@ -1407,16 +1449,17 @@ class SOURCE(object):
         
         return columns
     
-    def _rowHelper(self, df, max = None, head = True):
+    def _rowHelper(self, max = None, head = True, data_frame=None):
+        df = self._df if data_frame is None else data_frame
         if max == None: return df
         else: 
             if head == True: return df.head(max)
             else: return df.tail(max)
     
     def _toUniqueColName(self, name, data_frame=None):
-        if data_frame is None: data_frame = self._df
+        df = self._df if data_frame is None else data_frame
         n = 1
-        while name in data_frame.columns.values.tolist():
+        while name in df.columns.values.tolist():
             name = name + str(n)
         return name
     
@@ -1431,5 +1474,3 @@ class SOURCE(object):
         os.makedirs(path, exist_ok = True)
         path = os.path.join(path, filename)
         return path
-
-    

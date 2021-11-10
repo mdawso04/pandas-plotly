@@ -55,6 +55,8 @@ optional: pycurl (needed for corporate networks with authenticated proxy servers
 | ```DF_COL_ADD_DUPLICATE``` | Add a new column by copying an existing column<br /> ```.DF_COL_ADD_DUPLICATE('Old_column')```<br /> ```.DF_COL_ADD_DUPLICATE('New_column')```
 | ```DF_COL_DELETE``` |  Delete specified column/s<br /> ```.DF_COL_DELETE('Del_column')```<br />```.DF_COL_DELETE(['Del_column1', 'Del_column2', 'Del_columnN')```<br />```.DF_COL_DELETE([0, 3, 6])```<br />```.DF_COL_DELETE(Slice(0,3))```
 | ```DF_COL_DELETE_EXCEPT``` |  Deleted all column/s except specified<br /> ```.DF_COL_DELETE_EXCEPT('Keep_column')```<br />```.DF_COL_DELETE_EXCEPT(['Keep_column1', 'Keep_column2', 'Keep_columnN')```<br />```.DF_COL_DELETE_EXCEPT([0, 3, 6])```<br />```.DF_COL_DELETE_EXCEPT(Slice(0,3))```
+| ```DF_COL_MOVE_TO_FRONT``` |  Move specified column/s to front<br />```.DF_COL_MOVE_TO_FRONT(["Col1, ColN"])```<br />
+| ```DF_COL_MOVE_TO_BACK``` |  Move specified column/s to back<br />```.DF_COL_MOVE_TO_BACK(["Col1, ColN"])```<br />
 | ```DF_COL_RENAME``` |  Rename specfied column/s```.DF_COL_RENAME({'OldCol1':'NewCol1', 'OldColN:'NewColN})```<br />```.DF_COL_RENAME(['NewCol1','NewCol2', 'NewColN'])```<br />
 | ```DF_COL_FORMAT_TO_UPPERCASE``` |  Format specified column/s values to uppercase<br /> ```.DF_COL_FORMAT_TO_UPPERCASE(['Column1', 'ColumnN'])```
 | ```DF_COL_FORMAT_TO_LOWERCASE``` |  Format specified column/s values to lowercase<br /> ```.DF_COL_FORMAT_TO_LOWERCASE(['Column1', 'ColumnN'])```
@@ -64,8 +66,9 @@ optional: pycurl (needed for corporate networks with authenticated proxy servers
 | ```DF_COL_FORMAT_STRIP_RIGHT``` |  Convenience method for DF_COL_FORMAT_STRIP<br /> ```.DF_COL_FORMAT_STRIP_RIGHT(['Column1', 'ColumnN'])```
 | ```DF_COL_FORMAT_ADD_PREFIX``` | Format specified single column values by adding prefix<br /> ```.DF_COL_FORMAT_ADD_PREFIX('Prefix_', 'Column')```
 | ```DF_COL_FORMAT_ADD_SUFFIX``` |  Format specified single column values by adding suffix<br /> ```.DF_COL_FORMAT_ADD_SUFFIX(['_suffix', 'Column')```
-| ```DF_COL_FORMAT_TYPE``` | 
+| ```DF_COL_FORMAT_TYPE``` |  Format specified columns as specfied type<br /> ```.DF_COL_FORMAT_TYPE(['Col1', 'Col2'], 'str')```
 | ```DF_COL_FORMAT_ROUND``` | Round numerical column values to specified decimal<br /> ```.DF_COL_FORMAT_ROUND(2)```<br /> ```.DF_COL_FORMAT_ROUND({'Column1':2, 'Column2':1, 'ColumnN':1})```
+| ```DF_ROW_ADD``` |  Add row at specified index<br /> ```.DF_ROW_ADD(['Col1', 'Col2', 'ColN'])```<br /> 
 | ```DF_ROW_FILTER``` |  Filter rows with specified filter criteria<br /> ```.DF_ROW_FILTER('Age < 29')```
 | ```DF_ROW_KEEP_BOTTOM``` |  Delete all rows except specified bottom N rows<br /> ```.DF_ROW_KEEP_BOTTOM(5)```
 | ```DF_ROW_KEEP_TOP``` |  Delete all rows except specified top N rows<br /> ```.DF_ROW_KEEP_TOP(5)```
@@ -79,13 +82,14 @@ optional: pycurl (needed for corporate networks with authenticated proxy servers
 | ```DF__GROUP``` |  Group table contents by specified columns with optional aggregation (sum/max/min etc)<br /> ```.DF__GROUP('Department', {'Age': ['mean', 'count']})```
 | ```DF__MERGE``` |  Merge a table with current table with specified type (left/right/inner/outer) 
 | ```DF__REPLACE``` |  Replace string values in table
+| ```DF__TRANSPOSE``` |  Transpose dataframe
 | ```DF__UNPIVOT``` |  Unpivot table on specified columns
 | ```DF__PIVOT``` |  Pivot table on specified columns
 | ```DF_COLHEADER_PROMOTE``` |  Promote row at specified index to column headers<br /> ```.DF_COLHEADER_PROMOTE(1)```
 | ```DF_COLHEADER_DEMOTE``` |  Demote column headers to make 1st row of table<br /> ```.DF_COLHEADER_DEMOTE()```
 | ```DF_COLHEADER_REORDER_ASC``` |  Reorder column titles in ascending order<br /> ```.DF_COLHEADER_REORDER_ASC()```
 | ```DF_COLHEADER_REORDER_DESC``` |  Reorder column titles in descending order<br /> ```.DF_COLHEADER_REORDER_DESC()```
-| ```DF__STATS``` |  Show basic summary statistics of table contents<br /> ```.DF__STATS()```
+| ```DF_COLHEADER_REORDER``` |  Reorder column titles in specified order. Convenience method for DF_COL_MOVE_TO_FRONT<br /> ```.DF_COLHEADER_REORDER(['Col1', 'Col2', 'ColN'])```
 | ```VIZ_BOX``` |  Draw a box plot<br /> ```.VIZ_BOX('Department', 'NoEmployees')```
 | ```VIZ_VIOLIN``` |  Draw a violin plot<br /> ```.VIZ_VIOLIN('Department', 'NoEmployees')```
 | ```VIZ_HIST``` |  Draw a hisotgram<br /> ```.VIZ_HIST('Department', 'NoEmployees')```
@@ -93,8 +97,17 @@ optional: pycurl (needed for corporate networks with authenticated proxy servers
 | ```VIZ_SCATTER``` |  Draw a scatter plot
 | ```VIZ_BAR``` |  Draw a bar plot<br /> ```.VIZ_BAR('Department', 'NoEmployees')```
 | ```VIZ_LINE``` |  Draw a line plot<br /> ```.VIZ_LINE('Department', 'NoEmployees')```
+| ```VIZ_AREA``` |  Draw a line plot with shaded area<br /> ```.VIZ_AREA('Department', 'NoEmployees')```
 | ```VIZ_TREEMAP``` |  Draw a treemap plot
 | ```VIZ_SCATTERMATRIX``` |  Draw a scatter matrix plot
+| ```VIZ_TABLE``` |  Draw a table
+| ```VIZ_DFSTATS``` |  Draw a table with basic summary statistics of dataframe<br /> ```.VIZ_DFSTATS()```
+| ```ML_SELECT_FEATURES_NONE_ZERO_VARIANCE``` |  Select numerical features / columns with non-zero variance
+| ```ML_SELECT_FEATURES_N_BEST``` |  Select best n numerical features / columns for classifying target column
+| ```ML_TRAIN_AND_SAVE_CLASSIFIER``` |  Train a 'classification model' for provided target, save model to specified location and display summary of model performance
+| ```ML_EVAL_CLASSIFIER``` |  Load a saved 'classification model' from specified location and evaluate with current dataframe data
+| ```ML_TRAIN_AND_SAVE_REGRESSOR``` |  Train a 'regression model' for provided target, save model to specified location and display summary of model performance
+| ```ML_EVAL_REGRESSOR``` |  Load a saved 'regression model' from specified location and evaluate with current dataframe data
 | ```REPORT_SET_VIZ_COLORS_PLOTLY``` |  Set plot/report colors to 'Plotly'<br /> ```.REPORT_SET_VIZ_COLORS_PLOTLY```
 | ```REPORT_SET_VIZ_COLORS_D3``` |  Set plot/report colors to 'D3'<br /> ```.REPORT_SET_VIZ_COLORS_D3```
 | ```REPORT_SET_VIZ_COLORS_G10``` |  Set plot/report colors to 'G10'<br /> ```.REPORT_SET_VIZ_COLORS_G10```
@@ -119,3 +132,7 @@ optional: pycurl (needed for corporate networks with authenticated proxy servers
 | ```REPORT_SAVE_ALL``` |  Save html format report/plots and dataframe to specified location<br /> ```.REPORT_SAVE_ALL()```
 | ```REPORT_SAVE_VIZ_HTML``` |  Save html format report/plots to specified location<br /> ```.REPORT_SAVE_VIZ_HTML()```
 | ```REPORT_SAVE_DF``` |  Save dataframe to specified location<br /> ```.REPORT_SAVE_DF()```
+
+
+
+
