@@ -92,7 +92,8 @@ class SOURCE(object):
             self._df = pd.DataFrame()
         self._showFig = False
         self._preview = 'no_chart' #'current_chart' 'all_charts' 'full' 'color_swatches'
-        self._colorSwatch = px.colors.qualitative.Plotly
+        #self._colorSwatch = px.colors.qualitative.Plotly
+        self.REPORT_SET_VIZ_COLORS_ANTIQUE
         
         self._figs = []
         
@@ -169,13 +170,13 @@ class SOURCE(object):
     def DF_COL_ADD_FIXED(self, value, name = 'new_column', data_frame=None):
         '''Add a new column with a 'fixed' value as content'''
         df = self._df if data_frame is None else data_frame
-        name = self._toUniqueColName(name)
+        name = self._toUniqueColName(name, data_frame=df)
         df[name] = value
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_ADD_INDEX(self, name = 'new_column', start = 1, data_frame=None):
+    def DF_COL_ADD_INDEX(self, start, name = 'new_column', data_frame=None):
         '''Add a new column with a index/serial number as content'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
@@ -186,23 +187,24 @@ class SOURCE(object):
 
     def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 0, data_frame=data_frame)
+        return self.DF_COL_ADD_INDEX(start = 0, name=name, data_frame=data_frame)
         #self._fig()
         #if data_frame is None: self._df = df
         #return self if data_frame is None else df
 
     def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(name, start = 1, data_frame=data_frame)
+        return self.DF_COL_ADD_INDEX(start = 1, name=name, data_frame=data_frame)
         #self._fig()
         #if data_frame is None: self._df = df
         #return self if data_frame is None else df
 
-    def DF_COL_ADD_CUSTOM(self, column, lmda, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_CUSTOM(self, column, eval_string, name = 'new_column', data_frame=None):
         '''Add a new column with custom (lambda) content'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
-        df[name] = df[column].apply(lmda)
+        #df[name] = df[column].apply(lmda)
+        df = pd.eval(name+'='+'df.'+column + ' '+eval_string, target=df)
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
@@ -1459,8 +1461,9 @@ class SOURCE(object):
     def _toUniqueColName(self, name, data_frame=None):
         df = self._df if data_frame is None else data_frame
         n = 1
+        name = str(name)
         while name in df.columns.values.tolist():
-            name = name + str(n)
+            name = name + '_' + str(n)
         return name
     
     def _pathHelper(self, path, filename):
