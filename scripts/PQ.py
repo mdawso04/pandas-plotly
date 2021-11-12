@@ -167,7 +167,7 @@ class SOURCE(object):
             
     # DATAFRAME 'COLUMN' ACTIONS
     
-    def DF_COL_ADD_FIXED(self, value, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_FIXED(self, value, name='new_column', data_frame=None):
         '''Add a new column with a 'fixed' value as content'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
@@ -176,7 +176,7 @@ class SOURCE(object):
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_ADD_INDEX(self, start, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_INDEX(self, start, name='new_column', data_frame=None):
         '''Add a new column with a index/serial number as content'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
@@ -187,57 +187,58 @@ class SOURCE(object):
 
     def DF_COL_ADD_INDEX_FROM_0(self, name = 'new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(start = 0, name=name, data_frame=data_frame)
-        #self._fig()
-        #if data_frame is None: self._df = df
-        #return self if data_frame is None else df
+        return self.DF_COL_ADD_INDEX(start=0, name=name, data_frame=data_frame)
 
-    def DF_COL_ADD_INDEX_FROM_1(self, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_INDEX_FROM_1(self, name='new_column', data_frame=None):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(start = 1, name=name, data_frame=data_frame)
-        #self._fig()
-        #if data_frame is None: self._df = df
-        #return self if data_frame is None else df
+        return self.DF_COL_ADD_INDEX(start=1, name=name, data_frame=data_frame)
 
-    def DF_COL_ADD_CUSTOM(self, column, eval_string, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_CUSTOM(self, column, eval_string, name='new_column', data_frame=None):
         '''Add a new column with custom (lambda) content'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
-        #df[name] = df[column].apply(lmda)
         df = pd.eval(name+'='+'df.'+column + ' '+eval_string, target=df)
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_ADD_EXTRACT_POSITION_AFTER(self, column, pos, name = 'new_column', data_frame=None):
-        '''Add a new column with content extracted from after char pos in existing column'''
-        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[pos:], name = name, data_frame=data_frame)
-        #if data_frame is None: self._df = df
-        #self._fig()
-        #return self if data_frame is None else df
+    def DF_COL_ADD_EXTRACT_AFTER(self, column, pos, name='new_column', data_frame=None):
+        '''Add a new column of text extracted from after char pos in existing column'''
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column].apply(lambda x: str(x)[pos:])
+        if data_frame is None: self._df = df
+        self._fig()
+        return self if data_frame is None else df
 
-    def DF_COL_ADD_EXTRACT_POSITION_BEFORE(self, column, pos, name = 'new_column', data_frame=None):
-        '''Add a new column with content extracted from before char pos in existing column'''
-        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[:pos], name = name, data_frame=data_frame)
-        #self._fig()
-        #if data_frame is None: self._df = df
-        #return self if data_frame is None else df
+    def DF_COL_ADD_EXTRACT_BEFORE(self, column, pos, name='new_column', data_frame=None):
+        '''Add a new column with text extracted from before char pos in existing column'''
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column].apply(lambda x: str(x)[:pos])
+        if data_frame is None: self._df = df
+        self._fig()
+        return self if data_frame is None else df
 
-    def DF_COL_ADD_EXTRACT_CHARS_FIRST(self, column, chars, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_EXTRACT_FIRST(self, column, chars, name='new_column', data_frame=None):
         '''Add a new column with first N chars extracted from column'''
-        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[:chars], name = name, data_frame=data_frame)
-        #self._fig()
-        #if data_frame is None: self._df = df
-        #return self if data_frame is None else df
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column].apply(lambda x: str(x)[:chars])
+        if data_frame is None: self._df = df
+        self._fig()
+        return self if data_frame is None else df
 
-    def DF_COL_ADD_EXTRACT_CHARS_LAST(self, column, chars, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_EXTRACT_LAST(self, column, chars, name='new_column', data_frame=None):
         '''Add a new column with last N chars extracted from column'''
-        return self.DF_COL_ADD_CUSTOM(column, lambda x: x[-chars:], name = name, data_frame=data_frame)
-        #self._fig()
-        #if data_frame is None: self._df = df
-        #return self if data_frame is None else df
+        df = self._df if data_frame is None else data_frame
+        name = self._toUniqueColName(name, data_frame=df)
+        df[name] = df[column].apply(lambda x: str(x)[-chars:])
+        if data_frame is None: self._df = df
+        self._fig()
+        return self if data_frame is None else df
 
-    def DF_COL_ADD_DUPLICATE(self, column, name = 'new_column', data_frame=None):
+    def DF_COL_ADD_DUPLICATE(self, column, name='new_column', data_frame=None):
         '''Add a new column by copying an existing column'''
         df = self._df if data_frame is None else data_frame
         name = self._toUniqueColName(name, data_frame=df)
@@ -286,6 +287,7 @@ class SOURCE(object):
         self._fig()
         return self if data_frame is None else df
 
+    # TODO: handle common user errors
     def DF_COL_RENAME(self, columns, data_frame=None):
         '''Rename specfied column/s'''
         df = self._df if data_frame is None else data_frame
@@ -300,11 +302,11 @@ class SOURCE(object):
 
     #col_reorder list of indices, list of colnames
     
-    def DF_COL_FORMAT_TO_UPPERCASE(self, columns = None, data_frame=None):
+    def DF_COL_FORMAT_TO_UPPERCASE(self, columns=None, data_frame=None):
         '''Format specified column/s values to uppercase'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values.tolist()
-        df[columns] = df[columns].apply(lambda s: s.str.upper(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).upper())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
@@ -312,8 +314,8 @@ class SOURCE(object):
     def DF_COL_FORMAT_TO_LOWERCASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to lowercase'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.lower(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).lower())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
@@ -321,8 +323,8 @@ class SOURCE(object):
     def DF_COL_FORMAT_TO_TITLECASE(self, columns = None, data_frame=None):
         '''Format specified column/s values to titlecase'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.title(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).title())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
@@ -330,8 +332,8 @@ class SOURCE(object):
     def DF_COL_FORMAT_STRIP(self, columns = None, data_frame=None):
         '''Format specified column/s values by stripping invisible characters'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.strip(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).strip())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
@@ -339,33 +341,35 @@ class SOURCE(object):
     def DF_COL_FORMAT_STRIP_LEFT(self, columns = None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.lstrip(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).lstrip())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_FORMAT_STRIP_RIGHT(self, columns = None, data_frame=None):
+    def DF_COL_FORMAT_STRIP_RIGHT(self, columns=None, data_frame=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         df = self._df if data_frame is None else data_frame
-        if columns == None: columns = df.columns.values
-        df[columns] = df[columns].apply(lambda s: s.str.rstrip(), axis=0)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x).rstrip())
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_FORMAT_ADD_PREFIX(self, prefix, column, data_frame=None):
+    def DF_COL_FORMAT_ADD_PREFIX(self, columns, prefix, data_frame=None):
         '''Format specified single column values by adding prefix'''
         df = self._df if data_frame is None else data_frame
-        df[column] = str(prefix) + df[column].astype(str)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(prefix) + str(x))
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
 
-    def DF_COL_FORMAT_ADD_SUFFIX(self, suffix, column, data_frame=None):
+    def DF_COL_FORMAT_ADD_SUFFIX(self, columns, suffix, data_frame=None):
         '''Format specified single column values by adding suffix'''
         df = self._df if data_frame is None else data_frame
-        df[column] = df[column].astype(str) + str(suffix)
+        columns = self._colHelper(columns, data_frame=df)
+        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: str(x) + str(suffix))
         if data_frame is None: self._df = df
         self._fig()
         return self if data_frame is None else df
