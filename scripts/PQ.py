@@ -1,12 +1,19 @@
 import pandas as pd
-from pandas.plotting import scatter_matrix as pdsm 
-import pathlib
-from collections.abc import Iterable
 import plotly.express as px
 import plotly.graph_objects as go
-from PK import *
-from configparser import ConfigParser
 import numpy as np
+
+from configparser import ConfigParser
+import pathlib
+from tempfile import mkdtemp
+from shutil import rmtree
+from joblib import dump
+
+#from PK import *
+            
+#import pickle
+#from pandas.plotting import scatter_matrix as pdsm 
+#from collections.abc import Iterable
 
 # catch sklearn verbose warnings
 import warnings
@@ -44,59 +51,53 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 # vizualize pipeline
-from sklearn import set_config
-set_config(display='diagram')  
+#from sklearn import set_config
+#set_config(display='diagram')  
 # for sklearn transformer caching
-from tempfile import mkdtemp
-from shutil import rmtree
-import pickle
+        
+# ## QUERY INTERFACE ###
 
-# ## PQ CLASS - QUERY INTERFACE ###
-
-class SOURCE(object):
+class GET(object):
     
     def __init__(self, source):
-        super(SOURCE, self).__init__()
+        super(GET, self).__init__()
         file_ext = pathlib.Path(source).suffix
         self._config = ConfigParser()
         self._config.read('config.ini', encoding='utf_8')
             
-        # config.ini 'kintone app' section
+        # CONFIG.INI sources
+        # kintone app
         if source in self._config.sections() and 'kintone_domain' in self._config[source]:
+            from PK import *
             domain = self._config.get(source,'kintone_domain')
             app_id = self._config.getint(source,'app_id')
             api_token = self._config.get(source,'api_token')
             model_csv = self._config.get(source,'model_csv')
-        
             m = jsModelFactory.get(model_csv)
             js = JinSapo(domain=domain, app_id=app_id, api_token=api_token, model=m)
             self._df = js.select_df()
-        
-        # config.ini 'csv' section
+        # csv
         elif source in self._config.sections() and 'csv' in self._config[source]:
             self._df = pd.read_csv(self._config[source]['csv'])
-            
-        # config.ini 'xlsx' section
+        # xlsx
         elif source in self._config.sections() and 'xlsx' in self._config[source]:
             self._df = pd.read_csv(self._config[source]['xlsx'])
-        
+        # OTHER sources
         # csv
         elif file_ext == '.csv':
             self._df = pd.read_csv(source)
-            
         # excel
         elif file_ext == '.xlsx':
             self._df = pd.read_excel(source)
-        
+        # blank
         else:
             self._df = pd.DataFrame()
+        
+        self._dfs = []
         self._showFig = False
         self._preview = 'no_chart' #'current_chart' 'all_charts' 'full' 'color_swatches'
-        #self._colorSwatch = px.colors.qualitative.Plotly
-        self.REPORT_SET_VIZ_COLORS_ANTIQUE
-        
+        self.REPORT__SET_VIZ_COLORS__ANTIQUE
         self._figs = []
-        
         self._fig_config =  {
             'displaylogo': False,
             'toImageButtonOptions': {
@@ -117,555 +118,429 @@ class SOURCE(object):
         }
         # format floats as percentages for readability
         #pd.options.display.float_format = '{:.2%}'.format
+        #pd.options.display.max_rows = 500
+        #pd.options.display.max_columns = 100
         
-    def _repr_pretty_(self, p, cycle): 
-        if self._preview == 'current_chart':
-            return self._figs[-1].show(config=self._fig_config), display(self._df)
-        elif self._preview == 'all_charts':
-            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._df)
-        elif self._preview == 'full':
-            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._df), display(self._df.info())
-        elif self._preview == 'color_swatches':
-            return px.colors.qualitative.swatches().show(), display(self._df)
-        elif isinstance(self._preview, int):
-            return tuple([f.show(config=self._fig_config) for f in self._figs[-self._preview:]]), display(self._df)
-        else:
-            #return display(pd.DataFrame(self._df.dtypes).T), display(self._df)
-            #return display(self._df)
-            return display(self._dfForRepr())
-        
-    def _dfForRepr(self):
-        # Update columns to include current datatypes as 2nd line
-        dfr = self._df.copy()
-        if isinstance(dfr.columns, pd.MultiIndex): 
-            arrays = [dfr.columns.get_level_values(0), dfr.dtypes]
-            mi = pd.MultiIndex.from_arrays(arrays, names=('Name', 'Type'))
-        else:
-            arrays = [dfr.columns, dfr.dtypes]
-            mi = pd.MultiIndex.from_arrays(arrays, names=('Name', 'Type'))
-        dfr.columns = mi
-        return dfr
-        
-    def __repr__(self): 
-        return self._df.__repr__()
-    
-    def __str__(self): 
-        return self._df.__str__()
-    
-    def _fig(self, fig = None, preview = 'no_chart'):
-        
-        if fig == None:
-            self._preview = preview
-        else:
-            self._figTidy(fig)
-            self._figs.append(fig)
-            self._preview = 'current_chart'
-            
-    def _figTidy(self, fig):
-        #fig.update_traces()
-        fig.update_layout(
-            overwrite=True,
-            #colorway=self._colorSwatch,
-            dragmode='drawopenpath',
-            #newshape_line_color='cyan',
-            #title_text='Draw a path to separate versicolor and virginica',
-            modebar_add=['drawline',
-                'drawcircle',
-                'drawrect',
-                'eraseshape',
-                'pan2d'
-            ],
-            modebar_remove=['resetScale', 'lasso2d'] #'select', 'zoom', 
-        )
-        #fig.update_annotations()
-        #fig.update_xaxes()
-            
-    # DATAFRAME 'COLUMN' ACTIONS
-    
-    #TODO add multiple columns at once
-    
     # ROW-WISE ADD
-    def DF_COL_ADD_CUSTOM(self, eval_string='row', name='new_column', data_frame=None):
+    def DF_COL__ADD__CUSTOM(self, eval_string='""', name='new_column'):
         '''Add a new column with custom (lambda) content'''
-        df = self._df if data_frame is None else data_frame
-        name = self._toUniqueColName(name, data_frame=df)
-        df[name] = df.apply(lambda row: eval(eval_string), axis=1, result_type='expand')
-        if data_frame is None: self._df = df
+        name = self._toUniqueColName(name)
+        self._df[name] = self._df.apply(lambda row: eval(eval_string), axis=1, result_type='expand')
         self._fig()
-        return self if data_frame is None else df 
+        return self
+
+    #def DF_COL__ADD__CUSTOM(self, eval_string='row', name='new_column', data_frame=None):
+    #    '''Add a new column with custom (lambda) content'''
+    #    df = self._df if data_frame is None else data_frame[0] 
+    #    name = self._toUniqueColName(name, data_frame=df)
+    #    df[name] = df.apply(lambda row: eval(eval_string), axis=1, result_type='expand')
+    #    if data_frame is None: self._df = df
+    #    else: data_frame[0] = df
+    #    self._fig()
+    #    return self
     
-    def DF_COL_ADD_DUPLICATE(self, column=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__DUPLICATE(self, column=None, name='new_column'):
         '''Add a new column by copying an existing column'''
-        column = self._colHelper(column, max=1, data_frame=data_frame)
+        column = self._colHelper(column, max=1)
         eval_string = 'row.{}'.format(column[0])
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
+        self._fig()
+        return self
 
-    def DF_COL_ADD_EXTRACT_BEFORE(self, column=None, pos=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__EXTRACT_BEFORE(self, column=None, pos=None, name='new_column'):
         '''Add a new column with text extracted from before char pos in existing column'''
-        column = self._colHelper(column, max=1, data_frame=data_frame)
+        column = self._colHelper(column, max=1)
         eval_string = 'str(row.{})[:{}]'.format(column[0], pos)
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
 
-    def DF_COL_ADD_EXTRACT_FIRST(self, column=None, chars=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__EXTRACT_FIRST(self, column=None, chars=None, name='new_column'):
         '''Add a new column with first N chars extracted from column'''
-        column = self._colHelper(column, max=1, data_frame=data_frame)
+        column = self._colHelper(column, max=1)
         eval_string = 'str(row.{})[:{}]'.format(column[0], chars)
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
 
-    def DF_COL_ADD_EXTRACT_FROM(self, column=None, pos=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__EXTRACT_FROM(self, column=None, pos=None, name='new_column'):
         '''Add a new column of text extracted from after char pos in existing column'''
-        column = self._colHelper(column, max=1, data_frame=data_frame)
+        column = self._colHelper(column, max=1)
         eval_string = 'str(row.{})[{}:]'.format(column[0], pos)
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
 
-    def DF_COL_ADD_EXTRACT_LAST(self, column=None, chars=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__EXTRACT_LAST(self, column=None, chars=None, name='new_column'):
         '''Add a new column with last N chars extracted from column'''
         column = self._colHelper(column, max=1, data_frame=data_frame)
         eval_string = 'str(row.{})[-{}:]'.format(column[0], chars)
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
 
-    def DF_COL_ADD_FIXED(self, value=None, name='new_column', data_frame=None):
+    def DF_COL__ADD__FIXED(self, value=None, name='new_column'):
         '''Add a new column with a 'fixed' value as content'''
         if isinstance(value, str): value = '"{}"'.format(value) # wrap string with extra commas!
         eval_string = '{}'.format(value)
-        return self.DF_COL_ADD_CUSTOM(eval_string=eval_string, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__CUSTOM(eval_string=eval_string, name=name)
 
     # COLUMN-WISE ADD
-    def DF_COL_ADD_INDEX(self, start=1, name='new_column', data_frame=None):
+    def DF_COL__ADD__INDEX(self, start=1, name='new_column'):
         '''Add a new column with a index/serial number as content'''
-        df = self._df if data_frame is None else data_frame
-        name = self._toUniqueColName(name, data_frame=df)
-        df[name] = range(start, df.shape[0] + start)
-        if data_frame is None: self._df = df
+        name = self._toUniqueColName(name)
+        self._df[name] = range(start, self._df.shape[0] + start)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_COL_ADD_INDEX_FROM_0(self, name='new_column', data_frame=None):
+    def DF_COL__ADD__INDEX_FROM_0(self, name='new_column'):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(start=0, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__INDEX(start=0, name=name)
 
-    def DF_COL_ADD_INDEX_FROM_1(self, name='new_column', data_frame=None):
+    def DF_COL__ADD__INDEX_FROM_1(self, name='new_column'):
         '''Convenience method for DF_COL_ADD_INDEX'''
-        return self.DF_COL_ADD_INDEX(start=1, name=name, data_frame=data_frame)
+        return self.DF_COL__ADD__INDEX(start=1, name=name)
 
-    def DF_COL_DELETE(self, columns=None, data_frame=None):
+    def DF_COL__DELETE(self, columns=None):
         '''Delete specified column/s'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
-        df = df.drop(columns, axis = 1)
-        if data_frame is None: self._df = df
+        columns = self._colHelper(columns, max=max)
+        self._df = self._df.drop(columns, axis = 1)
         self._fig()
-        return self if data_frame is None else df
-
-    def DF_COL_DELETE_EXCEPT(self, columns=None, data_frame=None):
+        return self
+    
+    def DF_COL__DELETE_EXCEPT(self, columns=None):
         '''Deleted all column/s except specified'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
-        cols = self._removeElementsFromList(df.columns.values.tolist(), columns)
-        df = self.DF_COL_DELETE(cols, data_frame=df)
-        df = self.DF_COL_REORDER_MOVE_TO_FRONT(columns, data_frame=df)
-        if data_frame is None: self._df = df
+        columns = self._colHelper(columns, max=max)
+        cols = self._removeElementsFromList(self._df.columns.values.tolist(), columns)
+        self.DF_COL__DELETE(cols)
+        self.DF_COL__REORDER__MOVE_TO_FRONT(columns)
         self._fig()
-        return self if data_frame is None else df
-
-    def DF_COL_FORMAT_ADD_PREFIX(self, columns=None, prefix='pre_', data_frame=None):
+        return self
+    
+    def DF_COL__FORMAT__ADD_PREFIX(self, columns=None, prefix='pre_'):
         '''Format specified single column values by adding prefix'''
         eval_string = 'str("{}") + str(x)'.format(prefix)
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_ADD_SUFFIX(self, columns=None, suffix='_suf', data_frame=None):
+    def DF_COL__FORMAT__ADD_SUFFIX(self, columns=None, suffix='_suf'):
         '''Format specified single column values by adding suffix'''
         eval_string = 'str(x) + str("{}")'.format(suffix)
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
        #COLUMN-WISE FORMAT
-    def DF_COL_FORMAT_CUSTOM(self, columns=None, eval_string=None, data_frame=None):
+    def DF_COL__FORMAT__CUSTOM(self, columns=None, eval_string=None):
         '''Format specified column/s values to uppercase'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
-        df[columns] = pd.DataFrame(df[columns]).applymap(lambda x: eval(eval_string))
-        if data_frame is None: self._df = df
+        columns = self._colHelper(columns, max=max)
+        self._df[columns] = pd.DataFrame(self._df[columns]).applymap(lambda x: eval(eval_string))
         self._fig()
-        return self if data_frame is None else df
+        return self
     
-    def _DF_COL_FORMAT_CUSTOM_BATCH(self, columns=None, eval_string=None, data_frame=None):
+    def _DF_COL__FORMAT__CUSTOM_BATCH(self, columns=None, eval_string=None):
         '''Add a new column with custom (lambda) content'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
-        df[columns] = pd.DataFrame(df[columns]).apply(lambda row: eval(eval_string), axis=1)
-        if data_frame is None: self._df = df
+        columns = self._colHelper(columns, max=max)
+        self._df[columns] = pd.DataFrame(self._df[columns]).apply(lambda row: eval(eval_string), axis=1)
         self._fig()
-        return self if data_frame is None else df
+        return self
     
     # DF__FILL_DOWN
-    def DF_COL_FORMAT_FILL_DOWN(self, data_frame=None):
+    def DF_COL__FORMAT__FILL_DOWN(self):
         '''Fill blank cells with values from last non-blank cell above'''
         eval_string = 'row.fillna(method="ffill")'.format(str(before), str(after))
-        return self._DF_COL_FORMAT_CUSTOM_BATCH(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self._DF_COL__FORMAT__CUSTOM_BATCH(columns=columns, eval_string=eval_string)
         
     #DF__FILL_UP
-    def DF_COL_FORMAT_FILL_UP(self, data_frame=None):
+    def DF_COL__FORMAT__FILL_UP(self):
         '''Fill blank cells with values from last non-blank cell below'''
         eval_string = 'row.fillna(method="bfill")'.format(str(before), str(after))
-        return self._DF_COL_FORMAT_CUSTOM_BATCH(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self._DF_COL__FORMAT__CUSTOM_BATCH(columns=columns, eval_string=eval_string)
     
     # DF__REPLACE
-    def DF_COL_FORMAT_REPLACE(self, columns=None, before='', after='', data_frame=None):
+    def DF_COL__FORMAT__REPLACE(self, columns=None, before='', after=''):
         '''Round numerical column values to specified decimal'''
         eval_string = 'x.replace("{}","{}")'.format(str(before), str(after))
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
     #TODO restore original column order after format
     #     catch strings
-    def DF_COL_FORMAT_ROUND(self, columns=None, decimals=0, data_frame=None):
+    def DF_COL__FORMAT__ROUND(self, columns=None, decimals=0):
         '''Round numerical column values to specified decimal'''
         eval_string = 'round(x,{})'.format(decimals)
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_STRIP(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__STRIP(self, columns=None):
         '''Format specified column/s values by stripping invisible characters'''
         eval_string = 'str(x).strip()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_STRIP_LEFT(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__STRIP_LEFT(self, columns=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         eval_string = 'str(x).lstrip()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_STRIP_RIGHT(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__STRIP_RIGHT(self, columns=None):
         '''Convenience method for DF_COL_FORMAT_STRIP'''
         eval_string = 'str(x).rstrip()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_TO_LOWERCASE(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__TO_LOWERCASE(self, columns=None):
         '''Format specified column/s values to lowercase'''
         eval_string = 'str(x).lower()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_TO_TITLECASE(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__TO_TITLECASE(self, columns=None):
         '''Format specified column/s values to titlecase'''
         eval_string = 'str(x).title()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_TO_UPPERCASE(self, columns=None, data_frame=None):
+    def DF_COL__FORMAT__TO_UPPERCASE(self, columns=None):
         '''Format specified column/s values to uppercase'''
         eval_string = 'str(x).upper()'
-        return self.DF_COL_FORMAT_CUSTOM(columns=columns, eval_string=eval_string, data_frame=data_frame)
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
-    def DF_COL_FORMAT_TYPE(self, columns=None, typ='str', data_frame=None):
+    def DF_COL__FORMAT__TYPE(self, columns=None, typ='str'):
         '''Format specified columns as specfied type'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
+        columns = self._colHelper(columns, max=max)
         convert_dict = {c:typ for c in columns}
-        df = df.astype(convert_dict)
-        if data_frame is None: self._df = df
+        self._df = self._df.astype(convert_dict)
         self._fig()
-        return self if data_frame is None else df
+        return self
     
     # TODO: simplify (1 at a time?)
-    def DF_COL_RENAME(self, columns, data_frame=None):
+    def DF_COL__RENAME(self, columns):
         '''Rename specfied column/s'''
-        df = self._df if data_frame is None else data_frame
         # we handle dict for all or subset, OR list for all
         if isinstance(columns, dict):
-            df.rename(columns = columns, inplace = True)
+            self._df.rename(columns = columns, inplace = True)
         else:
-            df.columns = columns
-        if data_frame is None: self._df = df
+            self._df.columns = columns
         self._fig()
-        return self if data_frame is None else df
+        return self
     
-    def DF_COL_REORDER(self, columns, data_frame=None):
+    def DF_COL__REORDER(self, columns):
         '''Reorder column titles in specified order. Convenience method for DF_COL_MOVE_TO_FRONT'''
         # if not all columns are specified, we order to front and add others to end
-        return self.DF_COL_REORDER_MOVE_TO_FRONT(columns, data_frame=data_frame)
+        return self.DF_COL__REORDER__MOVE_TO_FRONT(columns)
 
     # DF_COLHEADER_REORDER_ASC
-    def DF_COL_REORDER_ASCENDING(self, data_frame=None):
+    def DF_COL__REORDER__ASCENDING(self):
         '''Reorder column titles in ascending order'''
-        df = self._df if data_frame is None else data_frame
         #df.columns = sorted(df.columns.values.tolist())
-        df = df[sorted(df.columns.values.tolist())]
-        if data_frame is None: self._df = df
+        self._df = self._df[sorted(self._df.columns.values.tolist())]
         self._fig()
-        return self if data_frame is None else df
+        return self
 
     # DF_COLHEADER_REORDER_DESC
-    def DF_COL_REORDER_DESCENDING(self, data_frame=None):
+    def DF_COL__REORDER__DESCENDING(self):
         '''Reorder column titles in descending order'''
-        df = self._df if data_frame is None else data_frame
         #df.columns = sorted(df.columns.values.tolist(), reverse = True)
-        df = df[sorted(df.columns.values.tolist(), reverse=True)]
-        if data_frame is None: self._df = df
+        self._df = self._df[sorted(self._df.columns.values.tolist(), reverse=True)]
         self._fig()
-        return self if data_frame is None else df
+        return self
 
     # DF_COL_MOVE_TO_BACK
-    def DF_COL_REORDER_MOVE_TO_BACK(self, columns=None, data_frame=None):
+    def DF_COL__REORDER__MOVE_TO_BACK(self, columns=None):
         '''Move specified column/s to back'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        colsToMove = self._colHelper(columns, max=max, data_frame=df)
-        otherCols = self._removeElementsFromList(df.columns.values.tolist(), colsToMove)
-        df = df[otherCols + colsToMove]
-        if data_frame is None: self._df = df
+        colsToMove = self._colHelper(columns, max=max)
+        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
+        self._df = self._df[otherCols + colsToMove]
         self._fig()
-        return self if data_frame is None else df
+        return self
     
     # DF_COL_MOVE_TO_FRONT
-    def DF_COL_REORDER_MOVE_TO_FRONT(self, columns=None, data_frame=None):
+    def DF_COL__REORDER__MOVE_TO_FRONT(self, columns=None):
         '''Move specified column/s to front'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        colsToMove = self._colHelper(columns, max=max, data_frame=df)
-        otherCols = self._removeElementsFromList(df.columns.values.tolist(), colsToMove)
-        df = df[colsToMove + otherCols]
-        if data_frame is None: self._df = df
+        colsToMove = self._colHelper(columns, max=max)
+        otherCols = self._removeElementsFromList(self._df.columns.values.tolist(), colsToMove)
+        self._df = self._df[colsToMove + otherCols]
         self._fig()
-        return self if data_frame is None else df
+        return self
     
      #col_reorder list of indices, list of colnames
     
 # DATAFRAME 'ROW' ACTIONS
     
-    def DF_ROW_ADD(self, rows=None, data_frame=None):
+    def DF_ROW__ADD(self, rows=None):
         '''Add row at specified index'''
-        df = self._df if data_frame is None else data_frame
-        if rows is None: rows = self._rowHelper(max=1, data_frame=df)
+        if rows is None: rows = self._rowHelper(max=1)
         if isinstance(rows, list):
-            df.iloc[0] = rows
+            self._df.iloc[0] = rows
         else:
-            df = pd.concat([rows, df], ignore_index = True)
-        if data_frame is None: self._df = df
+            self._df = pd.concat([rows, self._df], ignore_index = True)
         self._fig()
-        return self if data_frame is None else df
+        return self
     
-    def DF_ROW_DELETE(self, rowNum=0, data_frame=None):
-        df = self._df if data_frame is None else data_frame
+    def DF_ROW__DELETE(self, rowNum=0):
         #df.drop(df.index[rowNum], inplace=True)
-        df.drop(rowNum, inplace=True)
-        df.reset_index(drop=True, inplace=True)
-        if data_frame is None: self._df = df
+        self._df.drop(rowNum, inplace=True)
+        self._df.reset_index(drop=True, inplace=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
     
-    def DF_ROW_FILTER(self, criteria, data_frame=None):
+    def DF_ROW__FILTER(self, criteria):
         '''Filter rows with specified filter criteria'''
-        df = self._df if data_frame is None else data_frame
-        df.query(criteria, inplace = True)
-        df.reset_index(drop=True, inplace=True)
-        if data_frame is None: self._df = df
+        self._df.query(criteria, inplace = True)
+        self._df.reset_index(drop=True, inplace=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_KEEP_BOTTOM(self, numRows=1, data_frame=None):
+    def DF_ROW__KEEP__BOTTOM(self, numRows=1):
         '''Delete all rows except specified bottom N rows'''
-        df = self._df if data_frame is None else data_frame
-        df = df.tail(numRows)
-        df.reset_index(drop=True, inplace=True)
-        if data_frame is None: self._df = df
+        self._df = self._df.tail(numRows)
+        self._df.reset_index(drop=True, inplace=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_KEEP_TOP(self, numRows=1, data_frame=None):
+    def DF_ROW__KEEP__TOP(self, numRows=1):
         '''Delete all rows except specified top N rows'''
-        df = self._df if data_frame is None else data_frame
-        df = df.head(numRows)
-        df.reset_index(drop=True, inplace=True)
-        if data_frame is None: self._df = df
+        self._df = self._df.head(numRows)
+        self._df.reset_index(drop=True, inplace=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_REVERSE(self, data_frame=None):
+    def DF_ROW__REVERSE(self):
         '''Reorder all rows in reverse order'''
-        df = self._df if data_frame is None else data_frame
-        df = df[::-1].reset_index(drop = True)
-        if data_frame is None: self._df = df
+        self._df = self._df[::-1].reset_index(drop = True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_SORT(self, columns=None, ascending=True, data_frame=None):
+    def DF_ROW__SORT(self, columns=None, ascending=True):
         '''Reorder dataframe by specified columns in ascending/descending order'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if columns is None else None
-        columns = self._colHelper(columns, max=max, data_frame=df)
-        df = df.sort_values(by=columns, axis=0, ascending=ascending, na_position ='last')
-        df.reset_index(drop=True, inplace=True)
-        if data_frame is None: self._df = df
+        columns = self._colHelper(columns, max=max)
+        self._df = self._df.sort_values(by=columns, axis=0, ascending=ascending, na_position ='last')
+        self._df.reset_index(drop=True, inplace=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_TO_COLHEADER(self, row=0, data_frame=None):
+    def DF_ROW__TO_COLHEADER(self, row=0):
         '''Promote row at specified index to column headers'''
-        df = self._df if data_frame is None else data_frame
         # make new header, fill in blank values with ColN
-        newHeader = df.iloc[row].squeeze()
+        newHeader = self._df.iloc[row].squeeze()
         newHeader = newHeader.values.tolist()
         for i in newHeader:
             if i == None: i = 'Col'
-        df = self.DF_COL_RENAME(newHeader, data_frame=df)
-        df = self.DF_ROW_DELETE([*range(row+1)], data_frame=df)
-        if data_frame is None: self._df = df
+        self.DF_COL_RENAME(newHeader)
+        self.DF_ROW_DELETE([*range(row+1)])
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF_ROW_FROM_COLHEADER(self, data_frame=None):
+    def DF_ROW__FROM_COLHEADER(self):
         '''Demote column headers to make 1st row of table'''
-        df = self._df if data_frame is None else data_frame
-        df = self.DF_ROW_ADD(list(df.columns.values), data_frame=df)
-        newHeader = ['Col' + str(x) for x in range(len(df.columns))]
-        df = self.DF_COL_RENAME(newHeader, data_frame=df)
-        if data_frame is None: self._df = df
+        self.DF_ROW_ADD(list(self._df.columns.values))
+        newHeader = ['Col' + str(x) for x in range(len(self._df.columns))]
+        self.DF_COL_RENAME(newHeader)
         self._fig()
-        return self if data_frame is None else df
-
+        return self
     
     # DATAFRAME ACTIONS
-    def DF__APPEND(self, otherdf, data_frame=None):
+    def DF__APPEND(self, otherdf):
         '''Append a table to bottom of current table'''
-        df = self._df if data_frame is None else data_frame
-        df = df.append(otherdf, ignore_index=True)
-        if data_frame is None: self._df = df
+        self._df = self._df.append(otherdf, ignore_index=True)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF__GROUP(self, groupby=None, aggregates=None, data_frame=None):
+    def DF__GROUP(self, groupby=None, aggregates=None):
         '''Group table contents by specified columns with optional aggregation (sum/max/min etc)'''
-        df = self._df if data_frame is None else data_frame
         max = 1 if groupby is None else None
-        groupby = self._colHelper(groupby, max=max, data_frame=df)
+        groupby = self._colHelper(groupby, max=max)
         if aggregates is None:
-            df = df.groupby(groupby, as_index=False).first()
+            self._df = self._df.groupby(groupby, as_index=False).first()
         else:
-            df = df.groupby(groupby, as_index=False).agg(aggregates)
-            df.columns = ['_'.join(col).rstrip('_') for col in df.columns.values]
-        if data_frame is None: self._df = df
+            self._df = self._df.groupby(groupby, as_index=False).agg(aggregates)
+            self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF__MERGE(self, otherdf, on, how = 'left', data_frame=None):
-        df = self._df if data_frame is None else data_frame
-        df = pd.merge(df, otherdf, on=on, how=how)
-        if data_frame is None: self._df = df
+    def DF__MERGE(self, otherdf, on, how = 'left'):
+        self._df = pd.merge(self._df, otherdf, on=on, how=how)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF__TRANSPOSE(self, data_frame=None):
-        df = self._df if data_frame is None else data_frame
-        df.transpose()
-        if data_frame is None: self._df = df
+    def DF__TRANSPOSE(self):
+        self._df.transpose()
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF__UNPIVOT(self, indexCols, data_frame=None):
-        df = self._df if data_frame is None else data_frame
-        df = pd.melt(df, id_vars = indexCols)
-        if data_frame is None: self._df = df
+    def DF__UNPIVOT(self, indexCols):
+        self._df = pd.melt(self._df, id_vars = indexCols)
         self._fig()
-        return self if data_frame is None else df
+        return self
 
-    def DF__PIVOT(self, indexCols, cols, vals, data_frame=None):
+    def DF__PIVOT(self, indexCols, cols, vals):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
-        df = self._df if data_frame is None else data_frame
-        df = df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
-        if data_frame is None: self._df = df
+        self._df = self._df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
         self._fig()
-        return self if data_frame is None else df
-
+        return self
 
     # VIZUALIZATION ACTIONS
     
-    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
-        '''Draw a box plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.box(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-        
-    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
-        '''Draw a violin plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.violin(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-        
-    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
-        '''Draw a hisotgram'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.histogram(data_frame=df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
+    def VIZ__AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
+        '''Draw a line plot with shaded area'''
+        fig = px.area(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_HIST_LIST(self, color=None, data_frame=None, **kwargs):
-        '''Draw a histogram for all fields in current dataframe'''
-        df = self._df if data_frame is None else data_frame
-        for c in df.columns:
-            fig = px.histogram(data_frame=df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
-            self._fig(fig)
-        self._fig(preview = len(df.columns))
-        return self
-    
-    def VIZ_SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
-        '''Draw a scatter plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.scatter(data_frame=df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-        
-    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, data_frame=None, **kwargs):
+    def VIZ__BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
         '''Draw a bar plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.bar(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+        fig = px.bar(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
+    def VIZ__BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a box plot'''
+        fig = px.box(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        self._fig(fig)
+        return self
+        
+    def VIZ__DFSTATS(self):
+        '''Show basic summary statistics of table contents'''
+        stats = self._df.describe().T
+        stats.insert(0, 'Feature', stats.index)
+        self.DF_COL__ADD_INDEX_FROM_1(name='No')
+        self.DF_COL__MOVE_TO_FRONT(columns='No')
+        self.VIZ_TABLE(x=self._df.columns.values)
+        return self
+    
+    def VIZ__HIST(self, x=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a hisotgram'''
+        fig = px.histogram(data_frame=self._df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        self._fig(fig)
+        return self
+    
+    def VIZ__HIST_LIST(self, color=None, **kwargs):
+        '''Draw a histogram for all fields in current dataframe'''
+        for c in self._df.columns:
+            fig = px.histogram(data_frame=self._df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs)
+            self._fig(fig)
+        self._fig(preview = len(self._df.columns))
+        return self
+    
+    def VIZ__LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
         '''Draw a line plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.line(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
+        fig = px.line(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
                       color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, data_frame=None, **kwargs):
-        '''Draw a line plot with shaded area'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.area(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
+    def VIZ__SCATTER(self, x=None, y=None, color=None, size=None, symbol=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a scatter plot'''
+        fig = px.scatter(data_frame=self._df, x=x, y=y, color=color, size=size, symbol=symbol, facet_col=facet_col, facet_row=facet_row, 
                      color_discrete_sequence=self._colorSwatch, **kwargs)
         self._fig(fig)
         return self
-    
-    def VIZ_TREEMAP(self, path, values, root='All data', data_frame=None, **kwargs):
-        '''Draw a treemap plot'''
-        path = [px.Constant("All data")] + path
-        df = self._df if data_frame is None else data_frame
-        fig = px.treemap(data_frame=df, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
-        fig.update_traces(root_color="lightgrey")
-        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-        self._fig(fig)
-        return self
-    
-    def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, data_frame=None, **kwargs):
+        
+    def VIZ__SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
         '''Draw a scatter matrix plot'''
-        df = self._df if data_frame is None else data_frame
-        fig = px.scatter_matrix(data_frame=df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
+        fig = px.scatter_matrix(data_frame=self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
         self._fig(fig)
         return self
     
-    def VIZ_TABLE(self, x=None, data_frame=None, **kwargs):
+    def VIZ__TABLE(self, x=None, **kwargs):
         '''Draw a table'''
-        df = self._df if data_frame is None else data_frame
-        cell_values = df[x].to_numpy().T
+        cell_values = self._df[x].to_numpy().T
         fig = go.Figure(data=[go.Table(
             header=dict(values=x,
                        align='left',
@@ -679,48 +554,50 @@ class SOURCE(object):
         self._fig(fig)
         return self
     
-    def VIZ_DFSTATS(self, data_frame=None):
-        '''Show basic summary statistics of table contents'''
-        df = self._df if data_frame is None else data_frame
-        stats = df.describe().T
-        stats.insert(0, 'Feature', stats.index)
-        stats = self.DF_COL_ADD_INDEX_FROM_1(name='No', data_frame=stats)
-        stats = self.DF_COL_MOVE_TO_FRONT(columns='No', data_frame=stats)
-        self.VIZ_TABLE(x=stats.columns.values, data_frame=stats)
+    def VIZ__TREEMAP(self, path, values, root='All data', **kwargs):
+        '''Draw a treemap plot'''
+        path = [px.Constant("All data")] + path
+        fig = px.treemap(data_frame=self._df, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        self._fig(fig)
         return self
     
+    def VIZ__VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
+        '''Draw a violin plot'''
+        fig = px.violin(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
+                     color_discrete_sequence=self._colorSwatch, **kwargs)
+        self._fig(fig)
+        return self
+        
     # MACHINE LEARNING 'FEATURE SELECTION' ACTIONS
     
-    def ML_SELECT_FEATURES_NONE_ZERO_VARIANCE(self, data_frame=None):
+    def ML__SELECT_FEATURES__NONE_ZERO_VARIANCE(self):
         '''Select numerical features / columns with non-zero variance'''
-        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold', data_frame=data_frame), data_frame=data_frame)
+        return self.DF_COL__DELETE_EXCEPT(self._selectFeatures(method='VarianceThreshold'))
     
-    def ML_SELECT_FEATURES_N_BEST(self, target, n=10, data_frame=None):
+    def ML__SELECT_FEATURES__N_BEST(self, target, n=10):
         '''Select best n numerical features / columns for classifying target column'''
-        return self.DF_COL_DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n, data_frame=data_frame), data_frame=data_frame)
+        return self.DF_COL__DELETE_EXCEPT(self._selectFeatures(method='SelectKBest', target=target, n=n))
     
-    def _selectFeatures(self, method=None, target=None, n=10, data_frame=None):
-        df = self._df if data_frame is None else data_frame
-        
+    def _selectFeatures(self, method=None, target=None, n=10):
         if method == 'VarianceThreshold':
             sel = VarianceThreshold() #remove '0 variance'
-            x = df[self._colHelper(type='number', data_frame=df)]
+            x = self._df[self._colHelper(type='number')]
             sel.fit_transform(x)
             return sel.get_feature_names_out().tolist()
         elif method == 'SelectKBest':
             sel = SelectKBest(k=n)
-            x = df[self._removeElementsFromList(self._colHelper(type='number', data_frame=df), [target])]
-            y = df[target]
+            x = self._df[self._removeElementsFromList(self._colHelper(type='number'), [target])]
+            y = self._df[target]
             sel.fit_transform(X=x, y=y)
             features = sel.get_feature_names_out().tolist()
             features.append(target)
             return features
     
     #@ignore_warnings
-    def ML_TRAIN_AND_SAVE_CLASSIFIER(self, target, path='classifier.joblib', data_frame=None):
+    def ML__TRAIN_AND_SAVE__CLASSIFIER(self, target, path='classifier.joblib'):
         '''Train a classification model for provided target, save model to specified location and display summary of model performance'''
-        
-        df = self._df if data_frame is None else data_frame
         
         # BUILD MODEL
         
@@ -785,7 +662,7 @@ class SOURCE(object):
         
         # SPLIT & FIT!
         
-        train_df, test_df = train_test_split(df, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         
@@ -799,20 +676,18 @@ class SOURCE(object):
             path = self._config[path]['model']
         
         # save
-        from joblib import dump
         dump(grid.best_estimator_, path, compress = 1) 
         
         # force evaluation
-        self._ML_EVAL_CLASSIFIER(path, target, test_df, train_df, pos_label='Yes')
+        self._ML__EVAL__CLASSIFIER(path, target, test_df, train_df, pos_label='Yes')
         return self
     
-    def ML_EVAL_CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes', data_frame=None):
+    def ML__EVAL__CLASSIFIER(self, target, path='classifier.joblib', pos_label='Yes'):
         '''Load a save classifier model from specified location and evaluate with current dataframe data'''
-        df = self._df if data_frame is None else data_frame
-        self._ML_EVAL_CLASSIFIER(path, target, test_df=df, trainf_df=None, pos_label=pos_label)
+        self._ML__EVAL__CLASSIFIER(path, target, test_df=self._df, trainf_df=None, pos_label=pos_label)
         return self
         
-    def _ML_EVAL_CLASSIFIER(self, path, target, test_df, train_df, pos_label, **kwargs):
+    def _ML__EVAL__CLASSIFIER(self, path, target, test_df, train_df, pos_label, **kwargs):
                 
         # generate path
         if path in self._config.sections() and 'model' in self._config[path]:
@@ -856,18 +731,15 @@ class SOURCE(object):
         df['name'] = ['True negative', 'False Positive', 'False negative', 'True positive']
         
         # show confusion matrix as 'treemap'
-        self.VIZ_TREEMAP(data_frame=df, 
-                         path=['true', 'name'], 
+        self._appendDF(df).VIZ__TREEMAP(path=['true', 'name'], 
                          values='value',
                          root='Top',
                          #width=600,
                          #height=450,
-                         title='Classification Results (Confusion Matrix)')
+                         title='Classification Results (Confusion Matrix)')._popDF()
         
         # table of actual target, classifier scores and predictions based on those scores: use test
-        self.VIZ_TABLE(data_frame=test_df,
-                      x=['Count', y, 'Score', 'Prediction'], 
-                      )
+        self._appendDF(test_df).VIZ__TABLE(x=['Count', y, 'Score', 'Prediction'])
         self._figs[-1].update_layout(
             title="Classification Results (Details)",
             width=600, 
@@ -875,14 +747,13 @@ class SOURCE(object):
         ) 
         
         # histogram of scores compared to true labels: use test
-        self.VIZ_HIST(data_frame=test_df,
-                      title='Classifier score vs True labels',
+        self.VIZ__HIST(title='Classifier score vs True labels',
                       x='Score', 
                       color=target,
                       height=400,
                       nbins=50, 
                       labels=dict(color='True Labels', x='Classifier Score')
-                     )
+                     )._popDF()
         
         # preliminary viz & roc
         fpr, tpr, thresholds = roc_curve(test_df[y], test_df['Score'], pos_label=pos_label)
@@ -895,17 +766,16 @@ class SOURCE(object):
         df.index.name = "Thresholds"
         df.columns.name = "Rate"
         
-        self.VIZ_LINE(data_frame=df, 
-                      title='True Positive Rate and False Positive Rate at every threshold', 
+        self._appendDF(df).VIZ__LINE(title='True Positive Rate and False Positive Rate at every threshold', 
                       width=600, 
                       height=450,
                       range_x=[0,1], 
                       range_y=[0,1],
                       markers=False
-                     )
+                     )._popDF()
         
         # roc chart
-        self.VIZ_AREA(x=fpr, y=tpr,
+        self.VIZ__AREA(x=fpr, y=tpr,
                       #title=f'ROC Curve (AUC: %.2f)'% roc_auc_score(y_test, y_score),
                       width=600, 
                       height=450,
@@ -920,7 +790,7 @@ class SOURCE(object):
         precision, recall, thresholds = precision_recall_curve(test_df[target], test_df['Score'], pos_label=pos_label)
 
         # precision/recall chart
-        self.VIZ_AREA(x=recall, y=precision,
+        self.VIZ__AREA(x=recall, y=precision,
                       title=f'Precision-Recall Curve (AUC={auc(fpr, tpr):.4f})',
                       width=600, 
                       height=450,
@@ -938,10 +808,8 @@ class SOURCE(object):
     # MACHINE LEARNING 'MODEL TRAINING' ACTIONS
     
     #@ignore_warnings
-    def ML_TRAIN_AND_SAVE_REGRESSOR(self, target, path='classifier.joblib', data_frame=None):
+    def ML__TRAIN_AND_SAVE__REGRESSOR(self, target, path='classifier.joblib'):
         '''Train a regression model for provided target, save model to specified location and display summary of model performance'''
-        
-        df = self._df if data_frame is None else data_frame
         
         # BUILD MODEL
         
@@ -1006,7 +874,7 @@ class SOURCE(object):
         
         # PREPARE DATA & FIT!
         
-        train_df, test_df = train_test_split(df, test_size=0.2, random_state=0)
+        train_df, test_df = train_test_split(self._df, test_size=0.2, random_state=0)
         grid.fit(train_df.drop(target, axis=1), train_df[target])
         
         # after hard work of model fitting, we can clear pipeline/transformer cache
@@ -1019,21 +887,19 @@ class SOURCE(object):
             path = self._config[path]['model']
         
         # save
-        from joblib import dump
         dump(grid.best_estimator_, path, compress = 1) 
         
         # force evaluation
         #return self._ML_EVAL_REGRESSOR(path, X_test, y_test, X_train, y_train)
-        self._ML_EVAL_REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
+        self._ML__EVAL__REGRESSOR(path, target=target, test_df=test_df, train_df=train_df)
         return self
     
-    def ML_EVAL_REGRESSOR(self, target, path='classifier.joblib', data_frame=None):
+    def ML__EVAL__REGRESSOR(self, target, path='classifier.joblib'):
         '''Evaluate a regressor with TEST data'''
-        df = self._df if data_frame is None else data_frame
-        self._ML_EVAL_REGRESSOR(path, target, test_df=df, train_df=None)
+        self._ML__EVAL__REGRESSOR(path, target, test_df=self._df, train_df=None)
         return self
         
-    def _ML_EVAL_REGRESSOR(self, path, target, test_df, train_df, **kwargs):
+    def _ML__EVAL__REGRESSOR(self, path, target, test_df, train_df, **kwargs):
         '''Evaluate a regressor'''
         
         # generate path
@@ -1072,7 +938,7 @@ class SOURCE(object):
                 
         #PREDICTIONS VS ACTUAL
         # scatter: use combined test/train
-        self.VIZ_SCATTER(data_frame=eval_df,
+        self.VIZ__SCATTER(data_frame=eval_df,
                          x=y,
                          y='Prediction',
                          title='Predicted ' + y + ' vs actual ' + y,
@@ -1092,7 +958,7 @@ class SOURCE(object):
         self._figs[-1].update_yaxes(nticks=10).update_xaxes(nticks=10)
         
         # table of actual target, classifier scores and predictions based on those scores: use test
-        self.VIZ_TABLE(data_frame=test_df,
+        self.VIZ__TABLE(data_frame=test_df,
                       x=['Count', y, 'Prediction', 'Residual'], 
                       )
         self._figs[-1].update_layout(
@@ -1103,7 +969,7 @@ class SOURCE(object):
         
         #RESIDUALS
         # use combined train/test
-        self.VIZ_SCATTER(data_frame=eval_df,
+        self.VIZ__SCATTER(data_frame=eval_df,
                          x='Prediction',
                          y='Residual',
                          title='Gap between predicted '+y +' and actual '+ y,
@@ -1128,7 +994,7 @@ class SOURCE(object):
                 #'X': X_test.iloc[:, 0].to_numpy(),
                 #'y': y_test.to_numpy()
             })
-            self.VIZ_SCATTER(data_frame=df,
+            self.VIZ__SCATTER(data_frame=df,
                              x='X',
                              y='y',
                           title='Regression plot (r2: TBD)',
@@ -1146,7 +1012,7 @@ class SOURCE(object):
                 'y': clf.named_steps['regressor'].coef_
             })
             colors = ['Positive' if c > 0 else 'Negative' for c in clf.named_steps['regressor'].coef_]
-            self.VIZ_BAR(
+            self.VIZ__BAR(
                 x='X', 
                 y='y',
                 data_frame=df,
@@ -1162,129 +1028,129 @@ class SOURCE(object):
         return
     
     @property
-    def REPORT_SET_VIZ_COLORS_PLOTLY(self):
+    def REPORT__SET_VIZ_COLORS__PLOTLY(self):
         '''Set plot/report colors to 'Plotly'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Plotly)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Plotly)
     
     @property
-    def REPORT_SET_VIZ_COLORS_D3(self):
+    def REPORT__SET_VIZ_COLORS__D3(self):
         '''Set plot/report colors to 'D3'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.D3)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.D3)
     
     @property
-    def REPORT_SET_VIZ_COLORS_G10(self):
+    def REPORT__SET_VIZ_COLORS__G10(self):
         '''Set plot/report colors to 'G10'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.G10)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.G10)
     
     @property
-    def REPORT_SET_VIZ_COLORS_T10(self):
+    def REPORT__SET_VIZ_COLORS__T10(self):
         '''Set plot/report colors to 'T10'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.T10)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.T10)
     
     @property
-    def REPORT_SET_VIZ_COLORS_ALPHABET(self):
+    def REPORT__SET_VIZ_COLORS__ALPHABET(self):
         '''Set plot/report colors to 'Alphabet'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
     
     @property
-    def REPORT_SET_VIZ_COLORS_DARK24(self):
+    def REPORT__SET_VIZ_COLORS__DARK24(self):
         '''Set plot/report colors to 'Dark24'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark24)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Dark24)
     
     @property
-    def REPORT_SET_VIZ_COLORS_LIGHT24(self):
+    def REPORT__SET_VIZ_COLORS__LIGHT24(self):
         '''Set plot/report colors to 'Light24'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Light24)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Light24)
     
     @property
-    def REPORT_SET_VIZ_COLORS_SET1(self):
+    def REPORT__SET_VIZ_COLORS__SET1(self):
         '''Set plot/report colors to 'Set1'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set1)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Set1)
     
     @property
-    def REPORT_SET_VIZ_COLORS_PASTEL1(self):
+    def REPORT__SET_VIZ_COLORS__PASTEL1(self):
         '''Set plot/report colors to 'Pastel1'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
     
     @property
-    def REPORT_SET_VIZ_COLORS_DARK2(self):
+    def REPORT__SET_VIZ_COLORS__DARK2(self):
         '''Set plot/report colors to 'Dark2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark2)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Dark2)
     
     @property
-    def REPORT_SET_VIZ_COLORS_SET2(self):
+    def REPORT__SET_VIZ_COLORS__SET2(self):
         '''Set plot/report colors to 'Set2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set2)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Set2)
     
     @property
-    def REPORT_SET_VIZ_COLORS_PASTEL2(self):
+    def REPORT__SET_VIZ_COLORS__PASTEL2(self):
         '''Set plot/report colors to 'Pastel2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
     
     @property
-    def REPORT_SET_VIZ_COLORS_SET3(self):
+    def REPORT__SET_VIZ_COLORS__SET3(self):
         '''Set plot/report colors to 'Set3'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set3)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Set3)
     
     @property
-    def REPORT_SET_VIZ_COLORS_ANTIQUE(self):
+    def REPORT__SET_VIZ_COLORS__ANTIQUE(self):
         '''Set plot/report colors to 'Antique'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Antique)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Antique)
     
     @property
-    def REPORT_SET_VIZ_COLORS_BOLD(self):
+    def REPORT__SET_VIZ_COLORS__BOLD(self):
         '''Set plot/report colors to 'Bold'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Bold)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Bold)
     
     @property
-    def REPORT_SET_VIZ_COLORS_PASTEL(self):
+    def REPORT__SET_VIZ_COLORS__PASTEL(self):
         '''Set plot/report colors to 'Pastel'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Pastel)
     
     @property
-    def REPORT_SET_VIZ_COLORS_PRISM(self):
+    def REPORT__SET_VIZ_COLORS__PRISM(self):
         '''Set plot/report colors to 'Prism'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Prism)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Prism)
     
     @property
-    def REPORT_SET_VIZ_COLORS_SAFE(self):
+    def REPORT__SET_VIZ_COLORS__SAFE(self):
         '''Set plot/report colors to 'Safe'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Safe)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Safe)
     
     @property
-    def REPORT_SET_VIZ_COLORS_VIVID(self):
+    def REPORT__SET_VIZ_COLORS__VIVID(self):
         '''Set plot/report colors to 'Vivid'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Vivid)
+        return self._REPORT__SET_VIZ_COLORS(px.colors.qualitative.Vivid)
     
-    def _REPORT_SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
+    def _REPORT__SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
         self._colorSwatch = swatch
         #self._fig(preview = 'color_swatches')
         return self
     
-    @property
-    def REPORT_PREVIEW(self):
+    #@property
+    def REPORT__PREVIEW__CHARTS(self):
         self._fig(preview = 'all_charts')
         return self
     
-    @property
-    def REPORT_PREVIEW_FULL(self):
+    #@property
+    def REPORT__PREVIEW__FULL(self):
         self._fig(preview = 'full')
         return self
     
-    def REPORT_SAVE_ALL(self, path = None):
-        self.REPORT_SAVE_DF(path = path)
-        #self.REPORT_SAVE_VIZ_PNG(path = path)
-        self.REPORT_SAVE_VIZ_HTML(path = path)
+    def REPORT__SAVE__ALL(self, path = None):
+        self.REPORT__SAVE__DF(path = path)
+        #self.REPORT__SAVE__VIZ_PNG(path = path)
+        self.REPORT__SAVE__VIZ_HTML(path = path)
         return self
     
-    #def REPORT_SAVE_VIZ_PNG(self, path = None):
+    #def REPORT__SAVE__VIZ_PNG(self, path = None):
     #    'Save all figures into separate png files'
     #    path = self._pathHelper(path, filename='figure')
     #    for i, fig in enumerate(self._figs):
     #        fig.write_image(path+'%d.png' % i, width=1040, height=360, scale=10) 
     #    return self
     
-    def REPORT_SAVE_VIZ_HTML(self, path = None, write_type = 'w'):
+    def REPORT__SAVE__VIZ_HTML(self, path = None, write_type = 'w'):
         'Save all figures into a single html file'
         import datetime
         #path = path if path == Null else path.encode().decode('unicode-escape')
@@ -1300,11 +1166,11 @@ class SOURCE(object):
             #f.write(self._df.describe(include='all').fillna(value='').T.to_html())
         return self
     
-    #def REPORT_SAVE_VIZ_HTML_APPEND(self, path = None):
+    #def REPORT__SAVE__VIZ_HTML_APPEND(self, path = None):
     #    'Save all figures into a single html file'
-    #    return self.REPORT_SAVE_VIZ_HTML(path=path, write_type='a')
+    #    return self.REPORT__SAVE_VIZ_HTML(path=path, write_type='a')
     
-    def REPORT_SAVE_DF(self, path = None):
+    def REPORT__SAVE__DF(self, path = None):
         if path in self._config.sections() and 'csv' in self._config[path]:
             path = self._config[path]['csv']
         else:
@@ -1313,7 +1179,7 @@ class SOURCE(object):
         self._df.to_csv(path, index=False)
         return self
     
-    def REPORT_SAVE_DF_KINTONE_SYNCH(self, config_section):
+    def REPORT__SAVE__DF_KINTONE_SYNCH(self, config_section):
         if source in self._config.sections():
             domain = self._config.get(source,'kintone_domain')
             app_id = self._config.getint(source,'app_id')
@@ -1328,7 +1194,7 @@ class SOURCE(object):
             print('Config section not in config.ini: ' + config_section)
         return self
     
-    def REPORT_SAVE_DF_KINTONE_ADD(self, config_section):
+    def REPORT__SAVE__DF_KINTONE_ADD(self, config_section):
         if source in self._config.sections():
             domain = self._config.get(source,'kintone_domain')
             app_id = self._config.getint(source,'app_id')
@@ -1343,7 +1209,7 @@ class SOURCE(object):
             print('Config section not in config.ini: ' + config_section)
         return self
     
-    def REPORT_DASH(self):
+    def _REPORT__DASH(self):
         from jupyter_dash import JupyterDash
         import dash_core_components as dcc
         import dash_html_components as html
@@ -1384,6 +1250,86 @@ class SOURCE(object):
 
 # ## UTILITIES ###
 
+    def _repr_pretty_(self, p, cycle): 
+        '''Selects content for IPython display'''
+        if self._preview == 'current_chart':
+            return self._figs[-1].show(config=self._fig_config), display(self._dfForRepr())
+        elif self._preview == 'all_charts':
+            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._dfForRepr())
+        elif self._preview == 'full':
+            return tuple([f.show(config=self._fig_config) for f in self._figs]), display(self._dfForRepr())
+        elif self._preview == 'color_swatches':
+            return px.colors.qualitative.swatches().show(), display(self._dfForRepr())
+        elif isinstance(self._preview, int):
+            return tuple([f.show(config=self._fig_config) for f in self._figs[-self._preview:]]), display(self._dfForRepr())
+        else:
+            #return display(pd.DataFrame(self._df.dtypes).T), display(self._df)
+            #return display(self._df)
+            return display(self._dfForRepr())
+        
+    def _dfForRepr(self):
+        '''Prepares dataframe for IPython display'''
+        # Update columns to include current datatypes as 2nd line
+        dfr = self._df.copy()
+        if isinstance(dfr.columns, pd.MultiIndex): 
+            arrays = [dfr.columns.get_level_values(0), dfr.dtypes]
+            mi = pd.MultiIndex.from_arrays(arrays, names=('Name', 'Type'))
+        else:
+            arrays = [dfr.columns, dfr.dtypes]
+            mi = pd.MultiIndex.from_arrays(arrays, names=('Name', 'Type'))
+        dfr.columns = mi
+        return dfr
+        
+    def __repr__(self): 
+        return self._df.__repr__()
+    
+    def __str__(self): 
+        return self._df.__str__()
+    
+    def _fig(self, fig = None, preview = 'no_chart'):
+        '''Handles figure displaying for IPython'''
+        if fig == None:
+            self._preview = preview
+        else:
+            self._figTidy(fig)
+            self._figs.append(fig)
+            self._preview = 'current_chart'
+            
+    def _figTidy(self, fig):
+        #fig.update_traces()
+        fig.update_layout(
+            overwrite=True,
+            #colorway=self._colorSwatch,
+            dragmode='drawopenpath',
+            #newshape_line_color='cyan',
+            #title_text='Draw a path to separate versicolor and virginica',
+            modebar_add=['drawline',
+                'drawcircle',
+                'drawrect',
+                'eraseshape',
+                'pan2d'
+            ],
+            modebar_remove=['resetScale', 'lasso2d'] #'select', 'zoom', 
+        )
+        #fig.update_annotations()
+        #fig.update_xaxes()
+            
+    # DATAFRAME 'COLUMN' ACTIONS
+    
+    #utility to temporarily switch dataframe
+    
+    def _popDF(self):
+        '''Remove current dataframe and replace with next on stack'''
+        oldDF = self._df
+        self._df = self._dfs.pop()
+        return oldDF
+    
+    def _appendDF(self, df):
+        '''Add dataframe to stack and make active dataframe'''
+        self._dfs.append(self._df)
+        self._df = df
+        return self
+    
     def _removeElementsFromList(self, l1, l2):
         '''Remove from list1 any elements also in list2'''
         # if not list type ie string then covert
@@ -1412,23 +1358,21 @@ class SOURCE(object):
         #    return None
         return [i for i in l1 if i in l2]
     
-    def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True, data_frame=None):
-        
-        df = self._df if data_frame is None else data_frame
+    def _colHelper(self, columns = None, max = None, type = None, colsOnNone = True):
         
         # pre-process: translate to column names
         if isinstance(columns, slice) or isinstance(columns, int):
-            columns = df.columns.values.tolist()[columns]
+            columns = self._df.columns.values.tolist()[columns]
         elif isinstance(columns, list) and all(isinstance(c, int) for c in columns):
-            columns = df.columns[columns].values.tolist()
+            columns = self._df.columns[columns].values.tolist()
         
         # process: limit possible columns by type (number, object, datetime)
-        df = df.select_dtypes(include=type) if type is not None else df
+        self._df = self._df.select_dtypes(include=type) if type is not None else self._df
         
         #process: fit to limited column scope
-        if colsOnNone == True and columns is None: columns = df.columns.values.tolist()
+        if colsOnNone == True and columns is None: columns = self._df.columns.values.tolist()
         elif columns is None: return None
-        else: columns = self._commonElementsInList(columns, df.columns.values.tolist())           
+        else: columns = self._commonElementsInList(columns, self._df.columns.values.tolist())           
         
         # apply 'max' check    
         if isinstance(columns, list) and max != None: 
@@ -1440,26 +1384,23 @@ class SOURCE(object):
         
         return columns
     
-    def _rowHelper(self, max = None, head = True, data_frame=None):
-        df = self._df if data_frame is None else data_frame
+    def _rowHelper(self, max = None, head = True):
         if max is None: return df
         else: 
-            if head is True: return df.head(max)
-            else: return df.tail(max)
+            if head is True: return self._df.head(max)
+            else: return self._df.tail(max)
     
-    def _toUniqueColName(self, name, data_frame=None):
-        df = self._df if data_frame is None else data_frame
+    def _toUniqueColName(self, name):
         n = 1
         name = str(name)
-        while name in df.columns.values.tolist():
+        while name in self._df.columns.values.tolist():
             name = name + '_' + str(n)
         return name
     
     def _pathHelper(self, path, filename):
         import os
         if path == None:
-            from pathlib import Path
-            home = str(Path.home())
+            home = str(pathlib.Path.home())
             path = os.path.join(home, 'report')
         else:
             path = os.path.join(path, 'report')
