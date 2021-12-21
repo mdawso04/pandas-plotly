@@ -9,7 +9,7 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from joblib import dump
 
-#from PK import *
+from PK import *
             
 #import pickle
 #from pandas.plotting import scatter_matrix as pdsm 
@@ -68,7 +68,6 @@ class GET(object):
         # CONFIG.INI sources
         # kintone app
         if source in self._config.sections() and 'kintone_domain' in self._config[source]:
-            from PK import *
             domain = self._config.get(source,'kintone_domain')
             app_id = self._config.getint(source,'app_id')
             api_token = self._config.get(source,'api_token')
@@ -254,6 +253,12 @@ class GET(object):
     def DF_COL__FORMAT__REPLACE(self, columns=None, before='', after=''):
         '''Round numerical column values to specified decimal'''
         eval_string = 'x.replace("{}","{}")'.format(str(before), str(after))
+        return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
+    
+    # DF__REPLACE
+    def DF_COL__FORMAT__REPLACE_NAN(self, columns=None, after=''):
+        '''Round numerical column values to specified decimal'''
+        eval_string = 'x if pd.notnull(x) else "{}"'.format(str(after))
         return self.DF_COL__FORMAT__CUSTOM(columns=columns, eval_string=eval_string)
 
     #TODO restore original column order after format
@@ -518,6 +523,17 @@ class GET(object):
         self._fig(preview = len(self._df.columns))
         return self
     
+    def VIZ__ICICLE(self, path, values, root='All data', **kwargs):
+        '''Draw a treemap plot'''
+        path = [px.Constant("All data")] + path
+        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+        df1 = self._df.where(pd.notna, None)
+        fig = px.icicle(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        self._fig(fig)
+        return self
+    
     def VIZ__LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
         '''Draw a line plot'''
         fig = px.line(data_frame=self._df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
@@ -535,6 +551,17 @@ class GET(object):
     def VIZ__SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
         '''Draw a scatter matrix plot'''
         fig = px.scatter_matrix(data_frame=self._df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
+        self._fig(fig)
+        return self
+    
+    def VIZ__SUNBURST(self, path, values, root='All data', **kwargs):
+        '''Draw a treemap plot'''
+        path = [px.Constant("All data")] + path
+        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+        df1 = self._df.where(pd.notna, None)
+        fig = px.sunburst(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         self._fig(fig)
         return self
     
@@ -557,7 +584,9 @@ class GET(object):
     def VIZ__TREEMAP(self, path, values, root='All data', **kwargs):
         '''Draw a treemap plot'''
         path = [px.Constant("All data")] + path
-        fig = px.treemap(data_frame=self._df, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
+        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+        df1 = self._df.where(pd.notna, None)
+        fig = px.treemap(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
         fig.update_traces(root_color="lightgrey")
         fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
         self._fig(fig)
