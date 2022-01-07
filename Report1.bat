@@ -6,6 +6,6 @@
 @REM 4) Run this batch file to run the .py script. You can also make a shortcut to this
        batch file and run it from the shortcut (ex: from your desktop etc)
 
-call <path to anaconda3>\Scripts\activate.bat
+call C:\Users\mdaws\anaconda3\Scripts\activate.bat
 call %~n0.py
 @cmd /k

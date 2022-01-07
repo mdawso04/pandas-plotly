@@ -16,12 +16,7 @@
 from scripts import SOURCE
 (
     SOURCE('attrition_csv')
-    .DF_ROW_FILTER('Age < 29')
-    .DF__GROUP('Department', {'Age': ['mean', 'count']})
-    .DF_COL_RENAME({'Age_mean': 'AvgAge', 'Age_count': 'NoEmployees'})
-    .DF_COL_ADD_INDEX_FROM_1('DeptID')
-    .REPORT_SET_VIZ_COLORS_ANTIQUE
-    .VIZ_BAR('Department', 'NoEmployees')
+    .ML_TRAIN_AND_SAVE_CLASSIFIER('Attrition')
     .REPORT_SAVE_VIZ_HTML('html_report')
 )
 
