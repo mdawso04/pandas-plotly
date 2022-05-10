@@ -1,5 +1,7 @@
-from .base import *
-from .util import *
+from pp.constants import *
+from pp.log import logger
+from pp.util import *
+from pp.base import *
 
 #non-standard libraries
 import pandas as pd
@@ -20,15 +22,14 @@ class Data(Base):
         name = toUniqueColName(self.df, name)
         self.df[name] = self.df[columns].apply(lambda row: eval(eval_string), axis=1, result_type='expand')
         self._preview()
+        logger.info('Added column: {}'.format(name))
         return self
 
     def DATA_COL_ADD_DUPLICATE(self, column=None, name='new_column'):
         '''Add a single new column by copying an existing column'''
         column = colHelper(self.df, column, max=1, forceReturnAsList=False)
         eval_string = 'row.{}'.format(column)
-        self._DATA_COL_ADD_CUSTOM(eval_string=eval_string, name=name)
-        self._preview()
-        return self
+        return self._DATA_COL_ADD_CUSTOM(eval_string=eval_string, name=name)
 
     def DATA_COL_ADD_EXTRACT_BEFORE(self, column=None, pos=None, name='new_column'):
         '''Add a single new column with text extracted from before char pos in existing column'''
@@ -65,6 +66,7 @@ class Data(Base):
         name = toUniqueColName(self.df, name)
         self.df[name] = range(start, self.df.shape[0] + start)
         self._preview()
+        logger.info('Added column: {}'.format(name))
         return self
 
     def DATA_COL_ADD_INDEX_FROM_0(self, name='new_column'):
@@ -75,12 +77,15 @@ class Data(Base):
         '''Convenience method for DATA_COL_ADD_INDEX'''
         return self.DATA_COL_ADD_INDEX(start=1, name=name)
 
-    def DATA_COL_DELETE(self, columns=None):
+    # Handle explicit and non-explicit dataframe
+    def DATA_COL_DELETE(self, columns:list=None):
         '''Delete specified column/s'''
         max = 1 if columns is None else None
         columns = colHelper(self.df, columns, max=max)
         self.df = self.df.drop(columns, axis = 1)
         self._preview()
+        logger.debug('Deleted columns: {}'.format(columns))
+        logger.info('Deleted columns')
         return self
     
     def DATA_COL_DELETE_EXCEPT(self, columns=None):
@@ -88,15 +93,14 @@ class Data(Base):
         max = 1 if columns is None else None
         columns = colHelper(self.df, columns, max=max)
         cols = removeElementsFromList(self.df.columns.values.tolist(), columns)
-        self.DATA_COL_DELETE(cols).DATA_COL_REORDER_MOVE_TO_FRONT(columns)
-        self._preview()
-        return self
+        return self.DATA_COL_DELETE(cols).DATA_COL_REORDER_MOVE_TO_FRONT(columns)
     
     def DATA_COL_FILTER(self, columns=None, criteria=None):
         '''Filter rows with specified filter criteria'''
         self.df.query(criteria, inplace = True)
         self.df.reset_index(drop=True, inplace=True)
         self._preview()
+        logger.info('Filtered columns by: {}'.format(criteria))
         return self
     
     def DATA_COL_FILTER_MISSING(self, columns=None):
@@ -104,6 +108,7 @@ class Data(Base):
         columns = colHelper(self.df, columns, colsOnNone=True)
         self.df.dropna(inplace=True, subset=columns)
         self._preview()
+        logger.info('Filtered rows with missing data in these columns: {}'.format(columns))
         return self
 
     def DATA_COL_FORMAT_ADD_PREFIX(self, columns=None, prefix='pre_'):
@@ -127,6 +132,7 @@ class Data(Base):
         columns = colHelper(self.df, columns, max=max)
         self.df[columns] = pd.DataFrame(self.df[columns]).applymap(lambda cell: eval(eval_string))
         self._preview()
+        logger.info('Formatted columns: {}'.format(columns))
         return self
     
     def _DATA_COL_FORMAT_CUSTOM_BATCH(self, columns=None, eval_string=None):
@@ -135,6 +141,7 @@ class Data(Base):
         columns = colHelper(self.df, columns, max=max)
         self.df[columns] = pd.DataFrame(self.df[columns]).apply(lambda row: eval(eval_string), axis=1)
         self._preview()
+        logger.info('Formatted columns: {}'.format(columns))
         return self
     
     # DATA_FILL_DOWN
@@ -204,6 +211,7 @@ class Data(Base):
         convert_dict = {c:t for c,t in zip(columns, typ)}
         self.df = self.df.astype(convert_dict)
         self._preview()
+        logger.info('Changed column type to {} for these columns: {}'.format(typ, columns))
         return self
     
     def DATA_COL_RENAME(self, columns):
@@ -214,6 +222,7 @@ class Data(Base):
         else:
             self.df.columns = columns
         self._preview()
+        logger.info('Renamed columns: {}'.format(columns))
         return self
     
     def DATA_COL_REORDER(self, columns):
@@ -226,6 +235,7 @@ class Data(Base):
         #df.columns = sorted(df.columns.values.tolist())
         self.df = self.df[sorted(self.df.columns.values.tolist())]
         self._preview()
+        logger.info('Reordered columns: {}'.format(self.df.columns.values.tolist()))
         return self
 
     def DATA_COL_REORDER_DESCENDING(self):
@@ -233,6 +243,7 @@ class Data(Base):
         #df.columns = sorted(df.columns.values.tolist(), reverse = True)
         self.df = self.df[sorted(self.df.columns.values.tolist(), reverse=True)]
         self._preview()
+        logger.info('Reordered columns: {}'.format(self.df.columns.values.tolist()))
         return self
 
     def DATA_COL_REORDER_MOVE_TO_BACK(self, columns=None):
@@ -242,6 +253,7 @@ class Data(Base):
         otherCols = removeElementsFromList(self.df.columns.values.tolist(), colsToMove)
         self.df = self.df[otherCols + colsToMove]
         self._preview()
+        logger.info('Reordered columns: {}'.format(self.df.columns.values.tolist()))
         return self
     
     def DATA_COL_REORDER_MOVE_TO_FRONT(self, columns=None):
@@ -251,6 +263,7 @@ class Data(Base):
         otherCols = removeElementsFromList(self.df.columns.values.tolist(), colsToMove)
         self.df = self.df[colsToMove + otherCols]
         self._preview()
+        logger.info('Reordered columns: {}'.format(self.df.columns.values.tolist()))
         return self
     
     def DATA_COL_SORT(self, columns=None, ascending=True):
@@ -260,6 +273,7 @@ class Data(Base):
         self.df.sort_values(by=columns, ascending=ascending, inplace=True, na_position ='last')
         self.df.reset_index(inplace=True, drop=True)
         self._preview()
+        logger.info('Sorted columns: {}'.format(self.df.columns.values.tolist()))
         return self
     
     def DATA_COL_TRANSFORM_ADD(self, columns=None, num=0):
@@ -324,6 +338,7 @@ class Data(Base):
         #else:
         #    self._df = pd.concat([rows, self._df], ignore_index = True)
         self._preview()
+        logger.info('Added {} row/s'.format(len(rows)))
         return self
     
     def DATA_ROW_DELETE(self, rows=None):
@@ -331,6 +346,7 @@ class Data(Base):
         self.df.drop(self.df.index[rows], inplace=True)
         self.df.reset_index(drop=True, inplace=True)
         self._preview()
+        logger.info('Deleted {} row/s'.format(len(rows)))
         return self
     
     def DATA_ROW_KEEP_BOTTOM(self, numRows=1):
@@ -338,6 +354,7 @@ class Data(Base):
         self.df = self.df.tail(numRows+1)
         self.df.reset_index(drop=True, inplace=True)
         self._preview()
+        logger.info('Kept {} row/s'.format(numRows))
         return self
 
     def DATA_ROW_KEEP_TOP(self, numRows=1):
@@ -345,12 +362,14 @@ class Data(Base):
         self.df = self.df.head(numRows+1)
         self.df.reset_index(drop=True, inplace=True)
         self._preview()
+        logger.info('Kept {} row/s'.format(numRows))
         return self
 
     def DATA_ROW_REVERSE_ORDER(self):
         '''Reorder all rows in reverse order'''
         self.df = self.df[::-1].reset_index(drop = True)
         self._preview()
+        logger.info('Reversed row/s')
         return self
 
     def DATA_ROW_TO_COLHEADER(self, row=0):
@@ -378,6 +397,7 @@ class Data(Base):
         '''Append a table to bottom of current table'''
         self.df = self.df.append(otherdf, ignore_index=True)
         self._preview()
+        logger.info('Appended dataframe')
         return self
 
     def DATA_GROUP(self, groupby=None, aggregates=None):
@@ -393,27 +413,32 @@ class Data(Base):
             self.df = self.df.groupby(groupby, as_index=False, dropna=False).agg(aggregates)
             #self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
         self._preview()
+        logger.info('Grouped dataframe')
         return self
 
     def DATA_MERGE(self, otherdf, on, how = 'left'):
         self.df = pd.merge(self.df, otherdf, on=on, how=how)
         self._preview()
+        logger.info('Merged dataframe')
         return self
 
     def DATA_TRANSPOSE(self):
-        self.df.transpose()
+        self.df = self.df.transpose()
         self._preview()
+        logger.info('Transposed dataframe')
         return self
 
     def DATA_UNPIVOT(self, columns=None):
         columns = colHelper(self.df, columns)
         self.df = pd.melt(self.df, id_vars=columns)
         self._preview()
+        logger.info('Unpivot dataframe')
         return self
 
     def DATA_PIVOT(self, indexCols, cols, vals):
         #indexCols = list(set(df.columns) - set(cols) - set(vals))
         self.df = self.df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
         self._preview()
+        logger.info('Pivotted dataframe')
         return self
     

@@ -1,53 +1,18 @@
+from pp.constants import *
+import pp.config as config
+from pp.log import logger
+
 #python standard libraries
-from configparser import ConfigParser
-import functools
+import functools, inspect
 
 #non-standard libraries
 import pandas as pd
 
-#DATA TYPES 
-#directory
-DATATYPES = []
-DATATYPE_DATAFRAME = 'df'
-DATATYPE_READER = 'reader'
-DATATYPE_WRITER = 'writer'
-DATATYPE_PREVIEWER = 'previewer'
-DATATYPES.extend([
-    DATATYPE_DATAFRAME,
-    DATATYPE_READER,
-    DATATYPE_WRITER,
-    DATATYPE_PREVIEWER
-])
-
-#READER TYPES 
-#directory
-READERTYPES = []
-READER_SIMPLE_CSV_EXCEL = 'reader_simple_csv_excel'
-READERTYPES.extend([
-    READER_SIMPLE_CSV_EXCEL
-])
-
 #class store
 READERS = {}
 
-#WRITER TYPES
-#directory
-WRITERTYPES = []
-WRITER_SIMPLE_CSV_EXCEL = 'writer_simple_csv_excel'
-WRITERTYPES.extend([
-    WRITER_SIMPLE_CSV_EXCEL
-])
-
 #class store
 WRITERS = {}
-
-#PREVIEWER TYPES
-#directory
-PREVIEWTYPES = []
-PREVIEWER_SIMPLEDATA = 'previewer_simpledata'
-PREVIEWTYPES.extend([
-    PREVIEWER_SIMPLEDATA
-])
 
 #class store
 PREVIEWERS = {}
@@ -72,29 +37,25 @@ class Base(object):
                 'stack':[]
             }
         }
-        
-        #read user supplied config
-        self._cfg = ConfigParser()
-        self._cfg.read('config.ini', encoding='utf_8')
+        logger.debug('Data structure built')
         
         #read user supplied source
         self._read(source)
+        logger.debug('Source read: {}'.format(source))
         
         #call default preview
         self._preview()
     
-    def _cfgHelper(self, section):
-            return self._cfg[section] if section in self._cfg.sections() else None 
-            
     def _read(self, src=None):
         #check config for *valid* section matching our src
-        cfg = self._cfgHelper(src)
-        if cfg and (DATATYPE_READER in cfg.keys()) and any(cfg[DATATYPE_READER] == r for r in READERTYPES):
-            r = READERS[cfg[DATATYPE_READER]](cfg=cfg)
+        #cfg = self._cfgHelper(src)
+        c = config.section(src)
+        if c and (DATATYPE_READER in c.keys()) and any(c[DATATYPE_READER] == r for r in READERTYPES):
+            r = READERS[c[DATATYPE_READER]](cfg=c)
         
         #else, fallback to 1-by-1 check of readers supporting our src - use first 'OK' reader
         else:
-            for r in READERTYPES:
+            for r in READERS.values():
                 if r.ok(src):
                     r = r(src=src)
                     break
@@ -105,17 +66,18 @@ class Base(object):
         #If success, instantiate Reader, read df, append to our data
         df = r.read()
         self._append(DATATYPE_DATAFRAME, df)
+        logger.info('Read from: {}'.format(src))
         return self
     
     def _write(self, tar=None):
         #check config for *valid* section matching our src
-        cfg = self._cfgHelper(tar)
-        if cfg and (DATATYPE_WRITER in cfg.keys()) and any(cfg[DATATYPE_WRITER] == w for w in WRITERTYPES):
-            w = WRITERS[cfg[DATATYPE_WRITER]](cfg=cfg)
+        c = config.section(src)
+        if c and (DATATYPE_WRITER in c.keys()) and any(c[DATATYPE_WRITER] == w for w in WRITERTYPES):
+            w = WRITERS[c[DATATYPE_WRITER]](cfg=c)
         
         #else, fallback to 1-by-1 check of readers supporting our src - use first 'OK' reader
         else:
-            for w in WRITERTYPES:
+            for w in WRITERS.values():
                 if w.ok(tar):
                     w = w(tar=tar)
                     break
@@ -124,12 +86,9 @@ class Base(object):
                 return
         
         w.write(self._data)
+        logger.info('Wrote to: {}'.format(tar))
         return self
-        
-    def REPORT_SAVE_DATA_AS_CSV_EXCEL(self, tar):
-        self._write(tar)
-        return self
-        
+    
     def _preview(self, preview=PREVIEWER_SIMPLEDATA): 
         '''Handles figure displaying for IPython'''
         p = preview
@@ -157,13 +116,48 @@ class Base(object):
         self._pop(key); self._append(key, data)
         return self
     
+    def _call(self, params):
+        '''Call this object with dictionary provided'''
+        '''
+        test_params = [
+            {
+                'method': 'DATA_COL_DELETE',
+                'params': {
+                    'columns': '年齢',
+                }
+            },
+        ]
+        '''
+        
+        try:
+            for p in params:
+                func = getattr(self, p['method'])
+                if p['params'] is None:
+                    print(inspect.signature(func))
+                    func()
+                else:
+                    print(inspect.signature(func))
+                    func(**p['params'])
+        except AttributeError:
+            print("dostuff not found")
+        
+        return self
+    
+    def REPORT_SAVE_DATA_AS_CSV_EXCEL(self, tar):
+        self._write(tar)
+        return self
+    
+    def CALL(self, params):
+        self._call(params)
+        return self
+        
     @property
     def df(self):
         return self._data[DATATYPE_DATAFRAME]['active']
     
     @df.setter
     def df(self, df1):
-        '''Replace active df without saving to stack'''
+        '''Replace active df without pushing current to stack'''
         self._active(DATATYPE_DATAFRAME, df1)
     
     def _repr_pretty_(self, p, cycle): 
@@ -184,8 +178,9 @@ def registerReader(cls):
     '''Register Reader objects'''
     t = cls.type()
     if t is None or t not in READERTYPES:
-        return
+        raise ValueError('Not valid Reader')
     READERS[t] = cls
+    logger.debug('Registered Reader: {}'.format(cls))
     return cls
     
 class BaseReader():
@@ -230,16 +225,16 @@ class SimpleCsvExcelReader(BaseReader):
         if self._cfg:
             c = self._cfg
             if 'csv' in c.keys():
-                return pd.read_csv(filepath_or_buffer=c['csv'])
+                return pd.read_csv(c['csv'])
             elif 'excel' in c.keys():
-                return pd.read_excel(filepath_or_buffer=c['excel'])
+                return pd.read_excel(c['excel'])
             else:
                 pass
         s = self._src
-        if isinstance(src, str) and (src[-4:]=='.csv'):
-            return pd.read_csv(filepath_or_buffer=s)
-        elif isinstance(src, str) and (src[-5:]=='.xlsx'):
-            return pd.read_excel(filepath_or_buffer=s)
+        if isinstance(s, str) and (s[-4:]=='.csv'):
+            return pd.read_csv(s)
+        elif isinstance(s, str) and (s[-5:]=='.xlsx'):
+            return pd.read_excel(s)
         else:
             raise TypeError("Invalid reader source")
         
@@ -247,8 +242,9 @@ def registerWriter(cls):
     '''Register Writer objects'''
     t = cls.type()
     if t is None or t not in WRITERTYPES:
-        return
+        raise ValueError('Not valid Writer')
     WRITERS[t] = cls
+    logger.debug('Registered Writer: {}'.format(cls))
     return cls
     
 class BaseWriter():
@@ -301,9 +297,9 @@ class SimpleCsvExcelWriter(BaseWriter):
                 pass
         t = self._tar
         if isinstance(t, str) and (t[-4:]=='.csv'):
-            return pd.read_csv(filepath_or_buffer=s)
+            return df.to_csv(t, index=False)
         elif isinstance(t, str) and (t[-5:]=='.xlsx'):
-            return pd.read_excel(filepath_or_buffer=s)
+            return df.to_excel(t, index=False)
         else:
             raise TypeError("Invalid writer target")
 
@@ -311,8 +307,9 @@ def registerPreviewer(cls):
     '''Register objects'''
     t = cls.type()
     if t is None or t not in PREVIEWTYPES:
-        return
+        raise ValueError('Not valid Previewer')
     PREVIEWERS[t] = cls
+    logger.debug('Registered Previewer: {}'.format(cls))
     return cls
         
 class BasePreviewer():

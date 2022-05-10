@@ -1,6 +1,11 @@
-from .base import *
-from .data import *
-from .util import *
+from pp.constants import *
+from pp.log import logger
+from pp.util import *
+from pp.base import *
+from pp.data import *
+
+#python standard libraries
+import datetime
 
 #non-standard libraries
 import pandas as pd
@@ -409,7 +414,6 @@ class SimpleVizWriter(BaseWriter):
         
     def write(self, data):
         '''Writes viz based on config'''
-        import datetime
         vizs = data[DATATYPE_VIZ]['stack']
         write_type = 'w'
         def wr(path, vizs):
