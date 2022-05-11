@@ -1,5 +1,5 @@
 from pp.log import logger
-from pp.util import *
+from pp.util_f import *
 
 #non-standard libraries
 import pandas as pd
@@ -28,7 +28,9 @@ PREVIEWERTYPES.extend([
     PREVIEWER_SIMPLEDATA
 ])
 
-
+@registerService(
+    src=FIELD_STRING,
+)
 def IO_READ_CSV(src):
     df = _read(src=src, reader=READER_SIMPLE_CSV_EXCEL)
     return df

@@ -10,6 +10,7 @@ from collections import OrderedDict
 SERVICES = {}
 
 #SERVICE KEYS
+# type, number of selections possible
 OPTION_FIELD_SINGLE_COL_ANY = (None, 1)
 OPTION_FIELD_MULTI_COL_ANY = (None, None)
 OPTION_FIELD_SINGLE_COL_NUMBER = ('number', 1)
@@ -30,6 +31,9 @@ OPTION_FIELDS.extend([
     OPTION_FIELD_SINGLE_COLORSWATCH,
 ])
 FIELD_STRING = 'string'
+FIELD_INTEGER = 'int'
+FIELD_NUMBER = 'number'
+FIELD_FLOAT = 'float'
 
 class ServiceFactory(object):
     class Service(object):
@@ -51,31 +55,41 @@ class ServiceFactory(object):
     
 class ServiceManager(object):
     def __init__(self, pre=None, viz=None):
+        #TODO load from string param
         self.pre = [] if pre is None else pre
         self.viz = [] if viz is None else viz
 
     def current(self):
         return {'pre': self.pre, 'viz': self.viz}
     
+    def tostring():
+        pass
+    
     @property
     def services(self):
         return SERVICES
     
     def addPre(self, service, options):
-        self.pre.append({'service': service, 'options': options})
+        self.pre.append({'service': service.name, 'function': service.fn, 'options': options})
     
     def addViz(self, service, options):
-        self.viz.append({'service': service, 'options': options})
+        self.viz.append({'service': service.name, 'function': service.fn, 'options': options})
+    
+    def isvalid():
+        #TODO
+        # MUST/WANT param check
+        # param type check
+        return True
     
     def call(self, df):
+        #if not self.isvalid():
+            #exception
         if len(self.pre) > 0:
             for p in self.pre:
-                fn = p['service'].fn 
-                o = p['options']
-                df = fn(df, **o)
+                df = p['function'](df, **p['options'])
         
         if len(self.viz) > 0:
-            fn = self.viz[-1]['service'].fn 
+            fn = self.viz[-1]['function'] 
             o = self.viz[-1]['options']
             return fn(df, **o)
         
