@@ -53,48 +53,6 @@ class ServiceFactory(object):
     def get(self):
         return self.Service(self._fn, self._d)
     
-class ServiceManager(object):
-    def __init__(self, pre=None, viz=None):
-        #TODO load from string param
-        self.pre = [] if pre is None else pre
-        self.viz = [] if viz is None else viz
-
-    def current(self):
-        return {'pre': self.pre, 'viz': self.viz}
-    
-    def tostring():
-        pass
-    
-    @property
-    def services(self):
-        return SERVICES
-    
-    def addPre(self, service, options):
-        self.pre.append({'service': service.name, 'function': service.fn, 'options': options})
-    
-    def addViz(self, service, options):
-        self.viz.append({'service': service.name, 'function': service.fn, 'options': options})
-    
-    def isvalid():
-        #TODO
-        # MUST/WANT param check
-        # param type check
-        return True
-    
-    def call(self, df):
-        #if not self.isvalid():
-            #exception
-        if len(self.pre) > 0:
-            for p in self.pre:
-                df = p['function'](df, **p['options'])
-        
-        if len(self.viz) > 0:
-            fn = self.viz[-1]['function'] 
-            o = self.viz[-1]['options']
-            return fn(df, **o)
-        
-        return df
-
 def registerService(**d):
     def inner(fn):
         #sig = signature(fn)
@@ -102,62 +60,6 @@ def registerService(**d):
         logger.debug('Registered Service: {}'.format(fn.__name__))
         return fn
     return inner
-
-'''
-Viz
-
-{
-    pre:[{
-    }]
-    viz:[]
-}
-
-'''
-
-
-'''
-def registerServiceOLD(**d):
-    def inner(fn):
-        #sig = signature(fn)
-        SERVICES[fn.__name__] = {
-            'fn': fn,
-            'options': {k: lambda df, t=v: colHelper(df, type=t, colsOnNone=True) for k, v in d.items()}
-        }
-        logger.debug('Registered Service: {}'.format(fn.__name__))
-        return fn
-    return inner
-'''
-
-'''
-#ColumnName = str | int
-#ColumnNames = str | int | list[str] | list[int] | tuple[str] | tuple[int]
-
-class Column(Object):
-    @classmethod
-    def typeMatch(cls, t):
-        pass    
-        
-class AnyColumn(Column):
-    @classmethod
-    def typeMatch(cls, t):
-        if t is None or t not in ('number', 'object'):
-            return False
-        return True
-
-class NumberColumn(Column):
-    @classmethod
-    def typeMatch(cls, t):
-        if t is None or t not in ('number'):
-            return False
-        return True
-
-class TextColumn(Column):
-    @classmethod
-    def typeMatch(cls, t):
-        if t is None or t not in ('object'):
-            return False
-        return True
-'''
 
 
 # ## UTILITIES ###
