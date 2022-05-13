@@ -1,7 +1,7 @@
 from pp.constants import *
 import pp.config as config
 from pp.log import logger
-from pp.util_f import *
+from pp.util import *
 
 #python standard libraries
 import functools, inspect
@@ -10,10 +10,13 @@ import functools, inspect
 import pandas as pd
 
 class App(object):
-    def __init__(self, pre=None, viz=None):
+    def __init__(self, current=None):
         #TODO load from string param
-        self.pre = [] if pre is None else pre
-        self.viz = [] if viz is None else viz
+        if current is None or not isinstance(current, dict): 
+            self.pre, self.viz = [], []
+        else:
+            self.pre = current['pre']
+            self.viz = current['viz']
         self.services = SERVICES
 
     def current(self):
@@ -91,10 +94,6 @@ class Base(object):
     
     def REPORT_SAVE_DATA_AS_CSV_EXCEL(self, tar):
         self._write(tar)
-        return self
-    
-    def CALL(self, params):
-        self._call(params)
         return self
         
     @property

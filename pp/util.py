@@ -1,5 +1,66 @@
 import pandas as pd
 from pathlib import Path
+from pp.log import logger
+
+from inspect import signature
+#from types import MappingProxyType
+from collections import OrderedDict
+
+#SERVICES DIRECTORY 
+SERVICES = {}
+
+#SERVICE KEYS
+# type, number of selections possible
+OPTION_FIELD_SINGLE_COL_ANY = (None, 1)
+OPTION_FIELD_MULTI_COL_ANY = (None, None)
+OPTION_FIELD_SINGLE_COL_NUMBER = ('number', 1)
+OPTION_FIELD_MULTI_COL_NUMBER = ('number', None)
+OPTION_FIELD_SINGLE_COL_STRING = ('object', 1)
+OPTION_FIELD_MULTI_COL_STRING = ('object', None)
+OPTION_FIELD_SINGLE_BOOLEAN = ('boolean', 1)
+OPTION_FIELD_SINGLE_COLORSWATCH = ('colorswatch', 1)
+OPTION_FIELDS = []
+OPTION_FIELDS.extend([
+    OPTION_FIELD_SINGLE_COL_ANY,
+    OPTION_FIELD_MULTI_COL_ANY,
+    OPTION_FIELD_SINGLE_COL_NUMBER,
+    OPTION_FIELD_MULTI_COL_NUMBER,
+    OPTION_FIELD_SINGLE_COL_STRING,
+    OPTION_FIELD_MULTI_COL_STRING,
+    OPTION_FIELD_SINGLE_BOOLEAN,
+    OPTION_FIELD_SINGLE_COLORSWATCH,
+])
+FIELD_STRING = 'string'
+FIELD_INTEGER = 'int'
+FIELD_NUMBER = 'number'
+FIELD_FLOAT = 'float'
+
+class ServiceFactory(object):
+    class Service(object):
+        def __init__(self, fn, d):
+            self.name = fn.__name__
+            self.fn = fn
+            self._d = d
+            
+        def options(self, df):
+            #TODO: orderedDict 
+            return {k: (colHelper(df, type=v[0], colsOnNone=True) if v in OPTION_FIELDS else None) for k, v in self._d.items()}
+    
+    def __init__(self, fn, d):
+        self._fn = fn
+        self._d = d
+        
+    def get(self):
+        return self.Service(self._fn, self._d)
+    
+def registerService(**d):
+    def inner(fn):
+        #sig = signature(fn)
+        SERVICES[fn.__name__] = ServiceFactory(fn, d).get()
+        logger.debug('Registered Service: {}'.format(fn.__name__))
+        return fn
+    return inner
+
 
 # ## UTILITIES ###
 def removeElementsFromList(l1, l2):
@@ -50,6 +111,25 @@ def colHelper(df, columns=None, max=None, type=None, colsOnNone=True, forceRetur
         columns = [columns]
 
     return columns
+
+def colValues(df, col):
+    cv = df[col].unique()
+    return cv
+
+def toMultiIndex(df):
+    if isinstance(df.columns, pd.MultiIndex): 
+        arrays = [range(0, len(df.columns)), df.columns.get_level_values(0), df.dtypes]
+        mi = pd.MultiIndex.from_arrays(arrays, names=('Num', 'Name', 'Type'))
+    else:
+        arrays = [range(0, len(df.columns)), df.columns, df.dtypes]
+        mi = pd.MultiIndex.from_arrays(arrays, names=('Num', 'Name', 'Type'))
+    df.columns = mi
+    return df
+
+def toSingleIndex(df):
+    if isinstance(df.columns, pd.MultiIndex): 
+        df.columns = df.columns.get_level_values(1)
+    return df
 
 def rowHelper(df, max = None, head = True):
     if max is None: return df

@@ -1,5 +1,5 @@
 from pp.log import logger
-from pp.util_f import *
+from pp.util import *
 
 #non-standard libraries
 import pandas as pd
@@ -235,3 +235,63 @@ class SimpleDATAPreviewer(BasePreviewer):
             mi = pd.MultiIndex.from_arrays(arrays, names=('Num', 'Name', 'Type'))
         df.columns = mi
         return display(df)
+    
+'''
+@registerPreviewer 
+class PreviewerChartCurrent(BasePreviewer):
+    @classmethod
+    def type(cls):
+        return PREVIEWER_CHART_CURRENT
+    
+    @classmethod
+    def preview(self, data):
+        viz = data[DATATYPE_VIZ]['active']
+        
+        #if viz contains multiple plots eg. HIST_LIST 
+        if isinstance(viz, list):
+            return tuple([v.show(config=FIGURE_CONFIG_SHOW) for v in viz]), PREVIEWERS[PREVIEWER_SIMPLEDATA].preview(data)
+            
+        return viz.show(config=FIGURE_CONFIG_SHOW), PREVIEWERS[PREVIEWER_SIMPLEDATA].preview(data)
+
+@registerWriter 
+class SimpleVizWriter(BaseWriter):
+    def __init__(self, cfg=None, tar=None):
+        super().__init__(cfg=cfg, tar=tar)
+        
+    @classmethod
+    def type(cls):
+        return WRITER_SIMPLE_VIZ
+        
+    @classmethod
+    def ok(cls, tar):
+        if isinstance(tar, str) and tar[-5:]=='.html':
+            return True
+        return False
+        
+    def write(self, data):
+        vizs = data[DATATYPE_VIZ]['stack']
+        write_type = 'w'
+        def wr(path, vizs):
+            #handle mixed lists (individual viz & list of viz)
+            vizs1 = []
+            for v in vizs:
+                vizs1.extend(v) if isinstance(v, list) else vizs1.extend([v]) 
+            with open(path, write_type) as f:
+                f.write("Report generated: " + str(datetime.datetime.today()))
+                for v in vizs1:
+                    f.write(v.to_html(full_html=False, include_plotlyjs='cdn', default_height=360, default_width='95%', config=FIGURE_CONFIG_SHOW))
+        if self._cfg:
+            c = self._cfg
+            if 'html' in c.keys():
+                wr(c['html'], vizs)
+                return
+            else:
+                pass
+        t = self._tar
+        if isinstance(t, str) and tar[-5:]=='.html':
+            wr(tar, vizs)
+            return 
+        else:
+            raise TypeError("Invalid writer target")
+            
+'''

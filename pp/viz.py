@@ -1,7 +1,5 @@
-from pp.constants import *
 from pp.log import logger
 from pp.util import *
-from pp.base import *
 from pp.data import *
 
 #python standard libraries
@@ -11,21 +9,6 @@ import datetime
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
-DATATYPE_VIZ = 'viz'
-DATATYPES.extend([
-    DATATYPE_VIZ
-])
-
-PREVIEWER_CHART_CURRENT = 'previewer_chart_current'
-PREVIEWTYPES.extend([
-    PREVIEWER_CHART_CURRENT
-])
-
-WRITER_SIMPLE_VIZ = 'writer_simple_viz'
-WRITERTYPES.extend([
-    WRITER_SIMPLE_VIZ
-])
 
 FIGURE_CONFIG_SHOW = {
     'displaylogo': False,
@@ -58,387 +41,254 @@ FIGURE_CONFIG_BASE =  {
     }
 }
 
-class Viz(Data):   
-    def __init__(self, source):
-        super().__init__(source)
-        
-        #extend base data structure
-        self._data[DATATYPE_VIZ] = {
-                'active':None,
-                'stack':[]
-        }
-        
-        #set plotly color palette to our preferred one
-        self.REPORT_SET_VIZ_COLORS_ANTIQUE
+VIZ_COLORS_PLOTLY = px.colors.qualitative.Plotly
+VIZ_COLORS_D3 = px.colors.qualitative.D3
+VIZ_COLORS_G10 = px.colors.qualitative.G10
+VIZ_COLORS_T10 = px.colors.qualitative.T10
+VIZ_COLORS_ALPHABET = px.colors.qualitative.Alphabet
+VIZ_COLORS_DARK24 = px.colors.qualitative.Dark24
+VIZ_COLORS_LIGHT24 = px.colors.qualitative.Light24
+VIZ_COLORS_SET1 = px.colors.qualitative.Set1
+VIZ_COLORS_PASTEL1 = px.colors.qualitative.Pastel1
+VIZ_COLORS_DARK2 = px.colors.qualitative.Dark2
+VIZ_COLORS_SET2 = px.colors.qualitative.Set2
+VIZ_COLORS_PASTEL2 = px.colors.qualitative.Pastel2
+VIZ_COLORS_SET3 = px.colors.qualitative.Set3
+VIZ_COLORS_ANTIQUE = px.colors.qualitative.Antique
+VIZ_COLORS_BOLD = px.colors.qualitative.Bold
+VIZ_COLORS_PASTEL = px.colors.qualitative.Pastel
+VIZ_COLORS_PRISM = px.colors.qualitative.Prism
+VIZ_COLORS_SAFE = px.colors.qualitative.Safe
+VIZ_COLORS_VIVID = px.colors.qualitative.Vivid
+VIZ_COLORS_DEFAULT = VIZ_COLORS_ANTIQUE
     
-    @property
-    def viz(self):
-        return self._data[DATATYPE_VIZ]['active']
-    
-    @viz.setter
-    def viz(self, v):
-        self._data[DATATYPE_VIZ]['active'] = v
-    
-    def _fig(self, fig=None, updateCurrentFigure=False, settings=None, overwrite=True, preview=PREVIEWER_CHART_CURRENT):
-        '''Handles figure displaying for IPython'''
-        if fig is not None and not isinstance(fig, list):
-            d = {**FIGURE_CONFIG_BASE, **settings} if settings else FIGURE_CONFIG_BASE
-            fig.update_layout(dict1=d, overwrite=overwrite)
-            self._append(DATATYPE_VIZ, fig)
-            self._preview(preview=PREVIEWER_CHART_CURRENT)
-        elif fig is not None and isinstance(fig, list):
-            d = {**FIGURE_CONFIG_BASE, **settings} if settings else FIGURE_CONFIG_BASE
-            for f in fig:
-                f.update_layout(dict1=d, overwrite=overwrite)
-            self._append(DATATYPE_VIZ, fig)
-            self._preview(preview=PREVIEWER_CHART_CURRENT)
-        elif updateCurrentFigure:
-            fig = self._figs[-1]
-            d = {**FIGURE_CONFIG_BASE, **settings} if settings else FIGURE_CONFIG_BASE
-            fig.update_layout(dict1=d, overwrite=overwrite)
-            self._append(DATATYPE_VIZ, fig)
-            self._preview(preview=PREVIEWER_CHART_CURRENT)
-        else:
-            self._preview(preview) 
-    
+def _fig(fig=None, settings=None, overwrite=True):
+    '''Handles figure displaying for IPython'''
+    if fig is not None and not isinstance(fig, list):
+        d = {**FIGURE_CONFIG_BASE, **settings} if settings else FIGURE_CONFIG_BASE
+        fig.update_layout(dict1=d, overwrite=overwrite)
+        #self._append(DATATYPE_VIZ, fig)
+        #self._preview(preview=PREVIEWER_CHART_CURRENT)
+    elif fig is not None and isinstance(fig, list):
+        d = {**FIGURE_CONFIG_BASE, **settings} if settings else FIGURE_CONFIG_BASE
+        for f in fig:
+            f.update_layout(dict1=d, overwrite=overwrite)
+        #self._append(DATATYPE_VIZ, fig)
+        #self._preview(preview=PREVIEWER_CHART_CURRENT) 
+
 # VIZUALIZATION ACTIONS
-    
-    def REPORT_SAVE_VIZ_AS_HTML(self, tar):
-        self._write(tar)
-        return self
-        
-    def VIZ_AREA(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
-        '''Draw a line plot with shaded area'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.area(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-    
-    def VIZ_BAR(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
-        '''Draw a bar plot'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.histogram(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-    
-    def VIZ_BOX(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
-        '''Draw a box plot'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.box(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-        
-    def VIZ_DATASTATS(self):
-        '''Show basic summary statistics of table contents'''
-        stats = self.df.describe(include='all').T
-        stats.insert(0, 'Feature', stats.index)
-        self._append(DATATYPE_DATAFRAME, stats)
-        self.DATA_COL_ADD_INDEX_FROM_0(name='No').DATA_COL_REORDER_MOVE_TO_FRONT(columns='No')
-        self.VIZ_TABLE()
-        self._pop(DATATYPE_DATAFRAME)
-        return self
-    
-    def VIZ_HIST(self, x=None, color=None, facet_col=None, facet_row=None, **kwargs):
-        '''Draw a hisotgram'''
-        x, color, facet_col, facet_row = (colHelper(self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, color, facet_col, facet_row])
-        fig = px.histogram(data_frame=self.df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-    
-    def VIZ_HIST_LIST(self, color=None, **kwargs):
-        '''Draw a histogram for all fields in current dataframe'''
-        color = colHelper(df=self.df, columns=color, max=1, colsOnNone=False, forceReturnAsList=False)
-        v = [px.histogram(data_frame=self.df, x=c, color=color, color_discrete_sequence=self._colorSwatch, **kwargs) for c in self.df.columns]
-        self._fig(v)
-        return self
-    
-    def VIZ_ICICLE(self, path, values, root='All data', **kwargs):
-        '''Draw a treemap plot'''
-        path = [px.Constant("All data")] + colHelper(df=self.df, columns=path)
-        values = colHelper(df=self.df, columns=values, max=1, type='number', forceReturnAsList=False)
-        # make leaf dict (isna), update
-        
-        #p = self._colHelper(path)
-        #d = self._df[p].groupby(p, as_index=False, dropna=False).first()
-        #d = d[d.isna().any(axis=1)].to_dict(orient='records')
-        #print(d)
-        
-        #d = df.groupby('Dia').apply(lambda a: dict(a.groupby('macap').apply(lambda x: dict(zip(x['transmission'], x['bytes'])))))
-        #d = d.to_dict()
-        
-        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
-        df1 = self.df.where(pd.notnull, None)
-        try:
-            fig = px.icicle(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
-            fig.update_traces(root_color="lightgrey")
-            fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-            self._fig(fig)
-        except ValueError:
-            self.VIZ_ICICLE(path[1:-1], values, root=path[0])
-        return self
-    
-    def VIZ_LINE(self, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, **kwargs):
-        '''Draw a line plot'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.line(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, #markers=markers, 
-                      color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-    
-    def VIZ_SCATTER(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs): #size=None, symbol=None
-        '''Draw a scatter plot'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.scatter(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-        
-    def VIZ_SCATTERMATRIX(self, dimensions=None, color=None, **kwargs):
-        '''Draw a scatter matrix plot'''
-        dimensions, color = (colHelper(df=self.df, columns=i, max=j, colsOnNone=False, forceReturnAsList=False) for i, j in [(dimensions, None), (color, 1)])
-        fig = px.scatter_matrix(data_frame=self.df, dimensions=dimensions, color_discrete_sequence=self._colorSwatch, color=color, **kwargs)
-        self._fig(fig)
-        return self
-    
-    def VIZ_SUNBURST(self, path, values, root='All data', **kwargs):
-        '''Draw a treemap plot'''
-        path = [px.Constant("All data")] + colHelper(df=self.df, columns=path)
-        values = colHelper(df=self.df, columns=values, max=1, type='number', forceReturnAsList=False)
-        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
-        df1 = self.df.where(pd.notnull, None)
-        try:
-            fig = px.sunburst(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
-            fig.update_traces(root_color="lightgrey")
-            fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-            self._fig(fig)
-        except ValueError:
-            self.VIZ_SUNBURST(path[1:-1], values, root=path[0])
-        return self
-    
-    def VIZ_TABLE(self, columns=None, **kwargs):
-        '''Draw a table'''
-        columns = colHelper(df=self.df, columns=columns)
-        cell_values = self.df[columns].to_numpy().T
-        fig = go.Figure(data=[go.Table(
-            header=dict(values=columns,
-                       align='left',
-                       font_size=12,
-                       height=30),
-            cells=dict(values=cell_values,
-                      align='left',
-                       font_size=12,
-                       height=30))
-        ])
-        self._fig(fig)
-        return self
-    
-    def VIZ_TREEMAP(self, path, values, root='All data', **kwargs):
-        '''Draw a treemap plot'''
-        path = [px.Constant("All data")] + colHelper(df=self.df, columns=path)
-        values = colHelper(df=self.df, columns=values, max=1, type='number', forceReturnAsList=False)
-        # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
-        df1 = self.df.where(pd.notnull, None)
-        try:
-            fig = px.treemap(data_frame=df1, path=path, values=values, color_discrete_sequence=self._colorSwatch, **kwargs)
-            fig.update_traces(root_color="lightgrey")
-            fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
-            self._fig(fig)
-        except ValueError:
-            self.VIZ_TREEMAP(path[1:-1], values, root=path[0])
-        return self
-    
-    def VIZ_VIOLIN(self, x=None, y=None, color=None, facet_col=None, facet_row=None, **kwargs):
-        '''Draw a violin plot'''
-        x, y, color, facet_col, facet_row = (colHelper(df=self.df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
-        fig = px.violin(data_frame=self.df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, 
-                     color_discrete_sequence=self._colorSwatch, **kwargs)
-        self._fig(fig)
-        return self
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_PLOTLY(self):
-        '''Set plot/report colors to 'Plotly'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Plotly)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_D3(self):
-        '''Set plot/report colors to 'D3'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.D3)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_G10(self):
-        '''Set plot/report colors to 'G10'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.G10)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_T10(self):
-        '''Set plot/report colors to 'T10'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.T10)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_ALPHABET(self):
-        '''Set plot/report colors to 'Alphabet'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Alphabet)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_DARK24(self):
-        '''Set plot/report colors to 'Dark24'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark24)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_LIGHT24(self):
-        '''Set plot/report colors to 'Light24'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Light24)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_SET1(self):
-        '''Set plot/report colors to 'Set1'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set1)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_PASTEL1(self):
-        '''Set plot/report colors to 'Pastel1'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel1)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_DARK2(self):
-        '''Set plot/report colors to 'Dark2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Dark2)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_SET2(self):
-        '''Set plot/report colors to 'Set2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set2)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_PASTEL2(self):
-        '''Set plot/report colors to 'Pastel2'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel2)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_SET3(self):
-        '''Set plot/report colors to 'Set3'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Set3)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_ANTIQUE(self):
-        '''Set plot/report colors to 'Antique'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Antique)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_BOLD(self):
-        '''Set plot/report colors to 'Bold'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Bold)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_PASTEL(self):
-        '''Set plot/report colors to 'Pastel'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Pastel)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_PRISM(self):
-        '''Set plot/report colors to 'Prism'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Prism)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_SAFE(self):
-        '''Set plot/report colors to 'Safe'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Safe)
-    
-    @property
-    def REPORT_SET_VIZ_COLORS_VIVID(self):
-        '''Set plot/report colors to 'Vivid'''
-        return self._REPORT_SET_VIZ_COLORS(px.colors.qualitative.Vivid)
-    
-    def _REPORT_SET_VIZ_COLORS(self, swatch = px.colors.qualitative.Plotly):
-        self._colorSwatch = swatch
-        #self._fig(preview = 'color_swatches')
-        return self
 
-"""    
-    #@property
-    def REPORT_PREVIEW_CHARTS(self):
-        self._fig(preview = 'all_charts')
-        return self
-    
-    #@property
-    def REPORT_PREVIEW_FULL(self):
-        self._fig(preview = 'full')
-        return self
-    
-    def REPORT_SAVE_ALL(self, path = None):
-        self.REPORT_SAVE_DATA(path = path)
-        #self.REPORT_SAVE_VIZ_PNG(path = path)
-        self.REPORT_SAVE_VIZ_HTML(path = path)
-        return self
-"""  
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_AREA(df, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a line plot with shaded area'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.area(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
 
-@registerPreviewer 
-class PreviewerChartCurrent(BasePreviewer):
-    @classmethod
-    def type(cls):
-        '''Returns key used to regsiter type'''
-        return PREVIEWER_CHART_CURRENT
-    
-    @classmethod
-    def preview(self, data):
-        '''Returns dataframe based on config'''
-        viz = data[DATATYPE_VIZ]['active']
-        
-        #if viz contains multiple plots eg. HIST_LIST 
-        if isinstance(viz, list):
-            return tuple([v.show(config=FIGURE_CONFIG_SHOW) for v in viz]), PREVIEWERS[PREVIEWER_SIMPLEDATA].preview(data)
-            
-        return viz.show(config=FIGURE_CONFIG_SHOW), PREVIEWERS[PREVIEWER_SIMPLEDATA].preview(data)
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_BAR(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a bar plot'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.histogram(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
 
-@registerWriter 
-class SimpleVizWriter(BaseWriter):
-    def __init__(self, cfg=None, tar=None):
-        super().__init__(cfg=cfg, tar=tar)
-        
-    @classmethod
-    def type(cls):
-        '''Returns key used to register type'''
-        return WRITER_SIMPLE_VIZ
-        
-    @classmethod
-    def ok(cls, tar):
-        '''Returns key used to register type'''
-        if isinstance(tar, str) and tar[-5:]=='.html':
-            return True
-        return False
-        
-    def write(self, data):
-        '''Writes viz based on config'''
-        vizs = data[DATATYPE_VIZ]['stack']
-        write_type = 'w'
-        def wr(path, vizs):
-            #handle mixed lists (individual viz & list of viz)
-            vizs1 = []
-            for v in vizs:
-                vizs1.extend(v) if isinstance(v, list) else vizs1.extend([v]) 
-            with open(path, write_type) as f:
-                f.write("Report generated: " + str(datetime.datetime.today()))
-                for v in vizs1:
-                    f.write(v.to_html(full_html=False, include_plotlyjs='cdn', default_height=360, default_width='95%', config=FIGURE_CONFIG_SHOW))
-        if self._cfg:
-            c = self._cfg
-            if 'html' in c.keys():
-                wr(c['html'], vizs)
-                return
-            else:
-                pass
-        t = self._tar
-        if isinstance(t, str) and tar[-5:]=='.html':
-            wr(tar, vizs)
-            return 
-        else:
-            raise TypeError("Invalid writer target")
-                
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_BOX(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a box plot'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.box(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
+def VIZ_DATASTATS(df):
+    '''Show basic summary statistics of table contents'''
+    df = df.describe(include='all').T
+    df.insert(0, 'Feature', df.index)
+    df = DATA_COL_ADD_INDEX_FROM_0(df=df, name='No')
+    df = DATA_COL_REORDER_MOVE_TO_FRONT(df=df, columns='No')
+    fig = VIZ_TABLE(df=df)
+    return fig
+
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_HIST(df, x=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a histogram'''
+    x, color, facet_col, facet_row = (
+        colHelper(df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, color, facet_col, facet_row])
+    fig = px.histogram(data_frame=df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
+@registerService(
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+)
+def VIZ_HIST_LIST(df, color=None, swatch=VIZ_COLORS_ANTIQUE):
+    '''Draw a histogram for all fields in current dataframe'''
+    color = colHelper(df=df, columns=color, max=1, colsOnNone=False, forceReturnAsList=False)
+    v = [px.histogram(data_frame=df, x=c, color=color, color_discrete_sequence=swatch) for c in df.columns]
+    _fig(v)
+    return v
+
+def VIZ_ICICLE(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a treemap plot'''
+    path = [px.Constant("All data")] + colHelper(df=df, columns=path)
+    values = colHelper(df=df, columns=values, max=1, type='number', forceReturnAsList=False)
+    # make leaf dict (isna), update
+
+    #p = self._colHelper(path)
+    #d = self._df[p].groupby(p, as_index=False, dropna=False).first()
+    #d = d[d.isna().any(axis=1)].to_dict(orient='records')
+    #print(d)
+
+    #d = df.groupby('Dia').apply(lambda a: dict(a.groupby('macap').apply(lambda x: dict(zip(x['transmission'], x['bytes'])))))
+    #d = d.to_dict()
+
+    # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+    df1 = df.where(pd.notnull, None)
+    try:
+        fig = px.icicle(data_frame=df1, path=path, values=values, color_discrete_sequence=swatch)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        _fig(fig)
+    except ValueError:
+        fig = VIZ_ICICLE(df1, path[1:-1], values, root=path[0])
+    return fig
+
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_LINE(df, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a line plot'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.line(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+    size=OPTION_FIELD_SINGLE_COL_NUMBER,
+)
+def VIZ_SCATTER(df, x=None, y=None, color=None, facet_col=None, facet_row=None, size=None, swatch=VIZ_COLORS_ANTIQUE):
+    '''Draw a scatter plot'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.scatter(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
+@registerService(
+    dimension=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+)
+def VIZ_SCATTERMATRIX(df, dimensions=None, color=None, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a scatter matrix plot'''
+    dimensions, color = (
+        colHelper(df=df, columns=i, max=j, colsOnNone=False, forceReturnAsList=False) for i, j in [(dimensions, None), (color, 1)])
+    fig = px.scatter_matrix(data_frame=df, dimensions=dimensions, color=color, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
+def VIZ_SUNBURST(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a treemap plot'''
+    path = [px.Constant("All data")] + colHelper(df=df, columns=path)
+    values = colHelper(df=df, columns=values, max=1, type='number', forceReturnAsList=False)
+    # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+    df1 = df.where(pd.notnull, None)
+    try:
+        fig = px.sunburst(data_frame=df1, path=path, values=values, color_discrete_sequence=swatch)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        _fig(fig)
+    except ValueError:
+        fig = VIZ_SUNBURST(df1, path[1:-1], values, root=path[0])
+    return fig
+
+@registerService(
+    columns=OPTION_FIELD_MULTI_COL_ANY, 
+)
+def VIZ_TABLE(df, columns=None, **kwargs):
+    '''Draw a table'''
+    columns = colHelper(df=df, columns=columns)
+    cell_values = df[columns].to_numpy().T
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=columns,
+                   align='left',
+                   font_size=12,
+                   height=30),
+        cells=dict(values=cell_values,
+                  align='left',
+                   font_size=12,
+                   height=30))
+    ])
+    _fig(fig)
+    return fig
+
+def VIZ_TREEMAP(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a treemap plot'''
+    path = [px.Constant("All data")] + colHelper(df=df, columns=path)
+    values = colHelper(df=df, columns=values, max=1, type='number', forceReturnAsList=False)
+    # treemap, icicle, sunburst break on NaN. Replace with 'None' for this call
+    df1 = df.where(pd.notnull, None)
+    try:
+        fig = px.treemap(data_frame=df1, path=path, values=values, color_discrete_sequence=swatch)
+        fig.update_traces(root_color="lightgrey")
+        fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+        _fig(fig)
+    except ValueError:
+        fig = VIZ_TREEMAP(df1, path[1:-1], values, root=path[0])
+    return fig
+
+@registerService(
+    x=OPTION_FIELD_SINGLE_COL_ANY,
+    y=OPTION_FIELD_SINGLE_COL_ANY,
+    color=OPTION_FIELD_SINGLE_COL_ANY, 
+    facet_col=OPTION_FIELD_SINGLE_COL_ANY,
+    facet_row=OPTION_FIELD_SINGLE_COL_ANY,
+)
+def VIZ_VIOLIN(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
+    '''Draw a violin plot'''
+    x, y, color, facet_col, facet_row = (
+        colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
+    fig = px.violin(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, color_discrete_sequence=swatch)
+    _fig(fig)
+    return fig
+
 fig_defaults = {
     'data': [
         {
