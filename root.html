@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pandas Plotly &#8212; Pandas Plotly</title>
+    <title>pandas-plotly &#8212; Pandas Plotly</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -87,7 +87,7 @@
         <ul class="nav bd-sidenav">
  <li class="toctree-l1 current">
   <a class="reference internal" href="#">
-   Pandas Plotly
+   pandas-plotly
   </a>
  </li>
 </ul>
@@ -192,13 +192,28 @@
             <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#contribute">
-   Contribute
+  <a class="reference internal nav-link" href="#example">
+   Example
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#contents">
-   Contents
+  <a class="reference internal nav-link" href="#jupyterlab-screenshot">
+   JupyterLab screenshot
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#use-cases">
+   Use cases
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#requirements">
+   Requirements
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#methods">
+   Methods
   </a>
  </li>
 </ul>
@@ -213,22 +228,326 @@
               <div>
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="pandas-plotly">
-<h1>Pandas Plotly<a class="headerlink" href="#pandas-plotly" title="Permalink to this headline">¶</a></h1>
-<p>A simple wrapper for data wrangling &amp; vizualization</p>
-<div class="section" id="contribute">
-<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
-<p>Pandas Plotly is open-source. Feel free to use as you like (with attribution!).
-When you do, you will no doubt find holes, gaps and shortcomings; pls add to the GitHub issue list to improve for all.</p>
+<h1>pandas-plotly<a class="headerlink" href="#pandas-plotly" title="Permalink to this headline">¶</a></h1>
+<p>A simple, unified interface for pandas &amp; plotly for data wrangling, vizualization &amp; report generating.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scripts</span> <span class="kn">import</span> <span class="n">SOURCE</span>
+<span class="p">(</span>
+    <span class="n">SOURCE</span><span class="p">(</span><span class="s1">&#39;attrition_csv&#39;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">DF_ROW_FILTER</span><span class="p">(</span><span class="s1">&#39;Age &lt; 29&#39;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">DF__GROUP</span><span class="p">(</span><span class="s1">&#39;Department&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Age&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">]})</span>
+    <span class="o">.</span><span class="n">DF_COL_RENAME</span><span class="p">({</span><span class="s1">&#39;Age_mean&#39;</span><span class="p">:</span> <span class="s1">&#39;AvgAge&#39;</span><span class="p">,</span> <span class="s1">&#39;Age_count&#39;</span><span class="p">:</span> <span class="s1">&#39;NoEmployees&#39;</span><span class="p">})</span>
+    <span class="o">.</span><span class="n">DF_COL_ADD_INDEX_FROM_1</span><span class="p">(</span><span class="s1">&#39;DeptID&#39;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">REPORT_SET_VIZ_COLORS_ANTIQUE</span>
+    <span class="o">.</span><span class="n">VIZ_BAR</span><span class="p">(</span><span class="s1">&#39;Department&#39;</span><span class="p">,</span> <span class="s1">&#39;NoEmployees&#39;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">REPORT_SAVE_VIZ_HTML</span><span class="p">(</span><span class="s1">&#39;html_report&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="jupyterlab-screenshot">
+<h2>JupyterLab screenshot<a class="headerlink" href="#jupyterlab-screenshot" title="Permalink to this headline">¶</a></h2>
+<p><img alt="image" src="https://user-images.githubusercontent.com/87593190/136630375-245269b7-c0d8-4465-9198-5ccd481b9524.png" /></p>
+</div>
+<div class="section" id="use-cases">
+<h2>Use cases<a class="headerlink" href="#use-cases" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li><p>Basic data wrangling / vizualization /report generation<br />
+Use in JupyterLab to see data wrangling &amp; vizualization results in real time. When you
+find an interesting vizualization or data, save on the spot with no need to keep your script.</p></li>
+<li><p>Automated data wrangling / vizualization / report generation<br />
+As above play in JupyterLab to make the results you want. Once your script is ready,
+save to use whenever needed.</p></li>
+</ol>
+<p>For Windows users: Copy the supplied Windows .bat template so you can quickly call your script manually from a shortcut on your pc,
+from Windows Task Scheduler, or if in corporate environment, user start up tasks.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>pandas, plotly<br />
+optional: pycurl (needed for corporate networks with authenticated proxy servers due to current limitations with requests)</p>
+</div>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description &amp; example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_FIXED</span></code></p></td>
+<td><p>Add a new column with a ‘fixed’ value as content<br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_FIXED('Tokyo')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_FIXED('Tokyo',</span> <span class="pre">'Location')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_INDEX</span></code></p></td>
+<td><p>Add a new column with a index/serial number as content<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX()</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX('Index_number')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX('No.',</span> <span class="pre">0)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_INDEX_FROM_0</span></code></p></td>
+<td><p>Convenience method for DF_COL_ADD_INDEX<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX_FROM_0()</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX_FROM_0('Index_number')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_INDEX_FROM_1</span></code></p></td>
+<td><p>Convenience method for DF_COL_ADD_INDEX<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX_FROM_1()</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_INDEX_FROM_1('Index_number')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_CUSTOM</span></code></p></td>
+<td><p>Add a new column with custom (lambda) content</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_EXTRACT_POSITION_AFTER</span></code></p></td>
+<td><p>Add a new column with content extracted from after char pos in existing column<br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_POSITION_AFTER('Old_column',</span> <span class="pre">5)</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_POSITION_AFTER('Old_column',</span> <span class="pre">5,</span> <span class="pre">'New_column')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_EXTRACT_POSITION_BEFORE</span></code></p></td>
+<td><p>Add a new column with content extracted from before char pos in existing column<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_POSITION_BEFORE('Old_column',</span> <span class="pre">5)</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_POSITION_BEFORE('Old_column',</span> <span class="pre">5,</span> <span class="pre">'New_column')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_EXTRACT_CHARS_FIRST</span></code></p></td>
+<td><p>Add a new column with first N chars extracted from column<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_CHARS_FIRST('Old_column',</span> <span class="pre">5)</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_CHARS_FIRST('Old_column',</span> <span class="pre">5,</span> <span class="pre">'New_column')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_EXTRACT_CHARS_LAST</span></code></p></td>
+<td><p>Add a new column with last N chars extracted from column<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_CHARS_FIRST('Old_column',</span> <span class="pre">5)</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_EXTRACT_CHARS_FIRST('Old_column',</span> <span class="pre">5,</span> <span class="pre">'New_column')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_ADD_DUPLICATE</span></code></p></td>
+<td><p>Add a new column by copying an existing column<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_DUPLICATE('Old_column')</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_ADD_DUPLICATE('New_column')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_DELETE</span></code></p></td>
+<td><p>Delete specified column/s<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE('Del_column')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE(['Del_column1',</span> <span class="pre">'Del_column2',</span> <span class="pre">'Del_columnN')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE([0,</span> <span class="pre">3,</span> <span class="pre">6])</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE(Slice(0,3))</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_DELETE_EXCEPT</span></code></p></td>
+<td><p>Deleted all column/s except specified<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE_EXCEPT('Keep_column')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE_EXCEPT(['Keep_column1',</span> <span class="pre">'Keep_column2',</span> <span class="pre">'Keep_columnN')</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE_EXCEPT([0,</span> <span class="pre">3,</span> <span class="pre">6])</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_DELETE_EXCEPT(Slice(0,3))</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_MOVE_TO_FRONT</span></code></p></td>
+<td><p>Move specified column/s to front<br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_MOVE_TO_FRONT([&quot;Col1,</span> <span class="pre">ColN&quot;])</span></code><br /></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_MOVE_TO_BACK</span></code></p></td>
+<td><p>Move specified column/s to back<br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_MOVE_TO_BACK([&quot;Col1,</span> <span class="pre">ColN&quot;])</span></code><br /></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_RENAME</span></code></p></td>
+<td><p>Rename specfied column/s<code class="docutils literal notranslate"><span class="pre">.DF_COL_RENAME({'OldCol1':'NewCol1',</span> <span class="pre">'OldColN:'NewColN})</span></code><br /><code class="docutils literal notranslate"><span class="pre">.DF_COL_RENAME(['NewCol1','NewCol2',</span> <span class="pre">'NewColN'])</span></code><br /></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_TO_UPPERCASE</span></code></p></td>
+<td><p>Format specified column/s values to uppercase<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_TO_UPPERCASE(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_TO_LOWERCASE</span></code></p></td>
+<td><p>Format specified column/s values to lowercase<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_TO_LOWERCASE(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_TO_TITLECASE</span></code></p></td>
+<td><p>Format specified column/s values to titlecase<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_TO_TITLECASE(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_STRIP</span></code></p></td>
+<td><p>Format specified column/s values by stripping invisible characters<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_STRIP(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_STRIP_LEFT</span></code></p></td>
+<td><p>Convenience method for DF_COL_FORMAT_STRIP<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_STRIP_LEFT(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_STRIP_RIGHT</span></code></p></td>
+<td><p>Convenience method for DF_COL_FORMAT_STRIP<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_STRIP_RIGHT(['Column1',</span> <span class="pre">'ColumnN'])</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_ADD_PREFIX</span></code></p></td>
+<td><p>Format specified single column values by adding prefix<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_ADD_PREFIX('Prefix_',</span> <span class="pre">'Column')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_ADD_SUFFIX</span></code></p></td>
+<td><p>Format specified single column values by adding suffix<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_ADD_SUFFIX(['_suffix',</span> <span class="pre">'Column')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_TYPE</span></code></p></td>
+<td><p>Format specified columns as specfied type<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_TYPE(['Col1',</span> <span class="pre">'Col2'],</span> <span class="pre">'str')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COL_FORMAT_ROUND</span></code></p></td>
+<td><p>Round numerical column values to specified decimal<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_ROUND(2)</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_COL_FORMAT_ROUND({'Column1':2,</span> <span class="pre">'Column2':1,</span> <span class="pre">'ColumnN':1})</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_ADD</span></code></p></td>
+<td><p>Add row at specified index<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_ADD(['Col1',</span> <span class="pre">'Col2',</span> <span class="pre">'ColN'])</span></code><br /></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_FILTER</span></code></p></td>
+<td><p>Filter rows with specified filter criteria<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_FILTER('Age</span> <span class="pre">&lt;</span> <span class="pre">29')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_KEEP_BOTTOM</span></code></p></td>
+<td><p>Delete all rows except specified bottom N rows<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_KEEP_BOTTOM(5)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_KEEP_TOP</span></code></p></td>
+<td><p>Delete all rows except specified top N rows<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_KEEP_TOP(5)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_REVERSE</span></code></p></td>
+<td><p>Reorder all rows in reverse order<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_REVERSE()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_ROW_SORT</span></code></p></td>
+<td><p>Reorder dataframe by specified columns in ascending/descending order<br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_SORT('Sort_column1')</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_SORT(['Sort_column1',</span> <span class="pre">'Sort_Column2'])</span></code><br /> <code class="docutils literal notranslate"><span class="pre">.DF_ROW_SORT(['Sort_column1',</span> <span class="pre">'Sort_Column2'],</span> <span class="pre">True)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__APPEND</span></code></p></td>
+<td><p>Append a table to bottom of current table<br /> <code class="docutils literal notranslate"><span class="pre">.DF__APPEND(dataframe_to_append)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF__FILL_DOWN</span></code></p></td>
+<td><p>Fill blank cells with values from last non-blank cell above<br /> <code class="docutils literal notranslate"><span class="pre">.DF__FILL_DOWN()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__FILL_UP</span></code></p></td>
+<td><p>Fill blank cells with values from last non-blank cell below<br /> <code class="docutils literal notranslate"><span class="pre">.DF__FILL_UP()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF__FILL_RIGHT</span></code></p></td>
+<td><p>Fill blank cells with values from last non-blank cell from left<br /> <code class="docutils literal notranslate"><span class="pre">.DF__FILL_RIGHT()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__FILL_LEFT</span></code></p></td>
+<td><p>Fill blank cells with values from last non-blank cell from right<br /> <code class="docutils literal notranslate"><span class="pre">.DF__FILL_LEFT()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF__GROUP</span></code></p></td>
+<td><p>Group table contents by specified columns with optional aggregation (sum/max/min etc)<br /> <code class="docutils literal notranslate"><span class="pre">.DF__GROUP('Department',</span> <span class="pre">{'Age':</span> <span class="pre">['mean',</span> <span class="pre">'count']})</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__MERGE</span></code></p></td>
+<td><p>Merge a table with current table with specified type (left/right/inner/outer)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF__REPLACE</span></code></p></td>
+<td><p>Replace string values in table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__TRANSPOSE</span></code></p></td>
+<td><p>Transpose dataframe</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF__UNPIVOT</span></code></p></td>
+<td><p>Unpivot table on specified columns</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF__PIVOT</span></code></p></td>
+<td><p>Pivot table on specified columns</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COLHEADER_PROMOTE</span></code></p></td>
+<td><p>Promote row at specified index to column headers<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COLHEADER_PROMOTE(1)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COLHEADER_DEMOTE</span></code></p></td>
+<td><p>Demote column headers to make 1st row of table<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COLHEADER_DEMOTE()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COLHEADER_REORDER_ASC</span></code></p></td>
+<td><p>Reorder column titles in ascending order<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COLHEADER_REORDER_ASC()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COLHEADER_REORDER_DESC</span></code></p></td>
+<td><p>Reorder column titles in descending order<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COLHEADER_REORDER_DESC()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DF_COLHEADER_REORDER</span></code></p></td>
+<td><p>Reorder column titles in specified order. Convenience method for DF_COL_MOVE_TO_FRONT<br /> <code class="docutils literal notranslate"><span class="pre">.DF_COLHEADER_REORDER(['Col1',</span> <span class="pre">'Col2',</span> <span class="pre">'ColN'])</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_BOX</span></code></p></td>
+<td><p>Draw a box plot<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_BOX('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_VIOLIN</span></code></p></td>
+<td><p>Draw a violin plot<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_VIOLIN('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_HIST</span></code></p></td>
+<td><p>Draw a hisotgram<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_HIST('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_HIST_LIST</span></code></p></td>
+<td><p>Draw a histogram for all fields in current dataframe<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_HIST_LIST()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_SCATTER</span></code></p></td>
+<td><p>Draw a scatter plot</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_BAR</span></code></p></td>
+<td><p>Draw a bar plot<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_BAR('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_LINE</span></code></p></td>
+<td><p>Draw a line plot<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_LINE('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_AREA</span></code></p></td>
+<td><p>Draw a line plot with shaded area<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_AREA('Department',</span> <span class="pre">'NoEmployees')</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_TREEMAP</span></code></p></td>
+<td><p>Draw a treemap plot</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_SCATTERMATRIX</span></code></p></td>
+<td><p>Draw a scatter matrix plot</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_TABLE</span></code></p></td>
+<td><p>Draw a table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VIZ_DFSTATS</span></code></p></td>
+<td><p>Draw a table with basic summary statistics of dataframe<br /> <code class="docutils literal notranslate"><span class="pre">.VIZ_DFSTATS()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ML_SELECT_FEATURES_NONE_ZERO_VARIANCE</span></code></p></td>
+<td><p>Select numerical features / columns with non-zero variance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ML_SELECT_FEATURES_N_BEST</span></code></p></td>
+<td><p>Select best n numerical features / columns for classifying target column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ML_TRAIN_AND_SAVE_CLASSIFIER</span></code></p></td>
+<td><p>Train a ‘classification model’ for provided target, save model to specified location and display summary of model performance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ML_EVAL_CLASSIFIER</span></code></p></td>
+<td><p>Load a saved ‘classification model’ from specified location and evaluate with current dataframe data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ML_TRAIN_AND_SAVE_REGRESSOR</span></code></p></td>
+<td><p>Train a ‘regression model’ for provided target, save model to specified location and display summary of model performance</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ML_EVAL_REGRESSOR</span></code></p></td>
+<td><p>Load a saved ‘regression model’ from specified location and evaluate with current dataframe data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_PLOTLY</span></code></p></td>
+<td><p>Set plot/report colors to ‘Plotly’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_PLOTLY</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_D3</span></code></p></td>
+<td><p>Set plot/report colors to ‘D3’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_D3</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_G10</span></code></p></td>
+<td><p>Set plot/report colors to ‘G10’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_G10</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_T10</span></code></p></td>
+<td><p>Set plot/report colors to ‘T10’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_T10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_ALPHABET</span></code></p></td>
+<td><p>Set plot/report colors to ‘Alphabet’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_ALPHABET</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_DARK24</span></code></p></td>
+<td><p>Set plot/report colors to ‘Dark24’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_DARK24</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_LIGHT24</span></code></p></td>
+<td><p>Set plot/report colors to ‘Light24’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_LIGHT24</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_SET1</span></code></p></td>
+<td><p>Set plot/report colors to ‘Set1’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_SET1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_PASTEL1</span></code></p></td>
+<td><p>Set plot/report colors to ‘Pastel1’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_PASTEL1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_DARK2</span></code></p></td>
+<td><p>Set plot/report colors to ‘Dark2’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_DARK2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_SET2</span></code></p></td>
+<td><p>Set plot/report colors to ‘Set2’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_SET2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_PASTEL2</span></code></p></td>
+<td><p>Set plot/report colors to ‘Pastel2’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_PASTEL2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_SET3</span></code></p></td>
+<td><p>Set plot/report colors to ‘Set3’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_SET3</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_ANTIQUE</span></code></p></td>
+<td><p>Set plot/report colors to ‘Antique’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_ANTIQUE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_BOLD</span></code></p></td>
+<td><p>Set plot/report colors to ‘Bold’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_BOLD</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_PASTEL</span></code></p></td>
+<td><p>Set plot/report colors to ‘Pastel’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_PASTEL</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_PRISM</span></code></p></td>
+<td><p>Set plot/report colors to ‘Prism’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_PRISM</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_SAFE</span></code></p></td>
+<td><p>Set plot/report colors to ‘Safe’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_SAFE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SET_VIZ_COLORS_VIVID</span></code></p></td>
+<td><p>Set plot/report colors to ‘Vivid’<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SET_VIZ_COLORS_VIVID</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_PREVIEW</span></code></p></td>
+<td><p>Preview all plots on screen (for use in JupyterLab)<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_PREVIEW()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_PREVIEW_FULL</span></code></p></td>
+<td><p>Preview all plots, dataframe and column summary on screen (for use in JupyterLab)<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_PREVIEW_FULL()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SAVE_ALL</span></code></p></td>
+<td><p>Save html format report/plots and dataframe to specified location<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SAVE_ALL()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SAVE_VIZ_HTML</span></code></p></td>
+<td><p>Save html format report/plots to specified location<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SAVE_VIZ_HTML()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REPORT_SAVE_DF</span></code></p></td>
+<td><p>Save dataframe to specified location<br /> <code class="docutils literal notranslate"><span class="pre">.REPORT_SAVE_DF()</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">PP</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="pp/01-data/top.html">1. Data Top</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pp/02-viz/top.html">2. Viz Top</a></li>
-</ul>
-</div>
 </div>
 </div>
 
