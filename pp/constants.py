@@ -18,6 +18,8 @@ SETTINGS.extend([
     SETTING_LOG_LEVEL,
 ])
 
+DATA_ATTRITION = 'https://raw.githubusercontent.com/IBM/employee-attrition-aif360/master/data/emp_attrition.csv'
+
 
 
 

@@ -2,6 +2,7 @@ from pp.constants import *
 import pp.config as config
 from pp.log import logger
 from pp.util import *
+from pp.ml_f import *
 
 #python standard libraries
 import functools, inspect
@@ -13,23 +14,35 @@ class App(object):
     def __init__(self, current=None):
         #TODO load from string param
         if current is None or not isinstance(current, dict): 
-            self.pre, self.viz = [], []
+            self.src, self.pre, self.viz = None, [], []
         else:
-            self.pre = current['pre']
-            self.viz = current['viz']
-        self.services = SERVICES
+            self.src = current['src'] if 'src' in current.keys() else None
+            self.pre = current['pre'] if 'pre' in current.keys() else []
+            self.viz = current['viz'] if 'viz' in current.keys() else []
+        self.services = SERVICES.keys()
 
     def current(self):
-        return {'pre': self.pre, 'viz': self.viz}
+        return {'src': self.src,  'pre': self.pre, 'viz': self.viz}
     
     def tostring():
         pass
     
-    def addPre(self, service, options):
-        self.pre.append({'service': service.name, 'options': options})
+    def addSrc(self, service, options):
+        # only allow a single source
+        self.src = {'service': service, 'options': options}
     
-    def addViz(self, service, options):
-        self.viz.append({'service': service.name, 'options': options})
+    def addPre(self, service, options, index=None):
+        self.pre.insert(len(self.pre) if index is None else index, {'service': service, 'options': options})
+    
+    def addViz(self, service, options, index=None):
+        self.viz.insert(len(self.viz) if index is None else index, {'service': service, 'options': options})
+        
+    def options(self, service, df=None):
+        if df is not None:
+            return SERVICES[service].options(df)
+        elif self.src is not None:
+            return SERVICES[service].options(self.src)
+        return "Dataframe not found"
     
     def isvalid():
         #TODO

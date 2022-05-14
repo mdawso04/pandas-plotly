@@ -123,6 +123,7 @@ def VIZ_BOX(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swat
     _fig(fig)
     return fig
 
+@registerService()
 def VIZ_DATASTATS(df):
     '''Show basic summary statistics of table contents'''
     df = df.describe(include='all').T
@@ -156,6 +157,10 @@ def VIZ_HIST_LIST(df, color=None, swatch=VIZ_COLORS_ANTIQUE):
     _fig(v)
     return v
 
+@registerService(
+    path=OPTION_FIELD_MULTI_COL_ANY,
+    values=OPTION_FIELD_SINGLE_COL_ANY,
+)
 def VIZ_ICICLE(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
@@ -224,6 +229,10 @@ def VIZ_SCATTERMATRIX(df, dimensions=None, color=None, swatch=VIZ_COLORS_DEFAULT
     _fig(fig)
     return fig
 
+@registerService(
+    path=OPTION_FIELD_MULTI_COL_ANY,
+    values=OPTION_FIELD_SINGLE_COL_ANY,
+)
 def VIZ_SUNBURST(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
@@ -259,6 +268,10 @@ def VIZ_TABLE(df, columns=None, **kwargs):
     _fig(fig)
     return fig
 
+@registerService(
+    path=OPTION_FIELD_MULTI_COL_ANY,
+    values=OPTION_FIELD_SINGLE_COL_ANY,
+)
 def VIZ_TREEMAP(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
