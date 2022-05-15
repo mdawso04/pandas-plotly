@@ -31,12 +31,13 @@ PREVIEWERTYPES.extend([
 @registerService(
     src=FIELD_STRING,
 )
-def IO_READ_CSV(src):
-    df = _read(src=src, reader=READER_SIMPLE_CSV_EXCEL)
-    return df
+def READ_CSV(src, df=None):
+    read_df = _read(src=src, reader=READER_SIMPLE_CSV_EXCEL)
+    read_df = read_df if read_df is not None else df
+    return read_df
 
-def IO_WRITE_CSV(content, tar):
-    _write(content=content, tar=tar, writer=WRITER_SIMPLE_CSV_EXCEL)
+def WRITE_CSV(df, tar):
+    _write(content=df, tar=tar, writer=WRITER_SIMPLE_CSV_EXCEL)
     return
 
 def _read(src=None, reader=None):

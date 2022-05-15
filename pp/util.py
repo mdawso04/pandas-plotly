@@ -35,32 +35,30 @@ FIELD_INTEGER = 'int'
 FIELD_NUMBER = 'number'
 FIELD_FLOAT = 'float'
 
-class ServiceFactory(object):
-    class Service(object):
-        def __init__(self, fn, d):
-            self.name = fn.__name__
-            self.fn = fn
-            self._d = d
-            
-        def options(self, df):
-            #TODO: orderedDict 
-            return {k: (colHelper(df, type=v[0], colsOnNone=True) if v in OPTION_FIELDS else None) for k, v in self._d.items()}
-    
+class Service(object):
     def __init__(self, fn, d):
-        self._fn = fn
+        self.name = fn.__name__
+        self.fn = fn
         self._d = d
-        
-    def get(self):
-        return self.Service(self._fn, self._d)
-    
+
+    def options(self, df):
+        #TODO: orderedDict 
+        return {k: (colHelper(df, type=v[0], colsOnNone=True) if v in OPTION_FIELDS else None) for k, v in self._d.items()}
+
 def registerService(**d):
     def inner(fn):
-        #sig = signature(fn)
-        SERVICES[fn.__name__] = ServiceFactory(fn, d).get()
+        def service_group(service_dict, service_name):
+            gr = service_name.split('_', 1)[0].lower()
+            if gr in service_dict.keys(): return service_dict[gr]
+            else:
+                service_dict[gr] = {}
+                return service_dict[gr]
+        
+        service_group(SERVICES, fn.__name__)[fn.__name__] = Service(fn, d)
+        #SERVICES[fn.__name__] = Service(fn, d)
         logger.debug('Registered Service: {}'.format(fn.__name__))
         return fn
     return inner
-
 
 # ## UTILITIES ###
 def removeElementsFromList(l1, l2):

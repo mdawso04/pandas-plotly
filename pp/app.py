@@ -11,60 +11,83 @@ import functools, inspect
 import pandas as pd
 
 class App(object):
-    def __init__(self, current=None):
+    def __init__(self, todos=None):
         #TODO load from string param
-        if current is None or not isinstance(current, dict): 
-            self.src, self.pre, self.viz = None, [], []
+        if todos is None or not isinstance(todos, dict): 
+            self.todos = {k: [] for k in ('read', 'data', 'viz', 'write')} 
         else:
-            self.src = current['src'] if 'src' in current.keys() else None
-            self.pre = current['pre'] if 'pre' in current.keys() else []
-            self.viz = current['viz'] if 'viz' in current.keys() else []
-        self.services = SERVICES.keys()
-
-    def current(self):
-        return {'src': self.src,  'pre': self.pre, 'viz': self.viz}
+            self.todos = todos
     
-    def tostring():
-        pass
-    
-    def addSrc(self, service, options):
-        # only allow a single source
-        self.src = {'service': service, 'options': options}
-    
-    def addPre(self, service, options, index=None):
-        self.pre.insert(len(self.pre) if index is None else index, {'service': service, 'options': options})
-    
-    def addViz(self, service, options, index=None):
-        self.viz.insert(len(self.viz) if index is None else index, {'service': service, 'options': options})
+    def _service_helper(self, index=None, group=None, return_type='group_service'):
+        #if group_service: asis
+        #if group_service_names: grp/ser names
+        #if service: ser
         
-    def options(self, service, df=None):
-        if df is not None:
-            return SERVICES[service].options(df)
-        elif self.src is not None:
-            return SERVICES[service].options(self.src)
-        return "Dataframe not found"
+        if return_type=='group_service':
+            return SERVICES if group is None else SERVICES[group]
+        elif return_type=='group_service_names':
+            return ({k: list(v.keys()) for k, v in SERVICES.items()} if group is None 
+                    else [k for k, v in SERVICES[group].items()])
+        elif return_type=='service':
+            return {k: v for dic in SERVICES.values() for k, v in dic.items()}
+        return "SERVICE NOT FOUND"
     
-    def isvalid():
+    def services(self, group=None):
+        return self._service_helper(return_type='group_service_names', group=group)
+    
+    def options(self, service, df=None):
+        services_dict = self._service_helper(return_type='service')
+        if df is not None:
+            return services_dict[service].options(df)
+        else:
+            return services_dict[service].options(self.call(group='read')) 
+        return "SERVICE NOT FOUND"
+    
+    def add(self, service, options=None, index=None):
+        group = service.split('_', 1)[0].lower()
+        l = self.todos[group]
+        l.insert(len(l) if index is None else index, {'service': service, 'options': options})
+    
+    def isvalid(self):
         #TODO
         # MUST/WANT param check
         # param type check
         return True
     
-    def call(self, df):
-        #if not self.isvalid():
+    def call(self, df=None, index=None, group=None):
+        if not self.isvalid():
             #exception
-        if len(self.pre) > 0:
-            for p in self.pre:
-                fn = SERVICES[p['service']].fn
-                df = fn(df, **p['options'])
+            return "ERROR"
+        #groups = (group) if group is not None else ('io', 'data', 'viz')
+        #df = df if df is not None else...
+        if group is not None:
+            todos = self.todos[group]
+        else:
+            todos = self.todos['read'] + self.todos['data'] + self.todos['viz'] + self.todos['write']
         
-        if len(self.viz) > 0:
-            fn = SERVICES[self.viz[-1]['service']].fn
-            o = self.viz[-1]['options']
-            return fn(df, **o)
-        
-        return df
+        service_list = self._service_helper(return_type='service')
+            
+        result, results = None, []
+        for item in todos:
+            fn = service_list[item['service']].fn
+            if item['options'] is not None:
+                result = fn(df=df, **item['options'])
+            else:
+                result = fn(df=df)
+            if isinstance(result, pd.DataFrame):
+                df = result
+            else:
+                results.append(result)
+        if isinstance(result, pd.DataFrame):
+            results.append(result)
+        if len(results) == 1: return results[0]
+        else: return results
 
+    def tostring():
+        pass
+    
+    
+    
 class Base(object):
     
     def __init__(self, source):
