@@ -1,5 +1,6 @@
 from pp.log import logger
 from pp.util import *
+from pp.constants import *
 
 #non-standard libraries
 import pandas as pd
@@ -31,10 +32,14 @@ PREVIEWERTYPES.extend([
 @registerService(
     src=FIELD_STRING,
 )
-def READ_CSV(src, df=None):
+def READ_CSV(src):
     read_df = _read(src=src, reader=READER_SIMPLE_CSV_EXCEL)
-    read_df = read_df if read_df is not None else df
+    logger.debug('Read from: {}'.format(src))
     return read_df
+
+@registerService()
+def READ_DATA_ATTRITION():
+    return READ_CSV(src=DATA_ATTRITION)
 
 def WRITE_CSV(df, tar):
     _write(content=df, tar=tar, writer=WRITER_SIMPLE_CSV_EXCEL)
@@ -57,7 +62,6 @@ def _read(src=None, reader=None):
 
     #If success, instantiate Reader, read df, append to our data
     df = r.read()
-    logger.info('Read from: {}'.format(src))
     return df
 
 def _write(content, tar=None, writer=None):

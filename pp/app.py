@@ -12,82 +12,178 @@ import pandas as pd
 
 class App(object):
     def __init__(self, todos=None):
-        #TODO load from string param
-        if todos is None or not isinstance(todos, dict): 
-            self.todos = {k: [] for k in ('read', 'data', 'viz', 'write')} 
+        # TODO - CHANGE TO 'TODO_NAME': 'TODO' FORMAT
+        if todos is None or not isinstance(todos, list): 
+            #self.todos = {k: [] for k in ('read', 'data', 'viz', 'write')} 
+            self.todos = []
         else:
             self.todos = todos
+            if not self._hasRead():
+                self.todos = []
+                logger.warning('Assigned Todos missing Read so reset to None')
+            else:
+                logger.debug('Initiated App: {} Todos'.format(len(todos)))
     
-    def _service_helper(self, index=None, group=None, return_type='group_service'):
-        #if group_service: asis
-        #if group_service_names: grp/ser names
-        #if service: ser
-        
-        if return_type=='group_service':
-            return SERVICES if group is None else SERVICES[group]
-        elif return_type=='group_service_names':
-            return ({k: list(v.keys()) for k, v in SERVICES.items()} if group is None 
-                    else [k for k, v in SERVICES[group].items()])
-        elif return_type=='service':
-            return {k: v for dic in SERVICES.values() for k, v in dic.items()}
-        return "SERVICE NOT FOUND"
-    
-    def services(self, group=None):
+    def services(self, group=None, as_list=False):
+        if as_list:
+            d = self._service_helper(return_type='group_service_names', group=group)
+            return [i for l in d.values() for i in l]
         return self._service_helper(return_type='group_service_names', group=group)
     
-    def options(self, service, df=None):
-        services_dict = self._service_helper(return_type='service')
-        if df is not None:
-            return services_dict[service].options(df)
+    def _getService(self, service):
+        service_dict = self._service_helper(return_type='service_callable')
+        if service in service_dict.keys():
+            return service_dict[service]
         else:
-            return services_dict[service].options(self.call(group='read')) 
+            return None
+    
+    def _service_helper(self, group=None, return_type='group_service_callable', filter_read=True):
+        if return_type=='group_service_callable':
+            if self._hasRead():
+                if filter_read:
+                    return service_helper(groups=['data', 'viz', 'write'], return_type='group_service_callable')
+                else:
+                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_callable')
+            else:
+                if group in ('read', None):
+                    return service_helper(groups='read', return_type='group_service_callable')
+                else:    
+                    return None
+                
+        elif return_type=='group_service_names':
+            if self._hasRead():
+                if filter_read:
+                    return service_helper(groups=['data', 'viz', 'write'], return_type='group_service_names')
+                else:
+                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_names')
+            else:    
+                if group in ('read', None):
+                    return service_helper(groups='read', return_type='group_service_names')
+                else:
+                    return None
+                
+        elif return_type=='service_callable':
+            if self._hasRead():
+                if filter_read:
+                    return service_helper(groups=['data', 'viz', 'write'], return_type='service_callable')
+                else:
+                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='service_callable')
+            else:
+                if group in ('read', None):
+                    return service_helper(groups='read', return_type='service_callable')
+                else:
+                    return None
         return "SERVICE NOT FOUND"
     
-    def add(self, service, options=None, index=None):
-        group = service.split('_', 1)[0].lower()
-        l = self.todos[group]
-        l.insert(len(l) if index is None else index, {'service': service, 'options': options})
+    def options(self, service, df=None, index=None):
+        s = self._getService(service)
+        if s is None:
+            raise Exception('Service: {} not found'.format(service))
+        if df is not None:
+            o = s.options(df)
+        else:
+            if len(self.todos) == 0:
+                o = None
+            else:
+                o = s.options(self.call(last_index=index))
+        logger.debug('Generated options for {} field/s'.format(len(o) if o is not None else None))
+        return o
     
-    def isvalid(self):
+    def add(self, service, options=None, index=None, todoName=None):
+        if not self._validateAdd(service):
+            raise Exception('Service: {} not found'.format(service))
+        group = extractGroup(service)
+        def toUniqueName(name):
+            n = 1
+            name = str(name)
+            currentNames = [s['name'] for s in self.todos]
+            while name in currentNames:
+                name = name + '_' + str(n)
+            return name
+        if todoName is not None:
+            todoName = toUniqueName(todoName)
+        else:
+            todoName = toUniqueName(group)
+        todo = {'name': todoName, 'type': group, 'settings': {'service': service, 'options': options}}
+        if index is not None:
+            self.todos.insert(index, todo)
+        else:
+            self.todos.append(todo)
+        logger.debug('Added Todo: {} ({})'.format(service, todoName))
+        
+    def _validateAdd(self, service):
+        group = extractGroup(service)
+        if group is None:
+            return False
+        if group == 'read':
+            if self._hasRead():
+                logger.debug('Already has read!')
+                return False
+            else:
+                return True
+        else:
+            if not self._hasRead():
+                logger.debug('No read set so cant start!')
+                return False
+            else:
+                return True
+    
+    def _hasRead(self):
+        # need 1 and only 1 read in todos
+        td = self._todo_helper('read')
+        if len(td) == 1:
+            return True
+        return False
+    
+    def _todo_helper(self, group=None):
+        if group == None:
+            return self.todos
+        else:
+            return [i for i in self.todos if i['type']==group]
+    
+    # TODO - CHANGE TO 'TODO_NAME': 'TODO' FORMAT
+    def call(self, df=None, last_index=None, return_df=True):
+        if not self._isvalid():
+            #exception
+            return "ERROR"
+        service_list = self._service_helper(return_type='service_callable', filter_read=False)  
+        result, results = None, []
+        logger.debug('Calling Todos: {}'.format(len(self.todos)))
+        for item in self.todos[:last_index]:
+            fn = service_list[item['settings']['service']].fn
+            s = inspect.signature(fn)
+            if 'df' in s.parameters:
+                if 'options' in item['settings'].keys():
+                    result = fn(df=df, **item['settings']['options'])
+                else:
+                    result = fn(df=df)
+            else:
+                print(item)
+                if 'options' in item['settings'].keys():
+                    result = fn(**item['settings']['options'])
+                else:
+                    result = fn()
+            if isinstance(result, pd.DataFrame):
+                df = result
+            else:
+                results.append(result)
+            logger.debug('Called Todo: {} ({})'.format(item['settings']['service'], item['name']))
+        results.append(df)
+        logger.debug('Called Todos: {}'.format(len(self.todos)))
+        logger.debug('Generated results: {}'.format(len(results)))
+        if return_df:
+            return results[-1]
+        return results
+
+    def _isvalid(self):
         #TODO
         # MUST/WANT param check
         # param type check
         return True
     
-    def call(self, df=None, index=None, group=None):
-        if not self.isvalid():
-            #exception
-            return "ERROR"
-        #groups = (group) if group is not None else ('io', 'data', 'viz')
-        #df = df if df is not None else...
-        if group is not None:
-            todos = self.todos[group]
-        else:
-            todos = self.todos['read'] + self.todos['data'] + self.todos['viz'] + self.todos['write']
-        
-        service_list = self._service_helper(return_type='service')
-            
-        result, results = None, []
-        for item in todos:
-            fn = service_list[item['service']].fn
-            if item['options'] is not None:
-                result = fn(df=df, **item['options'])
-            else:
-                result = fn(df=df)
-            if isinstance(result, pd.DataFrame):
-                df = result
-            else:
-                results.append(result)
-        if isinstance(result, pd.DataFrame):
-            results.append(result)
-        if len(results) == 1: return results[0]
-        else: return results
-
     def tostring():
         pass
-    
-    
-    
+
 class Base(object):
     
     def __init__(self, source):
@@ -152,4 +248,17 @@ class Base(object):
     
     def __str__(self): 
         return self._df.__str__()
+                             
+                             
+'''
+if x < 0:
+  raise Exception("Sorry, no numbers below zero")
+
+try:
+  print("Hello")
+except:
+  print("Something went wrong")
+else:
+  print("Nothing went wrong")
+  '''
 

@@ -9,7 +9,7 @@ def _DATA_COL_ADD_CUSTOM(df, columns=None, eval_string='""', name='new_column'):
     columns = colHelper(df, columns)
     name = toUniqueColName(df, name)
     df[name] = df[columns].apply(lambda row: eval(eval_string), axis=1, result_type='expand')
-    logger.info('Added column: {}'.format(name))
+    logger.debug('Added column: {}'.format(name))
     return df
 
 @registerService(
@@ -101,7 +101,7 @@ def DATA_COL_ADD_INDEX(df, start=1, name='new_column'):
     '''Add a single new column with a index/serial number as content'''
     name = toUniqueColName(df, name)
     df[name] = range(start, df.shape[0] + start)
-    logger.info('Added column: {}'.format(name))
+    logger.debug('Added column: {}'.format(name))
     return df
 
 @registerService(
@@ -130,8 +130,7 @@ def DATA_COL_DELETE(df, columns=None):
     max = 1 if columns is None else None
     columns = colHelper(df, columns, max=max)
     df = df.drop(columns, axis = 1)
-    logger.debug('Deleted columns: {}'.format(columns))
-    logger.info('Deleted columns')
+    logger.debug('Deleted {} columns: {}'.format(len(columns), columns[:5]))
     return df
 
 @registerService(
@@ -153,7 +152,7 @@ def DATA_COL_FILTER(df, criteria=None):
     '''Filter rows with specified filter criteria'''
     df.query(criteria, inplace = True)
     df.reset_index(drop=True, inplace=True)
-    logger.info('Filtered columns by: {}'.format(criteria))
+    logger.debug('Filtered columns by: {}'.format(criteria))
     return df
 
 @registerService(
@@ -163,7 +162,7 @@ def DATA_COL_FILTER_MISSING(df, columns=None):
     '''Filter rows with specified filter criteria'''
     columns = colHelper(df, columns, colsOnNone=True)
     df.dropna(inplace=True, subset=columns)
-    logger.info('Filtered rows with missing data in these columns: {}'.format(columns))
+    logger.debug('Filtered rows with missing data in these columns: {}'.format(columns))
     return df
 
 @registerService(
@@ -201,7 +200,7 @@ def _DATA_COL_FORMAT_CUSTOM(df, columns=None, eval_string=None):
     max = 1 if columns is None else None
     columns = colHelper(df, columns, max=max)
     df[columns] = pd.DataFrame(df[columns]).applymap(lambda cell: eval(eval_string))
-    logger.info('Formatted columns: {}'.format(columns))
+    logger.debug('Formatted columns: {}'.format(columns))
     return df
 
 def _DATA_COL_FORMAT_CUSTOM_BATCH(df, columns=None, eval_string=None):
@@ -209,7 +208,7 @@ def _DATA_COL_FORMAT_CUSTOM_BATCH(df, columns=None, eval_string=None):
     max = 1 if columns is None else None
     columns = colHelper(df, columns, max=max)
     df[columns] = pd.DataFrame(df[columns]).apply(lambda row: eval(eval_string), axis=1)
-    logger.info('Formatted columns: {}'.format(columns))
+    logger.debug('Formatted columns: {}'.format(columns))
     return df
 
 @registerService()
@@ -327,7 +326,7 @@ def DATA_COL_FORMAT_TYPE(df, columns=None, typ='str'):
     typ = [typ] if isinstance(typ, str) else typ
     convert_dict = {c:t for c,t in zip(columns, typ)}
     df = df.astype(convert_dict)
-    logger.info('Changed column type to {} for these columns: {}'.format(typ, columns))
+    logger.debug('Changed column type to {} for these columns: {}'.format(typ, columns))
     return df
 
 def DATA_COL_RENAME(df, columns):
@@ -337,7 +336,7 @@ def DATA_COL_RENAME(df, columns):
         df.rename(columns = columns, inplace = True)
     else:
         df.columns = columns
-    logger.info('Renamed columns: {}'.format(columns))
+    logger.debug('Renamed columns: {}'.format(columns))
     return df
 
 def DATA_COL_REORDER(df, columns):
@@ -351,7 +350,7 @@ def DATA_COL_REORDER_ASCENDING(df):
     '''Reorder column titles in ascending order'''
     #df.columns = sorted(df.columns.values.tolist())
     df = df[sorted(df.columns.values.tolist())]
-    logger.info('Reordered columns: {}'.format(df.columns.values.tolist()))
+    logger.debug('Reordered columns: {}'.format(df.columns.values.tolist()))
     return df
 
 @registerService()
@@ -359,7 +358,7 @@ def DATA_COL_REORDER_DESCENDING(df):
     '''Reorder column titles in descending order'''
     #df.columns = sorted(df.columns.values.tolist(), reverse = True)
     df = df[sorted(df.columns.values.tolist(), reverse=True)]
-    logger.info('Reordered columns: {}'.format(df.columns.values.tolist()))
+    logger.debug('Reordered columns: {}'.format(df.columns.values.tolist()))
     return df
 
 @registerService(
@@ -371,7 +370,7 @@ def DATA_COL_REORDER_MOVE_TO_BACK(df, columns=None):
     colsToMove = colHelper(df, columns, max=max)
     otherCols = removeElementsFromList(df.columns.values.tolist(), colsToMove)
     df = df[otherCols + colsToMove]
-    logger.info('Reordered columns: {}'.format(df.columns.values.tolist()))
+    logger.debug('Reordered columns: {}'.format(df.columns.values.tolist()))
     return df
 
 @registerService(
@@ -383,7 +382,7 @@ def DATA_COL_REORDER_MOVE_TO_FRONT(df, columns=None):
     colsToMove = colHelper(df, columns, max=max)
     otherCols = removeElementsFromList(df.columns.values.tolist(), colsToMove)
     df = df[colsToMove + otherCols]
-    logger.info('Reordered columns: {}'.format(df.columns.values.tolist()))
+    logger.debug('Reordered columns: {}'.format(df.columns.values.tolist()))
     return df
 
 @registerService(
@@ -396,7 +395,7 @@ def DATA_COL_SORT(df, columns=None, ascending=True):
     ascending = [ascending for _ in columns]
     df.sort_values(by=columns, ascending=ascending, inplace=True, na_position ='last')
     df.reset_index(inplace=True, drop=True)
-    logger.info('Sorted columns: {}'.format(df.columns.values.tolist()))
+    logger.debug('Sorted columns: {}'.format(df.columns.values.tolist()))
     return df
 
 @registerService(
@@ -500,14 +499,14 @@ def DATA_ROW_ADD(df, rows=None):
         df.sort_index(inplace=True)
     #else:
     #    self._df = pd.concat([rows, self._df], ignore_index = True)
-    logger.info('Added {} row/s'.format(len(rows)))
+    logger.debug('Added {} row/s'.format(len(rows)))
     return df
 
 def DATA_ROW_DELETE(df, rows=None):
     rows = list(rows) if isinstance(rows, tuple) else rows
     df.drop(df.index[rows], inplace=True)
     df.reset_index(drop=True, inplace=True)
-    logger.info('Deleted {} row/s'.format(len(rows)))
+    logger.debug('Deleted {} row/s'.format(len(rows)))
     return df
 
 @registerService(
@@ -517,7 +516,7 @@ def DATA_ROW_KEEP_BOTTOM(df, numRows=1):
     '''Delete all rows except specified bottom N rows'''
     df = df.tail(numRows+1)
     df.reset_index(drop=True, inplace=True)
-    logger.info('Kept {} row/s'.format(numRows))
+    logger.debug('Kept {} row/s'.format(numRows))
     return df
 
 @registerService()
@@ -525,14 +524,14 @@ def DATA_ROW_KEEP_TOP(df, numRows=1):
     '''Delete all rows except specified top N rows'''
     df = df.head(numRows+1)
     df.reset_index(drop=True, inplace=True)
-    logger.info('Kept {} row/s'.format(numRows))
+    logger.debug('Kept {} row/s'.format(numRows))
     return df
 
 @registerService()
 def DATA_ROW_REVERSE_ORDER(df):
     '''Reorder all rows in reverse order'''
     df = df[::-1].reset_index(drop = True)
-    logger.info('Reversed row/s')
+    logger.debug('Reversed row/s')
     return df
 
 @registerService(
@@ -561,7 +560,7 @@ def DATA_ROW_FROM_COLHEADER(df):
 def DATA_APPEND(df, otherdf):
     '''Append a table to bottom of current table'''
     df = df.append(otherdf, ignore_index=True)
-    logger.info('Appended dataframe')
+    logger.debug('Appended dataframe')
     return df
 
 @registerService(
@@ -580,18 +579,18 @@ def DATA_GROUP(df, groupby=None, aggregates=None):
     else:
         df = df.groupby(groupby, as_index=False, dropna=False).agg(aggregates)
         #self._df.columns = ['_'.join(col).rstrip('_') for col in self._df.columns.values]
-    logger.info('Grouped dataframe')
+    logger.debug('Grouped dataframe')
     return df
 
 def DATA_MERGE(df, otherdf, on, how = 'left'):
     df = pd.merge(df, otherdf, on=on, how=how)
-    logger.info('Merged dataframe')
+    logger.debug('Merged dataframe')
     return df
 
 @registerService()
 def DATA_TRANSPOSE(df):
     df = df.transpose()
-    logger.info('Transposed dataframe')
+    logger.debug('Transposed dataframe')
     return df
 
 @registerService(
@@ -600,7 +599,7 @@ def DATA_TRANSPOSE(df):
 def DATA_UNPIVOT(df, columns=None):
     columns = colHelper(df, columns)
     df = pd.melt(df, id_vars=columns)
-    logger.info('Unpivot dataframe')
+    logger.debug('Unpivot dataframe')
     return df
 
 @registerService(
@@ -611,6 +610,6 @@ def DATA_UNPIVOT(df, columns=None):
 def DATA_PIVOT(df, indexCols, cols, vals):
     #indexCols = list(set(df.columns) - set(cols) - set(vals))
     df = df.pivot(index = indexCols, columns = cols, values = vals).reset_index().rename_axis(mapper = None,axis = 1)
-    logger.info('Pivotted dataframe')
+    logger.debug('Pivotted dataframe')
     return df
 

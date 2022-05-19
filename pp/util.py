@@ -47,20 +47,43 @@ class Service(object):
 
 def registerService(**d):
     def inner(fn):
-        def service_group(service_dict, service_name):
-            gr = service_name.split('_', 1)[0].lower()
-            if gr in service_dict.keys(): return service_dict[gr]
-            else:
-                service_dict[gr] = {}
-                return service_dict[gr]
-        
-        service_group(SERVICES, fn.__name__)[fn.__name__] = Service(fn, d)
-        #SERVICES[fn.__name__] = Service(fn, d)
+        def service_group(service_name):
+            gr = extractGroup(service_name)
+            if gr not in SERVICES.keys():
+                SERVICES[gr] = {}
+            return SERVICES[gr]
+        service_group(fn.__name__)[fn.__name__] = Service(fn, d)
         logger.debug('Registered Service: {}'.format(fn.__name__))
         return fn
     return inner
 
 # ## UTILITIES ###
+def service_helper(groups=None, return_type='group_service_callable'):
+    if isinstance(groups, str):
+        groups = [groups]
+    elif isinstance(groups, list):
+        groups = groups
+    else:
+        groups = None
+    if groups is None:
+        filtered_services = SERVICES
+    else:
+        filtered_services = {g: SERVICES[g] for g in groups if g in SERVICES.keys()}
+        
+    if return_type=='group_service_callable':
+        return filtered_services
+    elif return_type=='group_service_names':
+        return {k: list(v.keys()) for k, v in filtered_services.items()}
+    elif return_type=='service_callable':
+        return {k: v for dic in filtered_services.values() for k, v in dic.items()}
+    return "SERVICE NOT FOUND"
+
+        
+def extractGroup(service):
+    if not isinstance(service, str):
+        return None
+    return service.split('_', 1)[0].lower()
+
 def removeElementsFromList(l1, l2):
     '''Remove from list1 any elements also in list2'''
     # if not list type ie string then covert
