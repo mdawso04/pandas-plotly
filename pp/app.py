@@ -153,13 +153,13 @@ class App(object):
             fn = service_list[item['settings']['service']].fn
             s = inspect.signature(fn)
             if 'df' in s.parameters:
-                if 'options' in item['settings'].keys():
+                if 'options' in item['settings'].keys() and item['settings']['options'] is not None:
                     result = fn(df=df, **item['settings']['options'])
                 else:
                     result = fn(df=df)
             else:
                 print(item)
-                if 'options' in item['settings'].keys():
+                if 'options' in item['settings'].keys() and item['settings']['options'] is not None:
                     result = fn(**item['settings']['options'])
                 else:
                     result = fn()
