@@ -9,7 +9,4 @@ setup(
   author_email = 'mdawso04@gmail.com',
   url = 'https://github.com/mdawso04/pandas-plotly',
   keywords = ['pandas', 'plotly', 'vizualization'],
-  classifiers=[
-    'Programming Language :: Python :: 3 :: Only',
-  ],
 )
