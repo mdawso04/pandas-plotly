@@ -208,7 +208,7 @@ class Base(object):
         self._preview()
                
     def _pop(self, key):
-        '''Return current data item and replace with next from stack'''
+        #Return current data item and replace with next from stack
         #TODO if empty
         s = self._data[key]['stack']
         old = s.pop()
@@ -216,13 +216,13 @@ class Base(object):
         return old
     
     def _append(self, key, data):
-        '''Add data item to stack and make active'''
+        #Add data item to stack and make active
         #TODO if empty
         self._data[key]['stack'].append(data); self._data[key]['active'] = data
         return self
     
     def _active(self, key, data):
-        '''Replace active data'''
+        #Replace active data
         self._pop(key); self._append(key, data)
         return self
     
@@ -236,11 +236,11 @@ class Base(object):
     
     @df.setter
     def df(self, df1):
-        '''Replace active df without pushing current to stack'''
+        #Replace active df without pushing current to stack
         self._active(DATATYPE_DATAFRAME, df1)
     
     def _repr_pretty_(self, p, cycle): 
-        '''Selects content for IPython display'''
+        #Selects content for IPython display
         selected = self._previewMode
         d = self._data
         return PREVIEWERS[selected].preview(data=self._data)
