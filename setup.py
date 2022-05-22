@@ -9,6 +9,6 @@ setup(
         'numpy>=1.21.2',
         'pandas>=1.3.47',
         'plotly>=5.1.0',
-        'scikit_learn>=1.1.1',
+        'scikit_learn',
     ]
 )
