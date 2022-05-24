@@ -86,8 +86,18 @@ class App(object):
                 o = None
             else:
                 o = s.options(self.call(last_index=index))
+                #o = {k: {'options': v} for k, v in o.items()}
         logger.debug('Generated options for {} field/s'.format(len(o) if o is not None else None))
         return o
+    
+    def data(self):
+        #available
+        available_options = self.options(self.todos[-1]['settings']['service'], index=1)
+        #saved
+        saved_options = self.todos[-1]['settings']['options']
+        
+        all = {k: {'available': y, 'saved': saved_options.get(k)} for k, y in available_options.items()}
+        return all
     
     def add(self, service, options=None, index=None, todoName=None):
         if not self._validateAdd(service):
