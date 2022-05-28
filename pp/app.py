@@ -24,11 +24,11 @@ class App(object):
             else:
                 logger.debug('Initiated App: {} Todos'.format(len(todos)))
     
-    def services(self, group=None, as_list=False):
+    def services(self, as_list=False):
         if as_list:
-            d = self._service_helper(return_type='group_service_names', group=group)
+            d = self._service_helper(return_type='group_service_names')
             return [i for l in d.values() for i in l]
-        return self._service_helper(return_type='group_service_names', group=group)
+        return self._service_helper(return_type='group_service_names')
     
     def _getService(self, service):
         service_dict = self._service_helper(return_type='service_callable')
@@ -37,7 +37,7 @@ class App(object):
         else:
             return None
     
-    def _service_helper(self, group=None, return_type='group_service_callable', filter_read=True):
+    def _service_helper(self, return_type='group_service_callable', filter_read=True):
         if return_type=='group_service_callable':
             if self._hasRead():
                 if filter_read:
@@ -45,10 +45,7 @@ class App(object):
                 else:
                     return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_callable')
             else:
-                if group in ('read', None):
-                    return service_helper(groups='read', return_type='group_service_callable')
-                else:    
-                    return None
+                return service_helper(groups='read', return_type='group_service_callable')
                 
         elif return_type=='group_service_names':
             if self._hasRead():
@@ -91,12 +88,17 @@ class App(object):
         return o
     
     def data(self):
+        #todo
+        td = self.todos[-1]
         #available
-        available_options = self.options(self.todos[-1]['settings']['service'], index=1)
+        available_options = self.options(td['service'], index=1)
         #saved
-        saved_options = self.todos[-1]['settings']['options']
+        saved_options = td['options']
         
         all = {k: {'available': y, 'saved': saved_options.get(k)} for k, y in available_options.items()}
+        all = {'options': all}
+        all['name'] = td['name']
+        all['service'] = {'available': self.services(), 'saved': td['service']}
         return all
     
     def add(self, service, options=None, index=None, todoName=None):
@@ -114,7 +116,7 @@ class App(object):
             todoName = toUniqueName(todoName)
         else:
             todoName = toUniqueName(group)
-        todo = {'name': todoName, 'type': group, 'settings': {'service': service, 'options': options}}
+        todo = {'name': todoName, 'type': group, 'service': service, 'options': options}
         if index is not None:
             self.todos.insert(index, todo)
         else:
@@ -160,24 +162,24 @@ class App(object):
         result, results = None, []
         logger.debug('Calling Todos: {}'.format(len(self.todos)))
         for item in self.todos[:last_index]:
-            fn = service_list[item['settings']['service']].fn
+            fn = service_list[item['service']].fn
             s = inspect.signature(fn)
             if 'df' in s.parameters:
-                if 'options' in item['settings'].keys() and item['settings']['options'] is not None:
-                    result = fn(df=df, **item['settings']['options'])
+                if 'options' in item.keys() and item['options'] is not None:
+                    result = fn(df=df, **item['options'])
                 else:
                     result = fn(df=df)
             else:
                 print(item)
-                if 'options' in item['settings'].keys() and item['settings']['options'] is not None:
-                    result = fn(**item['settings']['options'])
+                if 'options' in item.keys() and item['options'] is not None:
+                    result = fn(**item['options'])
                 else:
                     result = fn()
             if isinstance(result, pd.DataFrame):
                 df = result
             else:
                 results.append(result)
-            logger.debug('Called Todo: {} ({})'.format(item['settings']['service'], item['name']))
+            logger.debug('Called Todo: {} ({})'.format(item['service'], item['name']))
         results.append(df)
         logger.debug('Called Todos: {}'.format(len(self.todos)))
         logger.debug('Generated results: {}'.format(len(results)))
