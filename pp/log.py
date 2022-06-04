@@ -19,7 +19,7 @@ _log_config = {
 if config.section('settings') and config.value('settings', SETTING_LOG_LEVEL):
     logger.setLevel(_log_config[config.value('settings', SETTING_LOG_LEVEL)])
 else:
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
 _file_handler = logging.FileHandler(filename='tmp.log')
 _stdout_handler = logging.StreamHandler(sys.stdout)
