@@ -53,7 +53,7 @@ def registerService(**d):
                 SERVICES[gr] = {}
             return SERVICES[gr]
         service_group(fn.__name__)[fn.__name__] = Service(fn, d)
-        logger.debug('Registered Service: {}'.format(fn.__name__))
+        logger.debug('pp.util > registerService: Registered Service: {}'.format(fn.__name__))
         return fn
     return inner
 

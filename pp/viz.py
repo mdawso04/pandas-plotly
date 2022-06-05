@@ -91,7 +91,7 @@ def VIZ_AREA(df, x=None, y=None, color=None, facet_col=None, facet_row=None, mar
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.area(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_area')
+    logger.debug('pp.viz > VIZ_AREA end')
     return fig
 
 @registerService(
@@ -107,7 +107,7 @@ def VIZ_BAR(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swat
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.histogram(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_bar')
+    logger.debug('pp.viz > VIZ_BAR end')
     return fig
 
 @registerService(
@@ -123,7 +123,7 @@ def VIZ_BOX(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swat
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.box(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_box')
+    logger.debug('pp.viz > VIZ_BOX end')
     return fig
 
 @registerService()
@@ -134,7 +134,7 @@ def VIZ_DATASTATS(df):
     df = DATA_COL_ADD_INDEX_FROM_0(df=df, name='No')
     df = DATA_COL_REORDER_MOVE_TO_FRONT(df=df, columns='No')
     fig = VIZ_TABLE(df=df)
-    logger.debug('pp.viz > Generated viz_datastats')
+    logger.debug('pp.viz > VIZ_DATASTATS end')
     return fig
 
 @registerService(
@@ -149,7 +149,7 @@ def VIZ_HIST(df, x=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_
         colHelper(df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, color, facet_col, facet_row])
     fig = px.histogram(data_frame=df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_hist')
+    logger.debug('pp.viz > VIZ_HIST end')
     return fig
 
 @registerService(
@@ -160,7 +160,7 @@ def VIZ_HIST_LIST(df, color=None, swatch=VIZ_COLORS_ANTIQUE):
     color = colHelper(df=df, columns=color, max=1, colsOnNone=False, forceReturnAsList=False)
     v = [px.histogram(data_frame=df, x=c, color=color, color_discrete_sequence=swatch) for c in df.columns]
     _fig(v)
-    logger.debug('pp.viz > Generated viz_hist_list')
+    logger.debug('pp.viz > VIZ_HIST_LIST end')
     return v
 
 @registerService(
@@ -190,7 +190,7 @@ def VIZ_ICICLE(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
         _fig(fig)
     except ValueError:
         fig = VIZ_ICICLE(df1, path[1:-1], values, root=path[0])
-    logger.debug('pp.viz > Generated viz_icicle')
+    logger.debug('pp.viz > VIZ_ICICLE end')
     return fig
 
 @registerService(
@@ -206,7 +206,7 @@ def VIZ_LINE(df, x=None, y=None, color=None, facet_col=None, facet_row=None, mar
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.line(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_line')
+    logger.debug('pp.viz > VIZ_LINE end')
     return fig
 
 @registerService(
@@ -223,7 +223,7 @@ def VIZ_SCATTER(df, x=None, y=None, color=None, facet_col=None, facet_row=None, 
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.scatter(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_scatter')
+    logger.debug('pp.viz > VIZ_SCATTER end')
     return fig
 
 @registerService(
@@ -236,7 +236,7 @@ def VIZ_SCATTERMATRIX(df, dimensions=None, color=None, swatch=VIZ_COLORS_DEFAULT
         colHelper(df=df, columns=i, max=j, colsOnNone=False, forceReturnAsList=False) for i, j in [(dimensions, None), (color, 1)])
     fig = px.scatter_matrix(data_frame=df, dimensions=dimensions, color=color, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_scattermatrix')
+    logger.debug('pp.viz > VIZ_SCATTERMATRIX end')
     return fig
 
 @registerService(
@@ -256,7 +256,7 @@ def VIZ_SUNBURST(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
         _fig(fig)
     except ValueError:
         fig = VIZ_SUNBURST(df1, path[1:-1], values, root=path[0])
-    logger.debug('pp.viz > Generated viz_sunburst')
+    logger.debug('pp.viz > VIZ_SUNBURST end')
     return fig
 
 @registerService(
@@ -277,7 +277,7 @@ def VIZ_TABLE(df, columns=None, **kwargs):
                    height=30))
     ])
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_table')
+    logger.debug('pp.viz > VIZ_TABLE end')
     return fig
 
 @registerService(
@@ -297,7 +297,7 @@ def VIZ_TREEMAP(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
         _fig(fig)
     except ValueError:
         fig = VIZ_TREEMAP(df1, path[1:-1], values, root=path[0])
-    logger.debug('pp.viz > Generated viz_treemap')
+    logger.debug('pp.viz > VIZ_TREEMAP end')
     return fig
 
 @registerService(
@@ -313,7 +313,7 @@ def VIZ_VIOLIN(df, x=None, y=None, color=None, facet_col=None, facet_row=None, s
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.violin(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, color_discrete_sequence=swatch)
     _fig(fig)
-    logger.debug('pp.viz > Generated viz_violin')
+    logger.debug('pp.viz > VIZ_VIOLIN end')
     return fig
 
 fig_defaults = {

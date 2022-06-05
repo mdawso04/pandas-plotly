@@ -34,7 +34,7 @@ PREVIEWERTYPES.extend([
 )
 def READ_CSV(src):
     read_df = _read(src=src, reader=READER_SIMPLE_CSV_EXCEL)
-    logger.debug('Read from: {}'.format(src))
+    logger.debug('pp.io > READ_CSV Read from: {}'.format(src))
     return read_df
 
 @registerService()
@@ -80,7 +80,6 @@ def _write(content, tar=None, writer=None):
             return
 
     w.write(content)
-    logger.info('Wrote to: {}'.format(tar))
     return
 
 def _preview(content, previewer=None):
@@ -99,7 +98,6 @@ def _preview(content, previewer=None):
             return
 
     p.preview(content)
-    logger.info('Previewed')
     return
 
 #READERS, WRITERS & PREVIEWERS
@@ -115,7 +113,7 @@ def register(cls):
         WRITERS[t] = cls
     else:
         PREVIEWERS[t] = cls
-    logger.debug('Registered Reader/Writer/Previewer: {}'.format(cls))
+    logger.debug('pp.io > register: Registered Reader/Writer/Previewer: {}'.format(cls))
     return cls
     
 class BaseReader():
