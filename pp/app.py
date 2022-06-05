@@ -22,7 +22,8 @@ class App(object):
                 self.todos = []
                 logger.warning('Assigned Todos missing Read so reset to None')
             else:
-                logger.debug('Initiated App: {} Todos'.format(len(todos)))
+                logger.debug('pp.App > init')
+                #logger.debug('Initiated App: {} Todos'.format(len(todos)))
     
     def services(self, as_list=False):
         if as_list:
@@ -84,7 +85,7 @@ class App(object):
             else:
                 o = s.options(self.call(last_index=index))
                 #o = {k: {'options': v} for k, v in o.items()}
-        logger.debug('Generated options for {} field/s'.format(len(o) if o is not None else None))
+        #logger.debug('Generated options for {} field/s'.format(len(o) if o is not None else None))
         return o
     
     def data(self):
@@ -121,7 +122,7 @@ class App(object):
             self.todos.insert(index, todo)
         else:
             self.todos.append(todo)
-        logger.debug('Added Todo: {} ({})'.format(service, todoName))
+        #logger.debug('Added Todo: {} ({})'.format(service, todoName))
         
     def _validateAdd(self, service):
         group = extractGroup(service)
@@ -155,6 +156,7 @@ class App(object):
     
     # TODO - CHANGE TO 'TODO_NAME': 'TODO' FORMAT
     def call(self, df=None, last_index=None, return_df=True):
+        logger.debug('pp.App > call start')
         if not self._isvalid():
             #exception
             return "ERROR"
@@ -170,7 +172,6 @@ class App(object):
                 else:
                     result = fn(df=df)
             else:
-                print(item)
                 if 'options' in item.keys() and item['options'] is not None:
                     result = fn(**item['options'])
                 else:
@@ -179,10 +180,11 @@ class App(object):
                 df = result
             else:
                 results.append(result)
-            logger.debug('Called Todo: {} ({})'.format(item['service'], item['name']))
+            #logger.debug('Called Todo: {} ({})'.format(item['service'], item['name']))
         results.append(df)
-        logger.debug('Called Todos: {}'.format(len(self.todos)))
-        logger.debug('Generated results: {}'.format(len(results)))
+        #logger.debug('Called Todos: {}'.format(len(self.todos)))
+        #logger.debug('Generated results: {}'.format(len(results)))
+        logger.debug('pp.App > call end')
         if return_df:
             return results[-1]
         return results
