@@ -87,6 +87,9 @@ def _fig(fig=None, settings=None, overwrite=True):
 )
 def VIZ_AREA(df, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a line plot with shaded area'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.area(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -103,6 +106,9 @@ def VIZ_AREA(df, x=None, y=None, color=None, facet_col=None, facet_row=None, mar
 )
 def VIZ_BAR(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a bar plot'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.histogram(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -119,6 +125,9 @@ def VIZ_BAR(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swat
 )
 def VIZ_BOX(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a box plot'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.box(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -145,6 +154,9 @@ def VIZ_DATASTATS(df):
 )
 def VIZ_HIST(df, x=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a histogram'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if not x:
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, color, facet_col, facet_row = (
         colHelper(df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, color, facet_col, facet_row])
     fig = px.histogram(data_frame=df, x=x, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -152,9 +164,11 @@ def VIZ_HIST(df, x=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_
     logger.debug('pp.viz > VIZ_HIST end')
     return fig
 
+'''
 @registerService(
     color=OPTION_FIELD_SINGLE_COL_ANY, 
 )
+'''
 def VIZ_HIST_LIST(df, color=None, swatch=VIZ_COLORS_ANTIQUE):
     '''Draw a histogram for all fields in current dataframe'''
     color = colHelper(df=df, columns=color, max=1, colsOnNone=False, forceReturnAsList=False)
@@ -163,10 +177,12 @@ def VIZ_HIST_LIST(df, color=None, swatch=VIZ_COLORS_ANTIQUE):
     logger.debug('pp.viz > VIZ_HIST_LIST end')
     return v
 
+'''
 @registerService(
     path=OPTION_FIELD_MULTI_COL_ANY,
     values=OPTION_FIELD_SINGLE_COL_ANY,
 )
+'''
 def VIZ_ICICLE(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
@@ -202,6 +218,9 @@ def VIZ_ICICLE(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
 )
 def VIZ_LINE(df, x=None, y=None, color=None, facet_col=None, facet_row=None, markers=True, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a line plot'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.line(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -219,6 +238,9 @@ def VIZ_LINE(df, x=None, y=None, color=None, facet_col=None, facet_row=None, mar
 )
 def VIZ_SCATTER(df, x=None, y=None, color=None, facet_col=None, facet_row=None, size=None, swatch=VIZ_COLORS_ANTIQUE):
     '''Draw a scatter plot'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.scatter(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, color_discrete_sequence=swatch)
@@ -226,10 +248,12 @@ def VIZ_SCATTER(df, x=None, y=None, color=None, facet_col=None, facet_row=None, 
     logger.debug('pp.viz > VIZ_SCATTER end')
     return fig
 
+'''
 @registerService(
     dimension=OPTION_FIELD_SINGLE_COL_ANY,
     color=OPTION_FIELD_SINGLE_COL_ANY, 
 )
+'''
 def VIZ_SCATTERMATRIX(df, dimensions=None, color=None, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a scatter matrix plot'''
     dimensions, color = (
@@ -239,10 +263,12 @@ def VIZ_SCATTERMATRIX(df, dimensions=None, color=None, swatch=VIZ_COLORS_DEFAULT
     logger.debug('pp.viz > VIZ_SCATTERMATRIX end')
     return fig
 
+'''
 @registerService(
     path=OPTION_FIELD_MULTI_COL_ANY,
     values=OPTION_FIELD_SINGLE_COL_ANY,
 )
+'''
 def VIZ_SUNBURST(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
@@ -259,9 +285,11 @@ def VIZ_SUNBURST(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     logger.debug('pp.viz > VIZ_SUNBURST end')
     return fig
 
+'''
 @registerService(
     columns=OPTION_FIELD_MULTI_COL_ANY, 
 )
+'''
 def VIZ_TABLE(df, columns=None, **kwargs):
     '''Draw a table'''
     columns = colHelper(df=df, columns=columns)
@@ -280,10 +308,12 @@ def VIZ_TABLE(df, columns=None, **kwargs):
     logger.debug('pp.viz > VIZ_TABLE end')
     return fig
 
+'''
 @registerService(
     path=OPTION_FIELD_MULTI_COL_ANY,
     values=OPTION_FIELD_SINGLE_COL_ANY,
 )
+'''
 def VIZ_TREEMAP(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
     '''Draw a treemap plot'''
     path = [px.Constant("All data")] + colHelper(df=df, columns=path)
@@ -309,6 +339,9 @@ def VIZ_TREEMAP(df, path, values, root='All data', swatch=VIZ_COLORS_DEFAULT):
 )
 def VIZ_VIOLIN(df, x=None, y=None, color=None, facet_col=None, facet_row=None, swatch=VIZ_COLORS_DEFAULT):
     '''Draw a violin plot'''
+    # catch missing x/y combination to prevent default to 'wide'
+    if all(not param for param in (x, y)):
+        x = colHelper(df=df, columns=x, max=1, colsOnNone=True, forceReturnAsList=False)
     x, y, color, facet_col, facet_row = (
         colHelper(df=df, columns=i, max=1, colsOnNone=False, forceReturnAsList=False) for i in [x, y, color, facet_col, facet_row])
     fig = px.violin(data_frame=df, x=x, y=y, color=color, facet_col=facet_col, facet_row=facet_row, box=True, color_discrete_sequence=swatch)

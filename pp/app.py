@@ -22,7 +22,8 @@ class App(object):
                 self.todos = []
                 logger.warning('Assigned Todos missing Read so reset to None')
             else:
-                logger.debug('pp.App > init')
+                pass
+                #logger.debug('pp.App > init')
                 #logger.debug('Initiated App: {} Todos'.format(len(todos)))
     
     def services(self, as_list=False):
@@ -55,10 +56,7 @@ class App(object):
                 else:
                     return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_names')
             else:    
-                if group in ('read', None):
-                    return service_helper(groups='read', return_type='group_service_names')
-                else:
-                    return None
+                return service_helper(groups='read', return_type='group_service_names')
                 
         elif return_type=='service_callable':
             if self._hasRead():
@@ -156,13 +154,13 @@ class App(object):
     
     # TODO - CHANGE TO 'TODO_NAME': 'TODO' FORMAT
     def call(self, df=None, last_index=None, return_df=True):
-        logger.debug('pp.App > call start')
+        #logger.debug('pp.App > call start')
         if not self._isvalid():
             #exception
             return "ERROR"
         service_list = self._service_helper(return_type='service_callable', filter_read=False)  
         result, results = None, []
-        logger.debug('Calling Todos: {}'.format(len(self.todos)))
+        #logger.debug('Calling Todos: {}'.format(len(self.todos)))
         for item in self.todos[:last_index]:
             fn = service_list[item['service']].fn
             s = inspect.signature(fn)
@@ -184,7 +182,7 @@ class App(object):
         results.append(df)
         #logger.debug('Called Todos: {}'.format(len(self.todos)))
         #logger.debug('Generated results: {}'.format(len(results)))
-        logger.debug('pp.App > call end')
+        #logger.debug('pp.App > call end')
         if return_df:
             return results[-1]
         return results
