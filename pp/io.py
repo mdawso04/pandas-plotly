@@ -160,7 +160,11 @@ class SimpleCsvExcelReader(BaseReader):
         elif isinstance(s, str) and (s[-5:]=='.xlsx'):
             return pd.read_excel(s)
         else:
-            raise TypeError("Invalid reader source")
+            if not hasattr(s, 'read'):
+                raise TypeError("Invalid reader source")
+            else:
+                s.seek(0)
+                return pd.read_csv(s)
             
 class BaseWriter():
     def __init__(self, tar=None):
