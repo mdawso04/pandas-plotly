@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
     name = 'pandas-plotly',
     packages = ['pp',],
-    version = '0.2.1',
+    version = '0.2.2',
     long_description = 'A simple, unified interface for pandas & plotly for data wrangling, vizualization & report generating',
     long_description_content_type = 'text/markdown',
     install_requires=[
