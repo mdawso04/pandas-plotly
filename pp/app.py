@@ -9,6 +9,8 @@ import functools, inspect
 
 #non-standard libraries
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 class App(object):
     def __init__(self, todos=None):
@@ -43,27 +45,27 @@ class App(object):
         if return_type=='group_service_callable':
             if self._hasRead():
                 if filter_read:
-                    return service_helper(groups=['data', 'viz', 'write'], return_type='group_service_callable')
+                    return service_helper(groups=['data', 'viz', 'write', 'draw'], return_type='group_service_callable')
                 else:
-                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_callable')
+                    return service_helper(groups=['read', 'data', 'viz', 'write', 'draw'], return_type='group_service_callable')
             else:
                 return service_helper(groups='read', return_type='group_service_callable')
                 
         elif return_type=='group_service_names':
             if self._hasRead():
                 if filter_read:
-                    return service_helper(groups=['data', 'viz', 'write'], return_type='group_service_names')
+                    return service_helper(groups=['data', 'viz', 'write', 'draw'], return_type='group_service_names')
                 else:
-                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='group_service_names')
+                    return service_helper(groups=['read', 'data', 'viz', 'write', 'draw'], return_type='group_service_names')
             else:    
                 return service_helper(groups='read', return_type='group_service_names')
                 
         elif return_type=='service_callable':
             if self._hasRead():
                 if filter_read:
-                    return service_helper(groups=['data', 'viz', 'write'], return_type='service_callable')
+                    return service_helper(groups=['data', 'viz', 'write', 'draw'], return_type='service_callable')
                 else:
-                    return service_helper(groups=['read', 'data', 'viz', 'write'], return_type='service_callable')
+                    return service_helper(groups=['read', 'data', 'viz', 'write', 'draw'], return_type='service_callable')
             else:
                 if group in ('read', None):
                     return service_helper(groups='read', return_type='service_callable')
@@ -86,9 +88,10 @@ class App(object):
         #logger.debug('Generated options for {} field/s'.format(len(o) if o is not None else None))
         return o
     
-    def data(self):
+    def data(self, todo=None):
         #todo
-        td = self.todos[-1]
+        todo = -1 if todo is None else todo
+        td = self.todos[todo]
         #available
         available_options = self.options(td['service'], index=1)
         #saved
@@ -153,7 +156,7 @@ class App(object):
             return [i for i in self.todos if i['type']==group]
     
     # TODO - CHANGE TO 'TODO_NAME': 'TODO' FORMAT
-    def call(self, df=None, last_index=None, return_df=True):
+    def call(self, df=None, viz=None, last_index=None, return_df=True):
         #logger.debug('pp.App > call start')
         if not self._isvalid():
             #exception
@@ -169,6 +172,11 @@ class App(object):
                     result = fn(df=df, **item['options'])
                 else:
                     result = fn(df=df)
+            elif 'viz' in s.parameters:
+                if 'options' in item.keys() and item['options'] is not None:
+                    result = fn(viz=viz, **item['options'])
+                else:
+                    result = fn(viz=viz)
             else:
                 if 'options' in item.keys() and item['options'] is not None:
                     result = fn(**item['options'])
@@ -177,6 +185,8 @@ class App(object):
             if isinstance(result, pd.DataFrame):
                 df = result
             else:
+                if isinstance(result, go.Figure):
+                    viz = result
                 results.append(result)
             #logger.debug('Called Todo: {} ({})'.format(item['service'], item['name']))
         results.append(df)
